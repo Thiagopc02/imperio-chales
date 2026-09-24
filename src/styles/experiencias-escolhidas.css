@@ -1,0 +1,127 @@
+
+/* ================================================
+   EXPERIÊNCIAS MAIS ESCOLHIDAS
+   CARTAS MÁGICAS — PRETO E DOURADO
+================================================ */
+
+.experiencias-magicas-fundo {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(
+      ellipse at 50% -15%,
+      rgba(210, 163, 74, 0.16),
+      transparent 55%
+    ),
+    linear-gradient(
+      145deg,
+      #101010 0%,
+      #242424 55%,
+      #0b0b0b 100%
+    );
+}
+
+.experiencias-magicas-fundo::before,
+.experiencias-magicas-fundo::after {
+  content: "";
+  position: absolute;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(65px);
+  background: rgba(210, 166, 81, 0.12);
+}
+
+.experiencias-magicas-fundo::before {
+  top: -130px;
+  left: -100px;
+}
+
+.experiencias-magicas-fundo::after {
+  right: -120px;
+  bottom: -140px;
+}
+
+.experiencia-carta {
+  position: relative;
+  will-change: transform;
+  animation:
+    experiencia-flutuar 6s ease-in-out infinite,
+    experiencia-brilhar 5s ease-in-out infinite;
+  box-shadow:
+    0 18px 35px rgba(0, 0, 0, 0.45),
+    0 0 20px rgba(210, 164, 75, 0.09);
+  transition:
+    box-shadow 300ms ease,
+    border-color 300ms ease;
+}
+
+.experiencia-carta:hover {
+  border-color: #e8ca86;
+  box-shadow:
+    0 24px 55px rgba(0, 0, 0, 0.6),
+    0 0 35px rgba(220, 174, 78, 0.25);
+}
+
+.experiencia-botao {
+  background: linear-gradient(
+    120deg,
+    #b88636 0%,
+    #f7e1a4 45%,
+    #d0a555 100%
+  );
+  box-shadow: 0 4px 18px rgba(212, 164, 72, 0.18);
+  transition:
+    filter 250ms ease,
+    box-shadow 250ms ease;
+}
+
+.experiencia-botao:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 5px 25px rgba(232, 188, 100, 0.35);
+}
+
+@keyframes experiencia-flutuar {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes experiencia-brilhar {
+  0%,
+  100% {
+    box-shadow:
+      0 18px 35px rgba(0, 0, 0, 0.45),
+      0 0 12px rgba(210, 164, 75, 0.07);
+  }
+
+  50% {
+    box-shadow:
+      0 23px 42px rgba(0, 0, 0, 0.5),
+      0 0 25px rgba(210, 164, 75, 0.2);
+  }
+}
+
+/* Respeita a preferência de reduzir movimento. */
+
+@media (prefers-reduced-motion: reduce) {
+  .experiencia-carta {
+    animation: none;
+    will-change: auto;
+  }
+
+  .experiencia-carta:hover {
+    transform: none;
+  }
+
+  .experiencia-botao,
+  .experiencia-carta img {
+    transition: none;
+  }
+}

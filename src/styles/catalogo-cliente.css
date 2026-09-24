@@ -1,0 +1,309 @@
+
+/* =====================================================
+   IMPÉRIO CHALÉS — SABORES DA CHAPADA
+   TEMA DO CLIENTE AUTENTICADO
+
+   Este CSS atua apenas dentro de .catalogo-cliente.
+
+   Não altera:
+   - Página inicial;
+   - Administração;
+   - Portal dos parceiros;
+   - Formulários de cadastro e login;
+   - Catálogo de visitantes.
+===================================================== */
+
+/* =====================================================
+   1. VARIÁVEIS E ESTRUTURA PRINCIPAL
+===================================================== */
+
+.catalogo-cliente {
+  --cliente-fundo: #171717;
+  --cliente-superficie: #242424;
+  --cliente-superficie-clara: #303030;
+  --cliente-superficie-escura: #101010;
+
+  --cliente-texto: #f5f5f5;
+  --cliente-texto-secundario: #c8c8c8;
+
+  --cliente-borda: #484848;
+  --cliente-destaque: #ffffff;
+
+  background-color: var(--cliente-fundo) !important;
+  color: var(--cliente-texto) !important;
+
+  color-scheme: dark;
+  min-height: 100vh;
+}
+
+/* =====================================================
+   2. SUPERFÍCIES BRANCAS E BEGES
+===================================================== */
+
+.catalogo-cliente [class~="bg-white"],
+.catalogo-cliente [class~="bg-[#faf8f2]"],
+.catalogo-cliente [class~="bg-[#f8f6ef]"],
+.catalogo-cliente [class~="bg-gray-50"],
+.catalogo-cliente [class~="bg-gray-100"] {
+  background-color: var(--cliente-superficie) !important;
+  color: var(--cliente-texto) !important;
+}
+
+/* =====================================================
+   3. SUPERFÍCIES VERDES
+===================================================== */
+
+.catalogo-cliente [class~="bg-[#19352b]"],
+.catalogo-cliente [class~="bg-[#17352a]"],
+.catalogo-cliente [class~="bg-[#101813]"] {
+  background-color: var(--cliente-superficie-escura) !important;
+}
+
+/* =====================================================
+   4. SUPERFÍCIES COLORIDAS SECUNDÁRIAS
+===================================================== */
+
+.catalogo-cliente [class~="bg-green-50"],
+.catalogo-cliente [class~="bg-green-100"],
+.catalogo-cliente [class~="bg-lime-50"],
+.catalogo-cliente [class~="bg-amber-50"],
+.catalogo-cliente [class~="bg-amber-100"],
+.catalogo-cliente [class~="bg-blue-50"],
+.catalogo-cliente [class~="bg-pink-50"],
+.catalogo-cliente [class~="bg-pink-100"] {
+  background-color: var(--cliente-superficie-clara) !important;
+  color: var(--cliente-texto) !important;
+}
+
+/* =====================================================
+   5. TEXTOS ESCUROS, VERDES E COLORIDOS
+===================================================== */
+
+.catalogo-cliente [class~="text-[#19352b]"],
+.catalogo-cliente [class~="text-green-900"],
+.catalogo-cliente [class~="text-green-800"],
+.catalogo-cliente [class~="text-green-700"],
+.catalogo-cliente [class~="text-amber-950"],
+.catalogo-cliente [class~="text-amber-900"],
+.catalogo-cliente [class~="text-amber-800"],
+.catalogo-cliente [class~="text-amber-700"],
+.catalogo-cliente [class~="text-blue-900"],
+.catalogo-cliente [class~="text-pink-900"] {
+  color: var(--cliente-texto) !important;
+}
+
+/* =====================================================
+   6. TEXTOS SECUNDÁRIOS
+===================================================== */
+
+.catalogo-cliente [class~="text-gray-400"],
+.catalogo-cliente [class~="text-gray-500"],
+.catalogo-cliente [class~="text-gray-600"],
+.catalogo-cliente [class~="text-gray-700"] {
+  color: var(--cliente-texto-secundario) !important;
+}
+
+/* =====================================================
+   7. BORDAS
+===================================================== */
+
+.catalogo-cliente [class~="border-gray-100"],
+.catalogo-cliente [class~="border-gray-200"],
+.catalogo-cliente [class~="border-green-100"],
+.catalogo-cliente [class~="border-green-200"],
+.catalogo-cliente [class~="border-amber-200"],
+.catalogo-cliente [class~="border-pink-200"],
+.catalogo-cliente [class~="border-blue-200"],
+.catalogo-cliente [class~="border-[#e8e2d5]"] {
+  border-color: var(--cliente-borda) !important;
+}
+
+/* =====================================================
+   8. CATEGORIAS
+===================================================== */
+
+.catalogo-cliente button[aria-pressed="true"] {
+  background-color: #090909 !important;
+  border-color: #ffffff !important;
+  color: #ffffff !important;
+}
+
+.catalogo-cliente button[aria-pressed="false"] {
+  background-color: #303030 !important;
+  border-color: #484848 !important;
+  color: #ffffff !important;
+}
+
+.catalogo-cliente button[aria-pressed="false"]:hover {
+  background-color: #414141 !important;
+}
+
+/* =====================================================
+   9. CAMPOS DE BUSCA E OBSERVAÇÕES
+===================================================== */
+
+.catalogo-cliente input,
+.catalogo-cliente textarea,
+.catalogo-cliente select {
+  background-color: #303030;
+  border-color: #555555;
+  color: #ffffff;
+}
+
+.catalogo-cliente input::placeholder,
+.catalogo-cliente textarea::placeholder {
+  color: #aaaaaa;
+}
+
+.catalogo-cliente input:focus,
+.catalogo-cliente textarea:focus,
+.catalogo-cliente select:focus {
+  border-color: #ffffff !important;
+  outline-color: #ffffff;
+}
+
+/* =====================================================
+   10. BOTÕES VERDES
+===================================================== */
+
+.catalogo-cliente button[class~="bg-[#19352b]"] {
+  background-color: #090909 !important;
+  border: 1px solid #707070 !important;
+  color: #ffffff !important;
+}
+
+.catalogo-cliente button[class~="bg-[#19352b]"]:hover {
+  background-color: #303030 !important;
+}
+
+/* =====================================================
+   11. BOTÕES ROSAS DO CARRINHO
+===================================================== */
+
+.catalogo-cliente button[class~="bg-[#ff4fa0]"] {
+  background-color: #f5f5f5 !important;
+  color: #111111 !important;
+
+  box-shadow:
+    0 4px 18px rgba(255, 255, 255, 0.12) !important;
+}
+
+.catalogo-cliente button[class~="bg-[#ff4fa0]"]:hover {
+  background-color: #dddddd !important;
+}
+
+/* =====================================================
+   12. VALORES E PREÇOS
+===================================================== */
+
+.catalogo-cliente strong[class~="text-green-900"],
+.catalogo-cliente p[class~="text-green-900"] {
+  color: #ffffff !important;
+}
+
+/* =====================================================
+   13. AVISOS INFORMATIVOS
+===================================================== */
+
+.catalogo-cliente [class~="bg-blue-50"],
+.catalogo-cliente [class~="bg-amber-50"] {
+  border-color: #555555 !important;
+}
+
+/* =====================================================
+   14. CARDS DOS RESTAURANTES
+===================================================== */
+
+.catalogo-cliente article[class~="bg-white"] {
+  background-color: #262626 !important;
+  border-color: #484848 !important;
+  color: #ffffff !important;
+}
+
+/* Mantém as fotos coloridas. */
+
+.catalogo-cliente article img {
+  filter: none;
+}
+
+/* =====================================================
+   15. MODAIS DOS RESTAURANTES E CARRINHO
+===================================================== */
+
+.catalogo-cliente [role="dialog"] {
+  background-color: #202020 !important;
+  color: #ffffff !important;
+  border: 1px solid #484848;
+}
+
+.catalogo-cliente [role="dialog"] > div,
+.catalogo-cliente [role="dialog"] > section {
+  border-color: #484848;
+}
+
+/* =====================================================
+   16. HORÁRIOS E INFORMAÇÕES DE RETIRADA
+===================================================== */
+
+.catalogo-cliente [class~="bg-[#f4e7c8]"] {
+  background-color: #303030 !important;
+  color: #ffffff !important;
+}
+
+/* =====================================================
+   17. BOTÕES DE SELEÇÃO DE PAGAMENTO
+===================================================== */
+
+.catalogo-cliente input[type="radio"],
+.catalogo-cliente input[type="checkbox"] {
+  accent-color: #ffffff;
+}
+
+/* =====================================================
+   18. LINKS
+===================================================== */
+
+.catalogo-cliente a {
+  text-underline-offset: 3px;
+}
+
+/* =====================================================
+   19. ACESSIBILIDADE
+===================================================== */
+
+.catalogo-cliente button:focus-visible,
+.catalogo-cliente a:focus-visible,
+.catalogo-cliente input:focus-visible,
+.catalogo-cliente textarea:focus-visible,
+.catalogo-cliente select:focus-visible {
+  outline: 2px solid #ffffff !important;
+  outline-offset: 3px;
+}
+
+/* =====================================================
+   20. ROLAGEM DOS MODAIS
+===================================================== */
+
+.catalogo-cliente [role="dialog"] * {
+  scrollbar-color: #666666 #242424;
+}
+
+/* =====================================================
+   21. CELULAR
+===================================================== */
+
+@media (max-width: 639px) {
+  .catalogo-cliente [role="dialog"] {
+    border-radius: 18px;
+  }
+
+  .catalogo-cliente input,
+  .catalogo-cliente textarea,
+  .catalogo-cliente select {
+    font-size: 16px;
+  }
+}
+
+/* =====================================================
+   FIM DO TEMA DO CLIENTE
+===================================================== */
