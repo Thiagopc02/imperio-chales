@@ -505,7 +505,7 @@ export function AdminRestaurantes() {
   function verificarAdministrador(): boolean {
     const usuario = auth.currentUser;
 
-    if (!usuario || !isAdmin(usuario.uid)) {
+    if (!usuario || !isAdmin(usuario.uid, usuario.email)) {
       setErro(
         "Faça login com a conta administrativa."
       );
