@@ -24,7 +24,7 @@ import {
 
 import { auth, db } from "../firebase/config";
 
-import { ADMIN_UID } from "../firebase/admin";
+import { isAdmin } from "../firebase/admin";
 
 import { uploadImagemPrato } from "../services/uploadImagemPrato";
 
@@ -276,7 +276,12 @@ export function AdminPratos() {
   // ===================================================
 
   function verificarAdministrador(): boolean {
-    if (auth.currentUser?.uid !== ADMIN_UID) {
+    const usuarioAtual = auth.currentUser;
+
+    if (
+      !usuarioAtual ||
+      !isAdmin(usuarioAtual.uid, usuarioAtual.email)
+    ) {
       setErroAcao(
         "Sua sessão administrativa não está autorizada."
       );
@@ -1049,7 +1054,7 @@ export function AdminPratos() {
             status: "aprovado",
             motivoRecusa: "",
             analisadoEm: serverTimestamp(),
-            analisadoPor: ADMIN_UID,
+            analisadoPor: auth.currentUser?.uid ?? "",
             atualizadoEm: serverTimestamp(),
           });
         }
@@ -1364,7 +1369,7 @@ export function AdminPratos() {
               status: "rejeitado",
               motivoRecusa: motivo,
               analisadoEm: serverTimestamp(),
-              analisadoPor: ADMIN_UID,
+              analisadoPor: auth.currentUser?.uid ?? "",
               atualizadoEm: serverTimestamp(),
             }
           );
