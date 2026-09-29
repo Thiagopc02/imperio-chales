@@ -13,18 +13,22 @@ export const ADMIN_EMAILS = [
 ];
 
 // ==========================================
-// UID ANTIGO
+// UID ADMINISTRATIVO ANTIGO
 // ==========================================
 //
-// Mantemos o UID antigo temporariamente para
-// compatibilidade com partes antigas do sistema.
-//
-// Caso essa conta ainda seja utilizada, ela
-// continuará sendo reconhecida como administrador.
+// Mantido para compatibilidade com arquivos antigos
+// que ainda importam ADMIN_UID diretamente.
+// ==========================================
+
+export const ADMIN_UID =
+  "YcRdKdXa3rUwGJW6DcbYsh3Bmo63";
+
+// ==========================================
+// LISTA DE UIDS ADMINISTRATIVOS
 // ==========================================
 
 export const ADMIN_UIDS = [
-  "YcRdKdXa3rUwGJW6DcbYsh3Bmo63",
+  ADMIN_UID,
 ];
 
 // ==========================================
@@ -61,13 +65,6 @@ export function isAdminUid(
 
 // ==========================================
 // VERIFICAÇÃO COMPLETA
-// ==========================================
-//
-// Podemos informar UID, e-mail ou ambos.
-//
-// Isso permite manter compatibilidade com o código
-// antigo enquanto migramos o painel para utilizar
-// a validação por e-mail.
 // ==========================================
 
 export function isAdmin(
