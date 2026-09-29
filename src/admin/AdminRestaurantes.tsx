@@ -1,3 +1,4 @@
+
 import {
   useEffect,
   useMemo,
@@ -16,6 +17,8 @@ import {
   writeBatch,
   type Timestamp,
 } from "firebase/firestore";
+
+import { onAuthStateChanged } from "firebase/auth";
 
 import { auth, db } from "../firebase/config";
 import { isAdmin } from "../firebase/admin";
@@ -259,126 +262,176 @@ export function AdminRestaurantes() {
       FORMULARIO_VAZIO
     );
 
-  // ===================================================
-  // CONSULTAR CADASTROS PRIVADOS
-  // ===================================================
+// ===================================================
+// CONSULTAR CADASTROS PRIVADOS
+// ===================================================
 
-  useEffect(() => {
-    const usuario = auth.currentUser;
+useEffect(() => {
+  let cancelarRestaurantes: (() => void) | null = null;
 
-    if (!usuario || !isAdmin(usuario.uid)) {
-      setErro(
-        "Sessão administrativa não autorizada."
-      );
+  const cancelarAutenticacao = onAuthStateChanged(
+    auth,
 
-      setCarregando(false);
-      return;
-    }
+    (usuario) => {
+      // =============================================
+      // USUÁRIO NÃO AUTENTICADO
+      // =============================================
 
-    const referencia = collection(
-      db,
-      "restaurantes"
-    );
-
-    const cancelar = onSnapshot(
-      referencia,
-
-      (resultado) => {
-        const lista: Restaurante[] =
-          resultado.docs.map((documento) => {
-            const dados = documento.data();
-
-            const status: StatusRestaurante =
-              dados.status === "aprovado" ||
-              dados.status === "rejeitado"
-                ? dados.status
-                : "pendente";
-
-            return {
-              id: documento.id,
-
-              uid:
-                typeof dados.uid === "string"
-                  ? dados.uid
-                  : documento.id,
-
-              nomeEmpresa:
-                dados.nomeEmpresa ?? "",
-
-              nomeResponsavel:
-                dados.nomeResponsavel ?? "",
-
-              email:
-                dados.email ?? "",
-
-              telefone:
-                dados.telefone ?? "",
-
-              documento:
-                dados.documento ?? "",
-
-              cep:
-                dados.cep ?? "",
-
-              endereco:
-                dados.endereco ?? "",
-
-              numero:
-                dados.numero ?? "",
-
-              bairro:
-                dados.bairro ?? "",
-
-              cidade:
-                dados.cidade ?? "",
-
-              complemento:
-                dados.complemento ?? "",
-
-              modalidadeEntrega:
-                dados.modalidadeEntrega ?? "",
-
-              descricao:
-                dados.descricao ?? "",
-
-              logoUrl:
-                dados.logoUrl ?? "",
-
-              status,
-
-              criadoEm:
-                dados.criadoEm ?? null,
-            };
-          });
-
-        lista.sort((a, b) => {
-          const dataA =
-            a.criadoEm?.toMillis() ?? 0;
-
-          const dataB =
-            b.criadoEm?.toMillis() ?? 0;
-
-          return dataB - dataA;
-        });
-
-        setRestaurantes(lista);
+      if (!usuario) {
+        setRestaurantes([]);
+        setErro("Sessão administrativa não autenticada.");
         setCarregando(false);
-        setErro("");
-      },
+        return;
+      }
 
-      (erroFirebase) => {
-        console.error(
-          "Erro ao consultar restaurantes:",
-          erroFirebase
+      // =============================================
+      // VERIFICAR ADMINISTRADOR
+      // =============================================
+
+      if (!isAdmin(usuario.uid, usuario.email)) {
+        console.warn(
+          "Usuário autenticado sem permissão administrativa:",
+          {
+            uid: usuario.uid,
+            email: usuario.email,
+          }
         );
 
-        setErro(obterErro(erroFirebase));
+        setRestaurantes([]);
+        setErro("Sessão administrativa não autorizada.");
         setCarregando(false);
+        return;
       }
-    );
 
-    return () => cancelar();
-  }, []);
+      // =============================================
+      // CONSULTAR RESTAURANTES
+      // =============================================
+
+      const referencia = collection(
+        db,
+        "restaurantes"
+      );
+
+      cancelarRestaurantes = onSnapshot(
+        referencia,
+
+        (resultado) => {
+          const lista: Restaurante[] =
+            resultado.docs.map((documento) => {
+              const dados = documento.data();
+
+              const status: StatusRestaurante =
+                dados.status === "aprovado" ||
+                dados.status === "rejeitado"
+                  ? dados.status
+                  : "pendente";
+
+              return {
+                id: documento.id,
+
+                uid:
+                  typeof dados.uid === "string"
+                    ? dados.uid
+                    : documento.id,
+
+                nomeEmpresa:
+                  dados.nomeEmpresa ?? "",
+
+                nomeResponsavel:
+                  dados.nomeResponsavel ?? "",
+
+                email:
+                  dados.email ?? "",
+
+                telefone:
+                  dados.telefone ?? "",
+
+                documento:
+                  dados.documento ?? "",
+
+                cep:
+                  dados.cep ?? "",
+
+                endereco:
+                  dados.endereco ?? "",
+
+                numero:
+                  dados.numero ?? "",
+
+                bairro:
+                  dados.bairro ?? "",
+
+                cidade:
+                  dados.cidade ?? "",
+
+                complemento:
+                  dados.complemento ?? "",
+
+                modalidadeEntrega:
+                  dados.modalidadeEntrega ?? "",
+
+                descricao:
+                  dados.descricao ?? "",
+
+                logoUrl:
+                  dados.logoUrl ?? "",
+
+                status,
+
+                criadoEm:
+                  dados.criadoEm ?? null,
+              };
+            });
+
+          lista.sort((a, b) => {
+            const dataA =
+              a.criadoEm?.toMillis() ?? 0;
+
+            const dataB =
+              b.criadoEm?.toMillis() ?? 0;
+
+            return dataB - dataA;
+          });
+
+          setRestaurantes(lista);
+          setCarregando(false);
+          setErro("");
+        },
+
+        (erroFirebase) => {
+          console.error(
+            "Erro ao consultar restaurantes:",
+            erroFirebase
+          );
+
+          setErro(obterErro(erroFirebase));
+          setCarregando(false);
+        }
+      );
+    },
+
+    (erroAutenticacao) => {
+      console.error(
+        "Erro ao verificar autenticação administrativa:",
+        erroAutenticacao
+      );
+
+      setRestaurantes([]);
+      setErro(
+        "Não foi possível verificar a sessão administrativa."
+      );
+      setCarregando(false);
+    }
+  );
+
+  return () => {
+    cancelarAutenticacao();
+
+    if (cancelarRestaurantes) {
+      cancelarRestaurantes();
+    }
+  };
+}, []);
 
   // ===================================================
   // CONSULTAR VITRINE PÚBLICA
