@@ -56,7 +56,6 @@ export function AdminRoute() {
   if (carregando) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center bg-[#081510] px-4 text-center text-white">
-
         <img
           src="/logo-imperio.png"
           alt="Império Chalés"
@@ -76,7 +75,6 @@ export function AdminRoute() {
         <p className="mt-2 text-sm text-gray-400">
           Aguarde enquanto confirmamos suas credenciais.
         </p>
-
       </main>
     );
   }
@@ -99,7 +97,7 @@ export function AdminRoute() {
   // USUÁRIO SEM PERMISSÃO ADMINISTRATIVA
   // ==========================================
 
-  if (!isAdmin(usuario.uid)) {
+  if (!isAdmin(usuario.uid, usuario.email)) {
     return (
       <Navigate
         to="/admin/login"

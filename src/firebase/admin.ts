@@ -1,17 +1,81 @@
 // ==========================================
 // IMPÉRIO CHALÉS
-// IDENTIFICAÇÃO DO ADMINISTRADOR
+// IDENTIFICAÇÃO DOS ADMINISTRADORES
 // ==========================================
 
-// UID da conta administrativa cadastrada no Firebase.
-export const ADMIN_UID = "YcRdKdXa3rUwGJW6DcbYsh3Bmo63";
+// ==========================================
+// E-MAILS ADMINISTRATIVOS AUTORIZADOS
+// ==========================================
 
-// Esta função serve apenas para verificações
-// de interface no frontend.
+export const ADMIN_EMAILS = [
+  "proprietario123@gmail.com",
+  "imperioilimitada3015@gmail.com",
+];
+
+// ==========================================
+// UID ANTIGO
+// ==========================================
 //
-// A segurança definitiva deve ser implementada
-// nas regras do Firestore e nas operações do servidor.
+// Mantemos o UID antigo temporariamente para
+// compatibilidade com partes antigas do sistema.
+//
+// Caso essa conta ainda seja utilizada, ela
+// continuará sendo reconhecida como administrador.
+// ==========================================
 
-export function isAdmin(uid: string | undefined | null): boolean {
-  return uid === ADMIN_UID;
+export const ADMIN_UIDS = [
+  "YcRdKdXa3rUwGJW6DcbYsh3Bmo63",
+];
+
+// ==========================================
+// VERIFICAÇÃO POR E-MAIL
+// ==========================================
+
+export function isAdminEmail(
+  email: string | undefined | null
+): boolean {
+  if (!email) {
+    return false;
+  }
+
+  const emailNormalizado = email
+    .trim()
+    .toLowerCase();
+
+  return ADMIN_EMAILS.includes(emailNormalizado);
+}
+
+// ==========================================
+// VERIFICAÇÃO POR UID
+// ==========================================
+
+export function isAdminUid(
+  uid: string | undefined | null
+): boolean {
+  if (!uid) {
+    return false;
+  }
+
+  return ADMIN_UIDS.includes(uid);
+}
+
+// ==========================================
+// VERIFICAÇÃO COMPLETA
+// ==========================================
+//
+// Podemos informar UID, e-mail ou ambos.
+//
+// Isso permite manter compatibilidade com o código
+// antigo enquanto migramos o painel para utilizar
+// a validação por e-mail.
+// ==========================================
+
+export function isAdmin(
+  uid?: string | null,
+  email?: string | null
+): boolean {
+  return (
+    isAdminEmail(email) ||
+    isAdminUid(uid)
+  );
 }
