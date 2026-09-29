@@ -1,4 +1,5 @@
 import { useState } from "react";
+
 import { Link, useNavigate } from "react-router-dom";
 
 import {
@@ -7,15 +8,28 @@ import {
 } from "firebase/auth";
 
 import type { FormEvent } from "react";
+
 import { auth } from "../firebase/config";
-import { isAdmin } from "../firebase/admin";
+
+// ======================================================
+// CONTAS AUTORIZADAS A ACESSAR O PAINEL ADMINISTRATIVO
+// ======================================================
+
+const ADMIN_EMAILS = [
+  "proprietario123@gmail.com",
+  "imperioilimitada3015@gmail.com",
+];
+
+// ======================================================
+// COMPONENTE
+// ======================================================
 
 export function AdminLogin() {
   const navigate = useNavigate();
 
-  // ==========================================
+  // ======================================================
   // ESTADOS
-  // ==========================================
+  // ======================================================
 
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
@@ -25,9 +39,23 @@ export function AdminLogin() {
   const [erro, setErro] = useState("");
   const [sucesso, setSucesso] = useState("");
 
-  // ==========================================
+  // ======================================================
+  // VERIFICAÇÃO DE ADMINISTRADOR
+  // ======================================================
+
+  function emailEhAdministrador(emailUsuario: string | null): boolean {
+    if (!emailUsuario) return false;
+
+    const emailNormalizado = emailUsuario
+      .trim()
+      .toLowerCase();
+
+    return ADMIN_EMAILS.includes(emailNormalizado);
+  }
+
+  // ======================================================
   // TRATAMENTO DE ERROS DO FIREBASE
-  // ==========================================
+  // ======================================================
 
   function mensagemErro(codigo: string): string {
     switch (codigo) {
@@ -56,11 +84,13 @@ export function AdminLogin() {
     }
   }
 
-  // ==========================================
+  // ======================================================
   // LOGIN ADMINISTRATIVO
-  // ==========================================
+  // ======================================================
 
-  async function entrar(event: FormEvent<HTMLFormElement>) {
+  async function entrar(
+    event: FormEvent<HTMLFormElement>
+  ) {
     event.preventDefault();
 
     if (carregando) return;
@@ -70,19 +100,28 @@ export function AdminLogin() {
     setCarregando(true);
 
     try {
-      const emailLimpo = email.trim();
+      const emailLimpo = email
+        .trim()
+        .toLowerCase();
 
-      // Autenticação real no Firebase.
-      const resultado = await signInWithEmailAndPassword(
-        auth,
-        emailLimpo,
-        senha
-      );
+      // ====================================================
+      // AUTENTICAÇÃO REAL NO FIREBASE
+      // ====================================================
+
+      const resultado =
+        await signInWithEmailAndPassword(
+          auth,
+          emailLimpo,
+          senha
+        );
 
       const usuario = resultado.user;
 
-      // Verifica se o UID pertence ao administrador.
-      if (!isAdmin(usuario.uid)) {
+      // ====================================================
+      // VERIFICA SE O E-MAIL TEM PERMISSÃO ADMINISTRATIVA
+      // ====================================================
+
+      if (!emailEhAdministrador(usuario.email)) {
         await signOut(auth);
 
         setErro(
@@ -92,19 +131,29 @@ export function AdminLogin() {
         return;
       }
 
-      // Login autorizado.
-      setSucesso("Autenticação realizada com sucesso!");
+      // ====================================================
+      // LOGIN AUTORIZADO
+      // ====================================================
+
+      setSucesso(
+        "Autenticação realizada com sucesso!"
+      );
 
       // Limpa a senha do formulário.
       setSenha("");
 
-      // Redireciona para o Dashboard.
+      // ====================================================
+      // REDIRECIONA PARA O DASHBOARD
+      // ====================================================
+
       navigate("/admin/dashboard", {
         replace: true,
       });
-
     } catch (error: unknown) {
-      console.error("Falha no login administrativo.");
+      console.error(
+        "Falha no login administrativo.",
+        error
+      );
 
       const codigo =
         typeof error === "object" &&
@@ -115,27 +164,23 @@ export function AdminLogin() {
           : "";
 
       setErro(mensagemErro(codigo));
-
     } finally {
       setCarregando(false);
     }
   }
 
-  // ==========================================
+  // ======================================================
   // INTERFACE
-  // ==========================================
+  // ======================================================
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#081510] px-4 py-12">
-
       <div className="w-full max-w-md">
-
-        {/* ================================= */}
-        {/* LOGO                              */}
-        {/* ================================= */}
+        {/* ================================================= */}
+        {/* LOGO                                              */}
+        {/* ================================================= */}
 
         <div className="mb-8 text-center">
-
           <img
             src="/logo-imperio.png"
             alt="Império Chalés"
@@ -149,30 +194,29 @@ export function AdminLogin() {
           <p className="mt-2 text-sm text-amber-300">
             IMPÉRIO CHALÉS — VILA DO SOSSEGO
           </p>
-
         </div>
 
-        {/* ================================= */}
-        {/* FORMULÁRIO                        */}
-        {/* ================================= */}
+        {/* ================================================= */}
+        {/* FORMULÁRIO                                        */}
+        {/* ================================================= */}
 
         <form
           onSubmit={entrar}
           className="rounded-3xl border border-white/10 bg-white p-6 shadow-2xl sm:p-8"
         >
-
           <h2 className="text-2xl font-bold text-[#19352b]">
             Acesso administrativo
           </h2>
 
           <p className="mt-2 text-sm text-gray-500">
-            Entre com suas credenciais para gerenciar
-            os serviços do Império Chalés.
+            Entre com suas credenciais para
+            gerenciar os serviços do Império
+            Chalés.
           </p>
 
-          {/* ================================= */}
-          {/* MENSAGEM DE ERRO                  */}
-          {/* ================================= */}
+          {/* ================================================= */}
+          {/* MENSAGEM DE ERRO                                  */}
+          {/* ================================================= */}
 
           {erro && (
             <div
@@ -185,9 +229,9 @@ export function AdminLogin() {
             </div>
           )}
 
-          {/* ================================= */}
-          {/* MENSAGEM DE SUCESSO               */}
-          {/* ================================= */}
+          {/* ================================================= */}
+          {/* MENSAGEM DE SUCESSO                               */}
+          {/* ================================================= */}
 
           {sucesso && (
             <div
@@ -200,12 +244,11 @@ export function AdminLogin() {
             </div>
           )}
 
-          {/* ================================= */}
-          {/* EMAIL                             */}
-          {/* ================================= */}
+          {/* ================================================= */}
+          {/* EMAIL                                             */}
+          {/* ================================================= */}
 
           <div className="mt-8">
-
             <label
               htmlFor="email"
               className="text-sm font-semibold text-[#19352b]"
@@ -221,21 +264,20 @@ export function AdminLogin() {
               onChange={(event) => {
                 setEmail(event.target.value);
                 setErro("");
+                setSucesso("");
               }}
               placeholder="Digite seu e-mail"
               autoComplete="username"
               disabled={carregando}
               className="mt-2 w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-100 disabled:opacity-60"
             />
-
           </div>
 
-          {/* ================================= */}
-          {/* SENHA                             */}
-          {/* ================================= */}
+          {/* ================================================= */}
+          {/* SENHA                                             */}
+          {/* ================================================= */}
 
           <div className="mt-5">
-
             <label
               htmlFor="senha"
               className="text-sm font-semibold text-[#19352b]"
@@ -244,15 +286,19 @@ export function AdminLogin() {
             </label>
 
             <div className="relative mt-2">
-
               <input
                 id="senha"
-                type={mostrarSenha ? "text" : "password"}
+                type={
+                  mostrarSenha
+                    ? "text"
+                    : "password"
+                }
                 required
                 value={senha}
                 onChange={(event) => {
                   setSenha(event.target.value);
                   setErro("");
+                  setSucesso("");
                 }}
                 placeholder="Digite sua senha"
                 autoComplete="current-password"
@@ -262,7 +308,12 @@ export function AdminLogin() {
 
               <button
                 type="button"
-                onClick={() => setMostrarSenha(!mostrarSenha)}
+                onClick={() =>
+                  setMostrarSenha(
+                    (estadoAtual) =>
+                      !estadoAtual
+                  )
+                }
                 disabled={carregando}
                 aria-label={
                   mostrarSenha
@@ -271,23 +322,22 @@ export function AdminLogin() {
                 }
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-gray-500 transition hover:text-[#19352b]"
               >
-                {mostrarSenha ? "Ocultar" : "Mostrar"}
+                {mostrarSenha
+                  ? "Ocultar"
+                  : "Mostrar"}
               </button>
-
             </div>
-
           </div>
 
-          {/* ================================= */}
-          {/* BOTÃO ENTRAR                      */}
-          {/* ================================= */}
+          {/* ================================================= */}
+          {/* BOTÃO ENTRAR                                      */}
+          {/* ================================================= */}
 
           <button
             type="submit"
             disabled={carregando}
             className="mt-8 flex w-full items-center justify-center gap-3 rounded-xl bg-[#19352b] px-5 py-4 font-bold text-white transition hover:bg-[#28533e] disabled:cursor-not-allowed disabled:opacity-70"
           >
-
             {carregando ? (
               <>
                 <span
@@ -300,50 +350,46 @@ export function AdminLogin() {
             ) : (
               "Entrar no painel"
             )}
-
           </button>
 
-          {/* ================================= */}
-          {/* AVISO DE SEGURANÇA                */}
-          {/* ================================= */}
+          {/* ================================================= */}
+          {/* AVISO DE SEGURANÇA                                */}
+          {/* ================================================= */}
 
           <div className="mt-6 flex items-center justify-center gap-2">
-
-            <span aria-hidden="true">🔒</span>
+            <span aria-hidden="true">
+              🔒
+            </span>
 
             <p className="text-center text-xs text-gray-500">
-              Acesso restrito ao administrador.
+              Acesso restrito ao
+              administrador.
             </p>
-
           </div>
-
         </form>
 
-        {/* ================================= */}
-        {/* VOLTAR AO SITE                     */}
-        {/* ================================= */}
+        {/* ================================================= */}
+        {/* VOLTAR AO SITE                                    */}
+        {/* ================================================= */}
 
         <div className="mt-7 text-center">
-
           <Link
             to="/"
             className="text-sm text-gray-300 transition hover:text-amber-300"
           >
             ← Voltar ao site dos chalés
           </Link>
-
         </div>
 
-        {/* ================================= */}
-        {/* RODAPÉ                             */}
-        {/* ================================= */}
+        {/* ================================================= */}
+        {/* RODAPÉ                                            */}
+        {/* ================================================= */}
 
         <p className="mt-8 text-center text-xs text-gray-500">
-          © Império Chalés — Vila do Sossego
+          © Império Chalés — Vila do
+          Sossego
         </p>
-
       </div>
-
     </main>
   );
 }
