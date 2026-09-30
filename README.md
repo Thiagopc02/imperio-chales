@@ -1,75 +1,74 @@
-# React + TypeScript + Vite
+# 🏡 Império Chalés
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern and responsive hospitality website developed for **Império Chalés**, a chalet accommodation business located in Alto Paraíso de Goiás, Brazil.
 
-Currently, two official plugins are available:
+The project was designed to showcase the property, accommodations and guest experience while providing visitors with an intuitive way to explore the chalets and access booking options.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+🌐 **Live Website:** https://imperio-chales.vercel.app
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## ✨ Project Overview
 
-## Expanding the ESLint configuration
+Império Chalés is a complete hospitality website focused on presenting the accommodation experience through a modern, responsive and visually engaging interface.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+The website was built to work smoothly across desktop, tablet and mobile devices.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+---
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## 🚀 Key Features
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- 🏡 Chalet and accommodation showcase
+- 📱 Fully responsive interface
+- 🖼️ Property and accommodation presentation
+- 📅 Easy access to booking options
+- 🧭 Guest-focused navigation
+- ⚡ Fast and modern user experience
+- 🔐 Administrative authentication
+- 🖥️ Restaurant management interface
+- 🌐 Production deployment with Vercel
 
-```
+---
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🛠️ Technologies
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- React
+- TypeScript
+- Vite
+- CSS
+- Firebase
+- Vercel
+- Git & GitHub
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+---
 
-```
+## 🎯 Project Goal
+
+The goal of this project was to create a professional digital presence for Império Chalés and provide potential guests with a simple and attractive way to discover the property before making a reservation.
+
+The interface combines hospitality-focused design with responsive web development and practical business functionality.
+
+---
+
+## 💻 Development
+
+This project includes both the public-facing hospitality experience and management functionality developed specifically for the business.
+
+The application is continuously improved as new features and business requirements are introduced.
+
+---
+
+## 🔗 Live Project
+
+👉 **https://imperio-chales.vercel.app**
+
+---
+
+## 👨‍💻 Developer
+
+Developed by **Thiago Torres de Oliveira**
+
+Full-Stack Web Developer  
+React • Next.js • TypeScript • Firebase
+
+💼 Portfolio: https://contra.com/thiago_torres_de_olivei_xlmcwrug
