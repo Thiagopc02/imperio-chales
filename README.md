@@ -69,6 +69,6 @@ The application is continuously improved as new features and business requiremen
 Developed by **Thiago Torres de Oliveira**
 
 Full-Stack Web Developer  
-React • Next.js • TypeScript • Firebase
+React • TypeScript • Vite • Firebase
 
 💼 Portfolio: https://contra.com/thiago_torres_de_olivei_xlmcwrug
