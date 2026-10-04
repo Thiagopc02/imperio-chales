@@ -1,458 +1,575 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+/* =========================================================
+   CARREGA AUTOMATICAMENTE TODAS AS FOTOS DOS CHALÉS
+
+   Aceita nomes como:
+   Chale01.png
+   Chale02.png
+   Chale26(1).png
+   Chale29.png
+   Chales30.png
+   Chales31.png
+
+   Assim NÃO precisamos importar foto por foto.
+========================================================= */
+
+const modulosFotos = import.meta.glob("./atrativos/Chale*.png", {
+  eager: true,
+  import: "default",
+}) as Record<string, string>;
+
+/* =========================================================
+   PEGA O NÚMERO DA FOTO PARA ORGANIZAR
+========================================================= */
+
+function pegarNumeroFoto(caminho: string) {
+  const nomeArquivo = caminho.split("/").pop() ?? "";
+
+  const resultado = nomeArquivo.match(/Chales?(\d+)/i);
+
+  if (!resultado) {
+    return 9999;
+  }
+
+  return Number(resultado[1]);
+}
+
+/* =========================================================
+   CRIA A LISTA DE FOTOS AUTOMATICAMENTE
+========================================================= */
+
+const fotos = Object.entries(modulosFotos)
+  .sort(([caminhoA], [caminhoB]) => {
+    const numeroA = pegarNumeroFoto(caminhoA);
+    const numeroB = pegarNumeroFoto(caminhoB);
+
+    if (numeroA !== numeroB) {
+      return numeroA - numeroB;
+    }
+
+    return caminhoA.localeCompare(caminhoB);
+  })
+  .map(([, imagem]) => imagem);
+
+/* =========================================================
+   COMPONENTE
+========================================================= */
 
 export function HeroGallery() {
-  /* =========================================================
-      FOTOS DO CARROSSEL
-      public/01.png até public/10.png
-  ========================================================= */
-
-  const fotos = [
-    "/01.png",
-    "/02.png",
-    "/03.png",
-    "/04.png",
-    "/05.png",
-    "/06.png",
-    "/07.png",
-    "/08.png",
-    "/09.png",
-    "/10.png",
-  ];
-
   const [fotoAtual, setFotoAtual] = useState(0);
 
   /* =========================================================
-      TROCA AUTOMÁTICA DAS FOTOS
+     QUANTIDADE TOTAL
+  ========================================================= */
+
+  const totalFotos = fotos.length;
+
+  /* =========================================================
+     CARROSSEL AUTOMÁTICO
   ========================================================= */
 
   useEffect(() => {
-    const intervalo = window.setInterval(() => {
-      setFotoAtual((atual) => (atual + 1) % fotos.length);
-    }, 4500);
+    if (totalFotos <= 1) {
+      return;
+    }
 
-    return () => window.clearInterval(intervalo);
-  }, [fotos.length]);
+    const intervalo = window.setInterval(() => {
+      setFotoAtual((atual) =>
+        atual === totalFotos - 1 ? 0 : atual + 1
+      );
+    }, 5000);
+
+    return () => {
+      window.clearInterval(intervalo);
+    };
+  }, [totalFotos]);
 
   /* =========================================================
-      CONTROLES DO CARROSSEL
+     GARANTE ÍNDICE VÁLIDO
   ========================================================= */
 
-  const anterior = () => {
+  useEffect(() => {
+    if (fotoAtual >= totalFotos && totalFotos > 0) {
+      setFotoAtual(0);
+    }
+  }, [fotoAtual, totalFotos]);
+
+  /* =========================================================
+     FOTO ANTERIOR
+  ========================================================= */
+
+  const fotoAnterior = () => {
+    if (totalFotos === 0) {
+      return;
+    }
+
     setFotoAtual((atual) =>
-      atual === 0 ? fotos.length - 1 : atual - 1
+      atual === 0 ? totalFotos - 1 : atual - 1
     );
   };
 
-  const proxima = () => {
+  /* =========================================================
+     PRÓXIMA FOTO
+  ========================================================= */
+
+  const proximaFoto = () => {
+    if (totalFotos === 0) {
+      return;
+    }
+
     setFotoAtual((atual) =>
-      atual === fotos.length - 1 ? 0 : atual + 1
+      atual === totalFotos - 1 ? 0 : atual + 1
     );
   };
+
+  /* =========================================================
+     INDICADORES DINÂMICOS
+
+     Em vez de colocar 31 bolinhas na tela,
+     mostramos apenas 7 próximas da foto atual.
+  ========================================================= */
+
+  const indicadoresVisiveis = useMemo(() => {
+    if (totalFotos <= 7) {
+      return Array.from(
+        { length: totalFotos },
+        (_, index) => index
+      );
+    }
+
+    const quantidade = 7;
+    const metade = Math.floor(quantidade / 2);
+
+    let inicio = fotoAtual - metade;
+
+    if (inicio < 0) {
+      inicio = 0;
+    }
+
+    if (inicio + quantidade > totalFotos) {
+      inicio = totalFotos - quantidade;
+    }
+
+    return Array.from(
+      { length: quantidade },
+      (_, index) => inicio + index
+    );
+  }, [fotoAtual, totalFotos]);
+
+  /* =========================================================
+     RENDER
+  ========================================================= */
 
   return (
-    <>
+    <div
+      className="
+        relative
+        z-20
+
+        mx-auto
+        w-full
+        max-w-[1500px]
+
+        px-4
+
+        sm:px-5
+        md:px-6
+      "
+    >
       {/* =====================================================
-          SEPARADOR
+          LOGO IMPÉRIO CHALÉS
       ====================================================== */}
 
       <div
-        aria-hidden="true"
         className="
-          relative
-          z-30
+          flex
+          flex-col
 
-          mx-auto
-          mt-2
+          items-center
+          justify-center
 
-          h-px
-          w-[94%]
-          max-w-[1500px]
+          pb-8
+          pt-10
 
-          bg-gradient-to-r
-          from-transparent
-          via-[#d4af37]/10
-          to-transparent
+          text-center
+
+          sm:pb-10
+          sm:pt-12
         "
-      />
+      >
+        <img
+          src="/centro.png"
+          alt="Império Chalés - Vila do Sossego"
+          draggable={false}
+          className="
+            w-[300px]
+            max-w-[85vw]
+
+            object-contain
+
+            select-none
+
+            sm:w-[360px]
+            md:w-[420px]
+          "
+        />
+
+        <p
+          className="
+            mt-5
+
+            text-xs
+            font-medium
+            tracking-[0.01em]
+
+            text-white/55
+
+            sm:text-sm
+          "
+        >
+          Conforto, natureza e momentos inesquecíveis em Alto Paraíso.
+        </p>
+      </div>
 
       {/* =====================================================
-          GALERIA
+          GALERIA PRINCIPAL
       ====================================================== */}
 
       <div
-        id="galeria"
         className="
+          group
           relative
-          z-30
 
           mx-auto
-          mt-8
 
+          h-[330px]
           w-full
-          max-w-7xl
 
-          px-3
+          overflow-hidden
 
-          sm:mt-10
-          sm:px-6
+          rounded-[26px]
 
-          lg:mt-12
+          border
+          border-[#d4af37]/30
+
+          bg-black
+
+          shadow-[0_24px_80px_rgba(0,0,0,0.48)]
+
+          sm:h-[430px]
+          md:h-[520px]
+          lg:h-[620px]
         "
       >
         {/* =================================================
-            LOGO CENTRAL
+            CASO NENHUMA FOTO SEJA ENCONTRADA
         ================================================== */}
 
-        <div
-          className="
-            mb-7
-            text-center
-
-            sm:mb-8
-          "
-        >
-          <img
-            src="/centro.png"
-            alt="Império Chalés - Vila do Sossego"
-            draggable={false}
+        {totalFotos === 0 && (
+          <div
             className="
-              mx-auto
+              absolute
+              inset-0
 
-              w-[78%]
-              max-w-[330px]
+              flex
+              items-center
+              justify-center
 
-              object-contain
+              text-center
+            "
+          >
+            <div>
+              <div className="text-4xl">📸</div>
 
-              drop-shadow-[0_8px_22px_rgba(255,255,255,0.07)]
+              <p
+                className="
+                  mt-4
+                  text-sm
+                  text-white/50
+                "
+              >
+                Nenhuma foto dos chalés foi encontrada.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* =================================================
+            FOTOS
+        ================================================== */}
+
+        {fotos.map((foto, index) => (
+          <img
+            key={`${foto}-${index}`}
+            src={foto}
+            alt={`Império Chalés - foto ${index + 1}`}
+            draggable={false}
+            loading={index === 0 ? "eager" : "lazy"}
+            className={`
+              absolute
+              inset-0
+
+              h-full
+              w-full
+
+              object-cover
+              object-center
 
               select-none
 
-              sm:w-[52%]
-              sm:max-w-[460px]
+              transition-all
+              duration-1000
+              ease-in-out
 
-              md:w-[48%]
-              md:max-w-[520px]
-
-              lg:w-[44%]
-              lg:max-w-[560px]
-
-              xl:w-[42%]
-            "
+              ${
+                fotoAtual === index
+                  ? "scale-100 opacity-100"
+                  : "pointer-events-none scale-[1.025] opacity-0"
+              }
+            `}
           />
-
-          <p
-            className="
-              mx-auto
-              mt-3
-
-              max-w-[310px]
-
-              px-2
-
-              text-center
-              text-[12px]
-              font-medium
-              leading-[1.5]
-
-              text-white/55
-
-              sm:max-w-xl
-              sm:text-sm
-
-              md:max-w-2xl
-              md:text-[15px]
-            "
-          >
-            Conforto, natureza e momentos inesquecíveis em Alto Paraíso.
-          </p>
-        </div>
+        ))}
 
         {/* =================================================
-            CARROSSEL DAS 10 FOTOS
+            SOMBRA SUAVE
         ================================================== */}
 
         <div
+          aria-hidden="true"
           className="
-            relative
+            pointer-events-none
 
-            overflow-hidden
+            absolute
+            inset-0
 
-            rounded-[20px]
+            bg-gradient-to-t
 
-            border
-            border-[#d4af37]/20
-
-            bg-[#050505]
-
-            shadow-[0_30px_80px_rgba(0,0,0,0.65)]
-
-            sm:rounded-[28px]
-            lg:rounded-[34px]
+            from-black/25
+            via-transparent
+            to-black/10
           "
-        >
+        />
+
+        {/* =================================================
+            CONTADOR
+        ================================================== */}
+
+        {totalFotos > 0 && (
           <div
             className="
-              relative
+              absolute
 
-              h-[280px]
-              w-full
+              right-4
+              top-4
 
-              sm:h-[420px]
-              md:h-[500px]
-              lg:h-[600px]
-              xl:h-[650px]
+              z-30
+
+              rounded-full
+
+              border
+              border-white/15
+
+              bg-black/65
+
+              px-4
+              py-2
+
+              text-[9px]
+              font-black
+              tracking-[0.14em]
+              text-white
+
+              backdrop-blur-md
+
+              sm:right-5
+              sm:top-5
+              sm:text-[10px]
             "
           >
-            {/* =================================================
-                AS 10 IMAGENS
-            ================================================== */}
+            {String(fotoAtual + 1).padStart(2, "0")}
+            {" / "}
+            {String(totalFotos).padStart(2, "0")}
+          </div>
+        )}
 
-            {fotos.map((foto, index) => (
-              <img
-                key={foto}
-                src={foto}
-                alt={`Império Chalés - foto ${index + 1}`}
-                draggable={false}
+        {/* =================================================
+            SETA ESQUERDA
+        ================================================== */}
+
+        {totalFotos > 1 && (
+          <button
+            type="button"
+            onClick={fotoAnterior}
+            aria-label="Foto anterior"
+            className="
+              absolute
+
+              left-4
+              top-1/2
+
+              z-40
+
+              flex
+              h-11
+              w-11
+
+              -translate-y-1/2
+
+              items-center
+              justify-center
+
+              rounded-full
+
+              border
+              border-white/20
+
+              bg-black/50
+
+              text-xl
+              font-light
+              text-white
+
+              backdrop-blur-md
+
+              transition-all
+              duration-300
+
+              hover:scale-110
+              hover:border-[#d4af37]
+              hover:bg-[#d4af37]
+              hover:text-black
+
+              sm:h-12
+              sm:w-12
+            "
+          >
+            ‹
+          </button>
+        )}
+
+        {/* =================================================
+            SETA DIREITA
+        ================================================== */}
+
+        {totalFotos > 1 && (
+          <button
+            type="button"
+            onClick={proximaFoto}
+            aria-label="Próxima foto"
+            className="
+              absolute
+
+              right-4
+              top-1/2
+
+              z-40
+
+              flex
+              h-11
+              w-11
+
+              -translate-y-1/2
+
+              items-center
+              justify-center
+
+              rounded-full
+
+              border
+              border-white/20
+
+              bg-black/50
+
+              text-xl
+              font-light
+              text-white
+
+              backdrop-blur-md
+
+              transition-all
+              duration-300
+
+              hover:scale-110
+              hover:border-[#d4af37]
+              hover:bg-[#d4af37]
+              hover:text-black
+
+              sm:h-12
+              sm:w-12
+            "
+          >
+            ›
+          </button>
+        )}
+
+        {/* =================================================
+            INDICADORES
+
+            MOSTRA SOMENTE 7 POR VEZ PARA NÃO POLUIR A TELA
+        ================================================== */}
+
+        {totalFotos > 1 && (
+          <div
+            className="
+              absolute
+
+              bottom-4
+              left-1/2
+
+              z-40
+
+              flex
+
+              -translate-x-1/2
+
+              items-center
+              justify-center
+
+              gap-1.5
+
+              rounded-full
+
+              border
+              border-white/10
+
+              bg-black/40
+
+              px-3
+              py-2
+
+              backdrop-blur-md
+
+              sm:bottom-5
+            "
+          >
+            {indicadoresVisiveis.map((index) => (
+              <button
+                key={index}
+                type="button"
+                onClick={() => setFotoAtual(index)}
+                aria-label={`Ir para foto ${index + 1}`}
                 className={`
-                  absolute
-                  inset-0
+                  h-[6px]
 
-                  h-full
-                  w-full
+                  shrink-0
 
-                  object-cover
-                  object-center
-
-                  select-none
+                  rounded-full
 
                   transition-all
-                  duration-1000
-                  ease-out
+                  duration-300
 
                   ${
                     index === fotoAtual
-                      ? "scale-100 opacity-100"
-                      : "pointer-events-none scale-[1.035] opacity-0"
+                      ? "w-7 bg-[#d4af37]"
+                      : "w-[6px] bg-white/45 hover:bg-white/80"
                   }
                 `}
               />
             ))}
-
-            {/* =================================================
-                SOMBREAMENTO
-            ================================================== */}
-
-            <div
-              aria-hidden="true"
-              className="
-                pointer-events-none
-                absolute
-                inset-0
-                z-10
-
-                bg-gradient-to-t
-                from-black/30
-                via-transparent
-                to-black/10
-              "
-            />
-
-            {/* =================================================
-                CONTADOR
-            ================================================== */}
-
-            <div
-              className="
-                absolute
-
-                right-3
-                top-3
-
-                z-20
-
-                rounded-full
-
-                border
-                border-white/15
-
-                bg-black/65
-
-                px-3
-                py-1.5
-
-                text-[9px]
-                font-bold
-                tracking-[0.15em]
-                text-white
-
-                backdrop-blur-md
-
-                sm:right-6
-                sm:top-6
-                sm:text-[10px]
-              "
-            >
-              {String(fotoAtual + 1).padStart(2, "0")} /{" "}
-              {String(fotos.length).padStart(2, "0")}
-            </div>
-
-            {/* =================================================
-                SETA ESQUERDA
-            ================================================== */}
-
-            <button
-              type="button"
-              onClick={anterior}
-              aria-label="Foto anterior"
-              className="
-                absolute
-
-                left-3
-                top-1/2
-
-                z-20
-
-                flex
-
-                h-10
-                w-10
-
-                -translate-y-1/2
-
-                items-center
-                justify-center
-
-                rounded-full
-
-                border
-                border-white/20
-
-                bg-black/60
-
-                text-xl
-                text-white
-
-                backdrop-blur-md
-
-                transition-all
-                duration-300
-
-                hover:border-[#d4af37]
-                hover:bg-black/80
-                hover:text-[#d4af37]
-
-                sm:left-6
-                sm:h-12
-                sm:w-12
-              "
-            >
-              ‹
-            </button>
-
-            {/* =================================================
-                SETA DIREITA
-            ================================================== */}
-
-            <button
-              type="button"
-              onClick={proxima}
-              aria-label="Próxima foto"
-              className="
-                absolute
-
-                right-3
-                top-1/2
-
-                z-20
-
-                flex
-
-                h-10
-                w-10
-
-                -translate-y-1/2
-
-                items-center
-                justify-center
-
-                rounded-full
-
-                border
-                border-white/20
-
-                bg-black/60
-
-                text-xl
-                text-white
-
-                backdrop-blur-md
-
-                transition-all
-                duration-300
-
-                hover:border-[#d4af37]
-                hover:bg-black/80
-                hover:text-[#d4af37]
-
-                sm:right-6
-                sm:h-12
-                sm:w-12
-              "
-            >
-              ›
-            </button>
-
-            {/* =================================================
-                INDICADORES
-            ================================================== */}
-
-            <div
-              className="
-                absolute
-
-                bottom-4
-                left-1/2
-
-                z-20
-
-                flex
-
-                -translate-x-1/2
-
-                items-center
-
-                gap-1.5
-
-                sm:bottom-6
-                sm:gap-2
-              "
-            >
-              {fotos.map((_, index) => (
-                <button
-                  key={index}
-                  type="button"
-                  aria-label={`Ver foto ${index + 1}`}
-                  onClick={() => setFotoAtual(index)}
-                  className={`
-                    h-1.5
-
-                    rounded-full
-
-                    transition-all
-                    duration-300
-
-                    ${
-                      fotoAtual === index
-                        ? "w-7 bg-[#d4af37]"
-                        : "w-1.5 bg-white/45 hover:bg-white"
-                    }
-                  `}
-                />
-              ))}
-            </div>
           </div>
-        </div>
+        )}
       </div>
-    </>
+    </div>
   );
 }
