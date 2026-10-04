@@ -1,6 +1,7 @@
 import Header from "../layout/Header";
 import { Hero } from "../components/hero/Hero";
 import { AtrativosChapada } from "../components/AtrativosChapada";
+import { Footer } from "../components/Footer";
 
 export function Home() {
   return (
@@ -10,6 +11,8 @@ export function Home() {
       <Hero />
 
       <AtrativosChapada />
+
+      <Footer />
     </main>
   );
 }
