@@ -1,4 +1,3 @@
-
 import {
   useEffect,
   useRef,
@@ -21,15 +20,36 @@ import {
   getDoc,
 } from "firebase/firestore";
 
-import { auth, db } from "./firebase/config";
+import {
+  auth,
+  db,
+} from "./firebase/config";
 
-import { CatalogoConteudo } from "./components/CatalogoConteudo";
+import {
+  CatalogoHeader,
+} from "./components/catalogo/CatalogoHeader";
 
-import { ExperienciasEscolhidas } from "./components/ExperienciasEscolhidas";
+import {
+  CatalogoConteudo,
+} from "./components/catalogo/CatalogoConteudo";
 
-// =====================================================
-// TIPOS
-// =====================================================
+import {
+  CatalogoApresentacao,
+} from "./components/catalogo/CatalogoApresentacao";
+
+import {
+  EspacoParceiro,
+} from "./components/catalogo/EspacoParceiro";
+
+import {
+  ExperienciasEscolhidas,
+} from "./components/ExperienciasEscolhidas";
+
+import restauranteEmoji from "./components/catalogo/restaurante-emoji.png";
+
+/* =========================================================
+   TIPOS
+========================================================= */
 
 interface ClienteAutenticado {
   uid: string;
@@ -37,260 +57,306 @@ interface ClienteAutenticado {
   email: string;
 }
 
-// =====================================================
-// IMAGENS DO CARROSSEL
-// =====================================================
+/* =========================================================
+   IMAGENS DO CARROSSEL
+========================================================= */
 
 const slides = [
   {
     id: 1,
+
     desktop: "/Carrossel-01.png",
+
     mobile: "/Carrossel-cll-01.png",
-    titulo: "Código de indicação IMPERIO",
+
+    titulo:
+      "Código de indicação IMPERIO",
+
     destino: "codigo",
-    botao: "Ver código IMPERIO",
   },
+
   {
     id: 2,
+
     desktop: "/Carrossel-02.png",
+
     mobile: "/Carrossel-cll-02.png",
-    titulo: "Restaurantes com entrega própria",
+
+    titulo:
+      "Restaurantes com entrega própria",
+
     destino: "categorias",
-    botao: "Ver restaurantes",
   },
+
   {
     id: 3,
+
     desktop: "/Carrossel-03.png",
+
     mobile: "/Carrossel-cll-03.png",
-    titulo: "Restaurantes com retirada sob consulta",
+
+    titulo:
+      "Restaurantes com retirada sob consulta",
+
     destino: "retirada",
-    botao: "Como funciona a retirada",
   },
 ];
 
-// =====================================================
-// COMPONENTE PRINCIPAL
-// =====================================================
+/* =========================================================
+   COMPONENTE PRINCIPAL
+========================================================= */
 
 export function Cardapio() {
   const navigate = useNavigate();
 
-  // ===================================================
-  // CARROSSEL
-  // ===================================================
+  /* =======================================================
+     CARROSSEL
+  ======================================================= */
 
-  const [slideAtual, setSlideAtual] = useState(0);
+  const [
+    slideAtual,
+    setSlideAtual,
+  ] = useState(0);
 
-  const [copiado, setCopiado] = useState(false);
+  const [
+    pausado,
+    setPausado,
+  ] = useState(false);
 
-  const [pausado, setPausado] = useState(false);
+  const toqueInicial =
+    useRef<number | null>(null);
 
-  const toqueInicial = useRef<number | null>(null);
+  /* =======================================================
+     AUTENTICAÇÃO
+  ======================================================= */
 
-  // ===================================================
-  // AUTENTICAÇÃO DO CLIENTE
-  // ===================================================
+  const [
+    cliente,
+    setCliente,
+  ] =
+    useState<ClienteAutenticado | null>(
+      null
+    );
 
-  const [cliente, setCliente] =
-    useState<ClienteAutenticado | null>(null);
+  const [
+    verificandoCliente,
+    setVerificandoCliente,
+  ] = useState(true);
 
-  const [verificandoCliente, setVerificandoCliente] =
-    useState(true);
+  const [
+    menuAberto,
+    setMenuAberto,
+  ] = useState(false);
 
-  const [menuAberto, setMenuAberto] =
-    useState(false);
+  const [
+    saindo,
+    setSaindo,
+  ] = useState(false);
 
-  const [saindo, setSaindo] =
-    useState(false);
+  const [
+    erroConta,
+    setErroConta,
+  ] = useState("");
 
-  const [erroConta, setErroConta] =
-    useState("");
-
-  // ===================================================
-  // VERIFICAR SESSÃO E PERFIL DO HÓSPEDE
-  // ===================================================
+  /* =======================================================
+     VERIFICAR SESSÃO DO CLIENTE
+  ======================================================= */
 
   useEffect(() => {
     let ativo = true;
-
     let versao = 0;
 
-    const cancelar = onAuthStateChanged(
-      auth,
+    const cancelar =
+      onAuthStateChanged(
+        auth,
 
-      async (usuario) => {
-        const minhaVersao = ++versao;
+        async (usuario) => {
+          const minhaVersao =
+            ++versao;
 
-        if (!ativo) {
-          return;
-        }
+          if (!ativo) {
+            return;
+          }
 
-        setVerificandoCliente(true);
-        setCliente(null);
-        setMenuAberto(false);
-        setErroConta("");
-
-        // Sem sessão: visitante comum.
-
-        if (!usuario) {
-          setVerificandoCliente(false);
-          return;
-        }
-
-        try {
-          // Uma conta do Authentication não é,
-          // necessariamente, uma conta de cliente.
-          //
-          // Precisamos verificar o documento privado.
-
-          const referencia = doc(
-            db,
-            "clientes",
-            usuario.uid
+          setVerificandoCliente(
+            true
           );
 
-          const resultado = await getDoc(referencia);
+          setCliente(null);
 
-          if (
-            !ativo ||
-            minhaVersao !== versao ||
-            auth.currentUser?.uid !== usuario.uid
-          ) {
-            return;
-          }
+          setMenuAberto(false);
 
-          if (!resultado.exists()) {
-            setCliente(null);
-            return;
-          }
+          setErroConta("");
 
-          const dados = resultado.data();
+          /* ===============================================
+             VISITANTE SEM LOGIN
+          =============================================== */
 
-          const perfilValido =
-            dados.uid === usuario.uid &&
-            dados.tipo === "cliente" &&
-            typeof dados.nomeCompleto === "string" &&
-            dados.nomeCompleto.trim().length >= 3 &&
-            typeof dados.email === "string" &&
-            dados.email === usuario.email;
-
-          if (!perfilValido) {
-            setCliente(null);
-            return;
-          }
-
-          setCliente({
-            uid: usuario.uid,
-            nomeCompleto: dados.nomeCompleto.trim(),
-            email: dados.email,
-          });
-
-        } catch (erro) {
-          console.error(
-            "Erro ao verificar perfil do cliente:",
-            erro
-          );
-
-          if (
-            ativo &&
-            minhaVersao === versao
-          ) {
-            setCliente(null);
-
-            setErroConta(
-              "Não foi possível verificar sua conta. O cardápio continua disponível."
+          if (!usuario) {
+            setVerificandoCliente(
+              false
             );
+
+            return;
           }
 
-        } finally {
-          if (
-            ativo &&
-            minhaVersao === versao
-          ) {
-            setVerificandoCliente(false);
+          try {
+            /* =============================================
+               VALIDAR PERFIL PRIVADO DO CLIENTE
+            ============================================== */
+
+            const referencia = doc(
+              db,
+              "clientes",
+              usuario.uid
+            );
+
+            const resultado =
+              await getDoc(
+                referencia
+              );
+
+            if (
+              !ativo ||
+              minhaVersao !==
+                versao ||
+              auth.currentUser?.uid !==
+                usuario.uid
+            ) {
+              return;
+            }
+
+            if (
+              !resultado.exists()
+            ) {
+              setCliente(null);
+
+              return;
+            }
+
+            const dados =
+              resultado.data();
+
+            const perfilValido =
+              dados.uid ===
+                usuario.uid &&
+              dados.tipo ===
+                "cliente" &&
+              typeof dados.nomeCompleto ===
+                "string" &&
+              dados.nomeCompleto
+                .trim()
+                .length >= 3 &&
+              typeof dados.email ===
+                "string" &&
+              dados.email ===
+                usuario.email;
+
+            if (!perfilValido) {
+              setCliente(null);
+
+              return;
+            }
+
+            setCliente({
+              uid: usuario.uid,
+
+              nomeCompleto:
+                dados.nomeCompleto.trim(),
+
+              email:
+                dados.email,
+            });
+          } catch (erro) {
+            console.error(
+              "Erro ao verificar perfil do cliente:",
+              erro
+            );
+
+            if (
+              ativo &&
+              minhaVersao === versao
+            ) {
+              setCliente(null);
+
+              setErroConta(
+                "Não foi possível verificar sua conta. O cardápio continua disponível."
+              );
+            }
+          } finally {
+            if (
+              ativo &&
+              minhaVersao === versao
+            ) {
+              setVerificandoCliente(
+                false
+              );
+            }
           }
         }
-      }
-    );
+      );
 
     return () => {
       ativo = false;
+
       versao++;
+
       cancelar();
     };
   }, []);
 
-  // ===================================================
-  // PRIMEIRO NOME
-  // ===================================================
+  /* =======================================================
+     STATUS DO CLIENTE
+  ======================================================= */
 
-  const primeiroNome = cliente
-    ? cliente.nomeCompleto.split(/\s+/)[0]
-    : "";
+  const clienteLogado =
+    cliente !== null;
 
-  const clienteLogado = cliente !== null;
+  /* =======================================================
+     TEMA PRINCIPAL
+  ======================================================= */
 
-  // ===================================================
-  // TEMA
-  // ===================================================
+  const fundoPrincipal =
+    clienteLogado
+      ? "bg-[#171717] text-white"
+      : "bg-black text-white";
 
-  const fundoPrincipal = clienteLogado
-    ? "bg-[#171717] text-white"
-    : "bg-[#faf8f2] text-[#19352b]";
-
-  const fundoCabecalho = clienteLogado
-    ? "bg-[#080808]"
-    : "bg-[#081510]";
-
-  const fundoParceiros = clienteLogado
-    ? "border-white/15 bg-gradient-to-br from-[#111111] via-[#242424] to-[#111111]"
-    : "border-amber-400/20 bg-gradient-to-br from-[#10251d] via-[#19352b] to-[#10251d]";
-
-  // ===================================================
-  // CARROSSEL AUTOMÁTICO
-  // ===================================================
+  /* =======================================================
+     CARROSSEL AUTOMÁTICO
+  ======================================================= */
 
   useEffect(() => {
     if (pausado) {
       return;
     }
 
-    const intervalo = window.setInterval(() => {
-      setSlideAtual(
-        (anterior) => (anterior + 1) % slides.length
-      );
-    }, 6000);
+    const intervalo =
+      window.setInterval(() => {
+        setSlideAtual(
+          (anterior) =>
+            (anterior + 1) %
+            slides.length
+        );
+      }, 6000);
 
     return () => {
-      window.clearInterval(intervalo);
+      window.clearInterval(
+        intervalo
+      );
     };
   }, [pausado]);
 
-  // ===================================================
-  // COPIAR CÓDIGO DE INDICAÇÃO
-  // ===================================================
+  /* =======================================================
+     NAVEGAR PARA UMA SEÇÃO
+  ======================================================= */
 
-  async function copiarCodigo() {
-    try {
-      await navigator.clipboard.writeText("IMPERIO");
-
-      setCopiado(true);
-
-    } catch {
-      setCopiado(false);
-
-      alert(
-        "Não foi possível copiar automaticamente. Copie o código IMPERIO."
+  function navegarParaSecao(
+    id: string
+  ) {
+    const secao =
+      document.getElementById(
+        id
       );
-    }
-  }
-
-  // ===================================================
-  // NAVEGAR PARA UMA SEÇÃO
-  // ===================================================
-
-  function navegarParaSecao(id: string) {
-    const secao = document.getElementById(id);
 
     if (secao) {
       secao.scrollIntoView({
@@ -302,37 +368,46 @@ export function Cardapio() {
     }
 
     document
-      .getElementById("categorias")
+      .getElementById(
+        "categorias"
+      )
       ?.scrollIntoView({
         behavior: "smooth",
         block: "start",
       });
   }
 
-  // ===================================================
-  // CONTROLES DO CARROSSEL
-  // ===================================================
+  /* =======================================================
+     CONTROLES DO CARROSSEL
+  ======================================================= */
 
-  function selecionarSlide(index: number) {
+  function selecionarSlide(
+    index: number
+  ) {
     setSlideAtual(index);
   }
 
   function proximoSlide() {
     setSlideAtual(
-      (anterior) => (anterior + 1) % slides.length
+      (anterior) =>
+        (anterior + 1) %
+        slides.length
     );
   }
 
   function slideAnterior() {
     setSlideAtual(
       (anterior) =>
-        (anterior - 1 + slides.length) % slides.length
+        (anterior -
+          1 +
+          slides.length) %
+        slides.length
     );
   }
 
-  // ===================================================
-  // CONTROLES DE TOQUE NO CELULAR
-  // ===================================================
+  /* =======================================================
+     CONTROLES TOUCH
+  ======================================================= */
 
   function iniciarToque(
     evento: TouchEvent<HTMLDivElement>
@@ -346,18 +421,27 @@ export function Cardapio() {
   function finalizarToque(
     evento: TouchEvent<HTMLDivElement>
   ) {
-    if (toqueInicial.current === null) {
+    if (
+      toqueInicial.current ===
+      null
+    ) {
       setPausado(false);
+
       return;
     }
 
     const toqueFinal =
-      evento.changedTouches[0].clientX;
+      evento.changedTouches[0]
+        .clientX;
 
     const diferenca =
-      toqueInicial.current - toqueFinal;
+      toqueInicial.current -
+      toqueFinal;
 
-    if (Math.abs(diferenca) > 50) {
+    if (
+      Math.abs(diferenca) >
+      50
+    ) {
       if (diferenca > 0) {
         proximoSlide();
       } else {
@@ -365,33 +449,41 @@ export function Cardapio() {
       }
     }
 
-    toqueInicial.current = null;
+    toqueInicial.current =
+      null;
 
     setPausado(false);
   }
 
-  // ===================================================
-  // SAIR DA CONTA
-  // ===================================================
+  /* =======================================================
+     SAIR DA CONTA
+  ======================================================= */
 
   async function sairDaConta() {
-    if (saindo || !cliente) {
+    if (
+      saindo ||
+      !cliente
+    ) {
       return;
     }
 
     setSaindo(true);
+
     setErroConta("");
 
     try {
       await signOut(auth);
 
       setCliente(null);
+
       setMenuAberto(false);
 
-      navigate("/cardapio", {
-        replace: true,
-      });
-
+      navigate(
+        "/cardapio",
+        {
+          replace: true,
+        }
+      );
     } catch (erro) {
       console.error(
         "Erro ao sair da conta:",
@@ -401,290 +493,146 @@ export function Cardapio() {
       setErroConta(
         "Não foi possível sair da conta. Tente novamente."
       );
-
     } finally {
       setSaindo(false);
     }
   }
 
-  // ===================================================
-  // INTERFACE
-  // ===================================================
+  /* =======================================================
+     INTERFACE
+  ======================================================= */
 
   return (
     <main
-      className={`min-h-screen overflow-x-hidden transition-colors duration-300 ${fundoPrincipal}`}
+      className={`
+        min-h-screen
+        w-full
+
+        overflow-x-hidden
+
+        transition-colors
+        duration-300
+
+        ${fundoPrincipal}
+      `}
     >
+      {/* ===================================================
+          CABEÇALHO
+      =================================================== */}
 
-      {/* ==================================== */}
-      {/* CABEÇALHO                           */}
-      {/* ==================================== */}
+      <CatalogoHeader
+        cliente={cliente}
+        verificandoCliente={
+          verificandoCliente
+        }
+        menuAberto={
+          menuAberto
+        }
+        saindo={saindo}
+        erroConta={erroConta}
+        onToggleMenu={() =>
+          setMenuAberto(
+            (anterior) =>
+              !anterior
+          )
+        }
+        onFecharMenu={() =>
+          setMenuAberto(false)
+        }
+        onSair={
+          sairDaConta
+        }
+        onVerRestaurantes={() =>
+          navegarParaSecao(
+            "categorias"
+          )
+        }
+      />
 
-      <header
-        className={`${fundoCabecalho} text-white transition-colors duration-300`}
+      {/* ===================================================
+          HERO / CARROSSEL
+      =================================================== */}
+
+      <section
+        className="
+          relative
+
+          w-full
+
+          overflow-hidden
+
+          bg-black
+
+          pb-8
+          pt-4
+
+          text-white
+
+          sm:pb-10
+          sm:pt-5
+
+          md:pb-12
+          md:pt-6
+
+          xl:pb-14
+        "
       >
+        {/* LUZ DOURADA */}
 
-        {/* ================================== */}
-        {/* BARRA SUPERIOR                     */}
-        {/* ================================== */}
+        <div
+          aria-hidden="true"
+          className="
+            pointer-events-none
 
-        <nav className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-3 px-3 py-4 sm:px-6 sm:py-5">
+            absolute
+            left-1/2
+            top-0
 
-          {/* LOGO */}
+            h-[260px]
+            w-[90vw]
+            max-w-[900px]
 
-          <Link
-            to="/"
-            className="flex min-w-0 items-center gap-2 transition hover:opacity-90 sm:gap-3"
-          >
+            -translate-x-1/2
+            -translate-y-1/2
 
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/20 bg-white/10 shadow-md sm:h-12 sm:w-12">
+            rounded-full
 
-              <img
-                src="/logo-imperio.png"
-                alt="Logo Império Chalés"
-                className="h-full w-full object-contain"
-              />
+            bg-[#d4af37]/[0.06]
 
-            </div>
+            blur-[130px]
+          "
+        />
 
-            <div className="min-w-0">
+        <div
+          className="
+            relative
+            z-10
 
-              <p className="text-[11px] font-bold tracking-wide text-white sm:text-base">
-                IMPÉRIO CHALÉS
-              </p>
+            mx-auto
 
-              <p
-                className={`text-[8px] tracking-[0.12em] sm:text-xs ${
-                  clienteLogado
-                    ? "text-gray-300"
-                    : "text-amber-300"
-                }`}
-              >
-                VILA DO SOSSEGO
-              </p>
+            w-full
+            max-w-[1180px]
 
-            </div>
+            px-3
 
-          </Link>
-
-          {/* ACESSO DO CLIENTE */}
-
-          <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
-
-            {verificandoCliente ? (
-
-              <span className="rounded-full border border-white/15 px-3 py-2 text-xs text-gray-300">
-                Verificando conta...
-              </span>
-
-            ) : clienteLogado ? (
-
-              <Link
-                to="/cliente/perfil"
-                className="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-2 text-xs font-bold text-white transition hover:bg-white/20 sm:px-4 sm:py-3"
-              >
-                <span aria-hidden="true">👤</span>
-
-                <span className="max-w-28 truncate sm:max-w-40">
-                  Olá, {primeiroNome}
-                </span>
-
-                <span className="hidden text-green-300 sm:inline">
-                  ✓
-                </span>
-              </Link>
-
-            ) : (
-
-              <Link
-                to="/cliente/login"
-                state={{
-                  from: "/cardapio",
-                }}
-                className="rounded-full border border-white/20 bg-white/10 px-3 py-2 text-xs font-bold text-white transition hover:bg-white/20 sm:px-4 sm:py-3"
-              >
-                👤 Entrar
-              </Link>
-
-            )}
-
-            <Link
-              to="/"
-              className="rounded-full border border-white/20 bg-white/5 px-3 py-2 text-[10px] font-semibold text-white transition hover:bg-white/10 sm:px-5 sm:py-3 sm:text-sm"
-            >
-              ← Voltar ao site
-            </Link>
-
-          </div>
-
-        </nav>
-
-        {/* ================================== */}
-        {/* ÁREA EXCLUSIVA DO CLIENTE          */}
-        {/* ================================== */}
-
-        {clienteLogado && (
-
-          <section className="mx-auto w-full max-w-7xl px-3 pb-5 sm:px-6">
-
-            <div className="overflow-hidden rounded-2xl border border-white/15 bg-[#202020] shadow-lg">
-
-              {/* IDENTIFICAÇÃO */}
-
-              <div className="flex flex-wrap items-center justify-between gap-3 p-4 sm:p-5">
-
-                <div className="flex min-w-0 items-center gap-3">
-
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-white/20 bg-[#383838] text-2xl">
-                    👤
-                  </div>
-
-                  <div className="min-w-0">
-
-                    <p className="text-[11px] text-gray-300">
-                      Bem-vindo de volta!
-                    </p>
-
-                    <h2 className="mt-1 truncate text-lg font-black text-white sm:text-xl">
-                      {cliente.nomeCompleto}
-                    </h2>
-
-                    <p className="mt-1 text-[11px] text-gray-400">
-                      Sua conta de hóspede está conectada
-                    </p>
-
-                  </div>
-
-                </div>
-
-                <span className="rounded-full border border-green-400/30 bg-green-400/10 px-3 py-2 text-[11px] font-black text-green-300">
-                  ✓ Conectado
-                </span>
-
-              </div>
-
-              {/* BOTÃO DO MENU */}
-
-              <div className="border-t border-white/10 p-3 sm:px-5">
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setMenuAberto(
-                      (anterior) => !anterior
-                    )
-                  }
-                  aria-expanded={menuAberto}
-                  aria-controls="menu-cliente-cardapio"
-                  className="flex w-full items-center justify-between rounded-xl bg-[#303030] px-4 py-3 text-left text-sm font-black text-white transition hover:bg-[#404040]"
-                >
-
-                  <span>
-                    ☰ Minha conta e opções
-                  </span>
-
-                  <span aria-hidden="true">
-                    {menuAberto ? "−" : "+"}
-                  </span>
-
-                </button>
-
-                {/* MENU EXPANSÍVEL */}
-
-                {menuAberto && (
-
-                  <div
-                    id="menu-cliente-cardapio"
-                    className="mt-3 grid gap-2 sm:grid-cols-2"
-                  >
-
-                    {/* MEU PERFIL */}
-
-                    <Link
-                      to="/cliente/perfil"
-                      className="flex min-h-12 items-center gap-3 rounded-xl border border-white/10 bg-[#303030] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#404040]"
-                    >
-                      <span aria-hidden="true">👤</span>
-                      Meu perfil
-                    </Link>
-
-                    {/* RESTAURANTES */}
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setMenuAberto(false);
-
-                        navegarParaSecao("categorias");
-                      }}
-                      className="flex min-h-12 items-center gap-3 rounded-xl border border-white/10 bg-[#303030] px-4 py-3 text-left text-sm font-bold text-white transition hover:bg-[#404040]"
-                    >
-                      <span aria-hidden="true">🍽️</span>
-                      Ver restaurantes
-                    </button>
-
-                    {/* CONSULTAS */}
-
-                    <Link
-                      to="/cliente/perfil"
-                      className="flex min-h-12 items-center gap-3 rounded-xl border border-white/10 bg-[#303030] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#404040]"
-                    >
-                      <span aria-hidden="true">📋</span>
-                      Minhas consultas
-                    </Link>
-
-                    {/* SAIR */}
-
-                    <button
-                      type="button"
-                      onClick={sairDaConta}
-                      disabled={saindo}
-                      className="flex min-h-12 items-center gap-3 rounded-xl border border-red-400/20 bg-[#3a2525] px-4 py-3 text-left text-sm font-bold text-red-200 transition hover:bg-[#503030] disabled:opacity-50"
-                    >
-                      <span aria-hidden="true">🚪</span>
-
-                      {saindo
-                        ? "Saindo..."
-                        : "Sair da conta"}
-                    </button>
-
-                  </div>
-
-                )}
-
-              </div>
-
-            </div>
-
-          </section>
-
-        )}
-
-        {/* ERRO DA CONTA */}
-
-        {erroConta && (
-
-          <div
-            role="alert"
-            className="mx-auto mb-5 w-[calc(100%-24px)] max-w-7xl rounded-xl border border-red-300/30 bg-red-950/50 p-4 text-sm text-red-100"
-          >
-            ⚠️ {erroConta}
-          </div>
-
-        )}
-
-        {/* ================================== */}
-        {/* CARROSSEL RESPONSIVO               */}
-        {/* ================================== */}
-
-        <section
-          className="mx-auto w-full max-w-7xl px-3 pb-8 sm:px-6 sm:pb-12"
+            sm:px-5
+            md:px-6
+            lg:px-8
+          "
           aria-label="Carrossel Sabores da Chapada"
           aria-roledescription="carrossel"
-          onMouseEnter={() => setPausado(true)}
-          onMouseLeave={() => setPausado(false)}
-          onFocusCapture={() => setPausado(true)}
-          onBlurCapture={(evento) => {
+          onMouseEnter={() =>
+            setPausado(true)
+          }
+          onMouseLeave={() =>
+            setPausado(false)
+          }
+          onFocusCapture={() =>
+            setPausado(true)
+          }
+          onBlurCapture={(
+            evento
+          ) => {
             if (
               !evento.currentTarget.contains(
                 evento.relatedTarget
@@ -694,376 +642,814 @@ export function Cardapio() {
             }
           }}
         >
-
-          {/* IMAGENS */}
+          {/* =================================================
+              CARROSSEL
+          ================================================= */}
 
           <div
-            className={`relative overflow-hidden rounded-2xl border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.35)] sm:rounded-[30px] ${
-              clienteLogado
-                ? "bg-[#171717]"
-                : "bg-[#101813]"
-            }`}
-            onTouchStart={iniciarToque}
-            onTouchEnd={finalizarToque}
+            className="
+              relative
+
+              mx-auto
+
+              w-full
+
+              overflow-hidden
+
+              rounded-[18px]
+
+              border
+              border-white/10
+
+              bg-black
+
+              shadow-[0_25px_80px_rgba(0,0,0,0.65)]
+
+              sm:rounded-[22px]
+
+              md:rounded-[26px]
+
+              lg:rounded-[30px]
+            "
+            onTouchStart={
+              iniciarToque
+            }
+            onTouchEnd={
+              finalizarToque
+            }
             onTouchCancel={() => {
-              toqueInicial.current = null;
-              setPausado(false);
+              toqueInicial.current =
+                null;
+
+              setPausado(
+                false
+              );
             }}
           >
+            <div
+              className="
+                relative
 
-            <div className="relative aspect-[9/16] w-full sm:aspect-video">
+                mx-auto
 
-              {slides.map((slide, index) => (
+                aspect-[9/16]
+                w-full
 
-                <div
-                  key={slide.id}
-                  aria-hidden={slideAtual !== index}
-                  className={`absolute inset-0 transition-opacity duration-700 ${
-                    slideAtual === index
-                      ? "z-10 opacity-100"
-                      : "pointer-events-none z-0 opacity-0"
-                  }`}
-                >
+                max-h-[78svh]
 
-                  <picture className="block h-full w-full">
+                sm:aspect-[16/9]
+                sm:max-h-none
+              "
+            >
+              {slides.map(
+                (
+                  slide,
+                  index
+                ) => (
+                  <div
+                    key={
+                      slide.id
+                    }
+                    aria-hidden={
+                      slideAtual !==
+                      index
+                    }
+                    className={`
+                      absolute
+                      inset-0
 
-                    <source
-                      media="(max-width: 639px)"
-                      srcSet={slide.mobile}
-                    />
+                      transition-all
+                      duration-700
+                      ease-out
 
-                    <img
-                      src={slide.desktop}
-                      alt={slide.titulo}
-                      className="block h-full w-full object-contain"
-                      loading={
-                        index === 0
-                          ? "eager"
-                          : "lazy"
+                      ${
+                        slideAtual ===
+                        index
+                          ? "z-10 scale-100 opacity-100"
+                          : "pointer-events-none z-0 scale-[1.01] opacity-0"
                       }
-                    />
+                    `}
+                  >
+                    <picture
+                      className="
+                        block
+                        h-full
+                        w-full
+                      "
+                    >
+                      <source
+                        media="(max-width: 639px)"
+                        srcSet={
+                          slide.mobile
+                        }
+                      />
 
-                  </picture>
+                      <img
+                        src={
+                          slide.desktop
+                        }
+                        alt={
+                          slide.titulo
+                        }
+                        draggable={
+                          false
+                        }
+                        loading={
+                          index === 0
+                            ? "eager"
+                            : "lazy"
+                        }
+                        className="
+                          block
 
-                </div>
+                          h-full
+                          w-full
 
-              ))}
+                          object-contain
+                          object-center
 
+                          select-none
+                        "
+                      />
+                    </picture>
+                  </div>
+                )
+              )}
             </div>
-
           </div>
 
-          {/* CONTROLES */}
+          {/* =================================================
+              CONTROLES
+          ================================================= */}
 
-          <div className="mt-5 flex items-center justify-center gap-5 sm:mt-7">
+          <div
+            className="
+              mt-5
+
+              flex
+              w-full
+
+              items-center
+              justify-center
+
+              gap-3
+
+              sm:mt-6
+              sm:gap-4
+
+              md:mt-7
+              md:gap-5
+            "
+          >
+            {/* ANTERIOR */}
 
             <button
               type="button"
-              onClick={slideAnterior}
+              onClick={
+                slideAnterior
+              }
               aria-label="Imagem anterior"
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-white/10 text-2xl text-white transition hover:bg-white/20"
+              className="
+                flex
+                h-10
+                w-10
+
+                shrink-0
+
+                items-center
+                justify-center
+
+                rounded-full
+
+                border
+                border-white/20
+
+                bg-gradient-to-br
+                from-[#252525]
+                to-[#070707]
+
+                text-xl
+                text-white
+
+                shadow-[0_8px_20px_rgba(0,0,0,0.40)]
+
+                transition-all
+                duration-300
+
+                hover:-translate-y-1
+                hover:border-[#d4af37]
+                hover:text-[#f1c93d]
+
+                sm:h-11
+                sm:w-11
+
+                md:h-12
+                md:w-12
+                md:text-2xl
+              "
             >
               ‹
             </button>
 
-            <div className="flex items-center gap-3">
+            {/* INDICADORES */}
 
-              {slides.map((slide, index) => (
+            <div
+              className="
+                flex
+                items-center
+                justify-center
+                gap-2
 
-                <button
-                  key={slide.id}
-                  type="button"
-                  onClick={() =>
-                    selecionarSlide(index)
-                  }
-                  aria-label={`Exibir imagem ${index + 1}`}
-                  aria-current={
-                    slideAtual === index
-                      ? "true"
-                      : undefined
-                  }
-                  className={`h-3 rounded-full transition-all ${
-                    slideAtual === index
-                      ? clienteLogado
-                        ? "w-10 bg-white"
-                        : "w-10 bg-amber-400"
-                      : "w-3 bg-white/30 hover:bg-white/50"
-                  }`}
-                />
+                sm:gap-2.5
+              "
+            >
+              {slides.map(
+                (
+                  slide,
+                  index
+                ) => (
+                  <button
+                    key={
+                      slide.id
+                    }
+                    type="button"
+                    onClick={() =>
+                      selecionarSlide(
+                        index
+                      )
+                    }
+                    aria-label={`Exibir imagem ${
+                      index + 1
+                    }`}
+                    aria-current={
+                      slideAtual ===
+                      index
+                        ? "true"
+                        : undefined
+                    }
+                    className={`
+                      h-[9px]
+                      rounded-full
 
-              ))}
+                      transition-all
+                      duration-300
 
+                      sm:h-[10px]
+
+                      ${
+                        slideAtual ===
+                        index
+                          ? `
+                            w-8
+                            bg-[#d4af37]
+                            shadow-[0_0_12px_rgba(212,175,55,0.45)]
+
+                            sm:w-9
+                          `
+                          : `
+                            w-[9px]
+                            bg-white/30
+
+                            hover:bg-white/65
+
+                            sm:w-[10px]
+                          `
+                      }
+                    `}
+                  />
+                )
+              )}
             </div>
+
+            {/* PRÓXIMA */}
 
             <button
               type="button"
-              onClick={proximoSlide}
+              onClick={
+                proximoSlide
+              }
               aria-label="Próxima imagem"
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-white/10 text-2xl text-white transition hover:bg-white/20"
+              className="
+                flex
+                h-10
+                w-10
+
+                shrink-0
+
+                items-center
+                justify-center
+
+                rounded-full
+
+                border
+                border-white/20
+
+                bg-gradient-to-br
+                from-[#252525]
+                to-[#070707]
+
+                text-xl
+                text-white
+
+                shadow-[0_8px_20px_rgba(0,0,0,0.40)]
+
+                transition-all
+                duration-300
+
+                hover:-translate-y-1
+                hover:border-[#d4af37]
+                hover:text-[#f1c93d]
+
+                sm:h-11
+                sm:w-11
+
+                md:h-12
+                md:w-12
+                md:text-2xl
+              "
             >
               ›
             </button>
-
           </div>
 
-          {/* BOTÕES ABAIXO DO CARROSSEL */}
+          {/* =================================================
+              BOTÃO VER RESTAURANTES
+          ================================================= */}
 
-          <div className="mx-auto mt-7 flex w-full max-w-lg flex-col gap-3 sm:flex-row sm:justify-center">
+          <div
+            className="
+              mt-6
 
+              flex
+              w-full
+
+              items-center
+              justify-center
+
+              sm:mt-7
+
+              md:mt-8
+            "
+          >
             <button
               type="button"
-              onClick={() => {
+              onClick={() =>
                 navegarParaSecao(
-                  slides[slideAtual].destino
-                );
+                  "categorias"
+                )
+              }
+              className="
+                group
+                relative
+
+                w-[92%]
+                max-w-[370px]
+
+                overflow-hidden
+
+                rounded-[20px]
+
+                p-[2px]
+
+                transition-all
+                duration-300
+
+                hover:-translate-y-1
+                hover:scale-[1.018]
+
+                focus:outline-none
+
+                sm:max-w-[400px]
+
+                md:max-w-[430px]
+              "
+              style={{
+                boxShadow:
+                  "0 0 12px rgba(212,175,55,0.28), 0 0 35px rgba(212,175,55,0.20)",
               }}
-              className={`min-h-12 flex-1 rounded-full px-6 py-3 text-sm font-bold transition ${
-                clienteLogado
-                  ? "bg-white text-black hover:bg-gray-200"
-                  : "bg-amber-400 text-[#19352b] hover:bg-amber-300"
-              }`}
             >
-              {slides[slideAtual].botao}
-            </button>
-
-            <button
-              type="button"
-              onClick={copiarCodigo}
-              className="min-h-12 flex-1 rounded-full border border-white/20 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20"
-            >
-              {copiado
-                ? "✓ Código copiado!"
-                : "Copiar código IMPERIO"}
-            </button>
-
-          </div>
-
-          <p className="mt-5 text-center text-xs text-gray-400 sm:hidden">
-            Deslize para o lado para conhecer nossas opções.
-          </p>
-
-        </section>
-
-      </header>
-
-      {/* EXPERIÊNCIAS PARA CLIENTES; PARCERIAS PARA VISITANTES */}
-      {clienteLogado ? (
-        <ExperienciasEscolhidas
-          onExplorar={() => navegarParaSecao("categorias")}
-        />
-      ) : (
-        <section
-        aria-labelledby="titulo-espaco-parceiro"
-        className="relative mx-auto w-full max-w-7xl px-3 pb-10 pt-8 sm:px-6 sm:pb-14 sm:pt-10"
-      >
-
-        <div
-          className={`relative overflow-hidden rounded-[28px] border p-5 text-white shadow-xl sm:p-8 lg:p-10 ${fundoParceiros}`}
-        >
-
-          <div
-            className={`pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full blur-3xl ${
-              clienteLogado
-                ? "bg-white/5"
-                : "bg-amber-400/10"
-            }`}
-          />
-
-          <div
-            className={`pointer-events-none absolute -bottom-20 left-0 h-48 w-48 rounded-full blur-3xl ${
-              clienteLogado
-                ? "bg-gray-400/5"
-                : "bg-green-400/10"
-            }`}
-          />
-
-          <div className="relative z-10 grid items-center gap-8 lg:grid-cols-[1fr_auto] lg:gap-10">
-
-            {/* APRESENTAÇÃO */}
-
-            <div className="min-w-0">
+              {/* BORDA DOURADA ANIMADA */}
 
               <span
-                className={`inline-flex max-w-full items-center rounded-full border px-3 py-2 text-[10px] font-black uppercase tracking-wider sm:px-4 sm:text-xs ${
-                  clienteLogado
-                    ? "border-white/20 bg-white/10 text-white"
-                    : "border-amber-400/40 bg-amber-400/10 text-amber-300"
-                }`}
-              >
-                🏪 Sabores da Chapada • Parceiros
-              </span>
+                aria-hidden="true"
+                className="
+                  pointer-events-none
 
-              <h2
-                id="titulo-espaco-parceiro"
-                className="mt-5 text-3xl font-black leading-tight sm:text-4xl lg:text-5xl"
+                  absolute
+
+                  left-1/2
+                  top-1/2
+
+                  h-[600%]
+                  w-[180%]
+
+                  -translate-x-1/2
+                  -translate-y-1/2
+
+                  animate-[spin_3s_linear_infinite]
+
+                  bg-[conic-gradient(from_0deg,transparent_0deg,transparent_50deg,#725400_78deg,#d4af37_100deg,#fff0a0_120deg,#ffd447_140deg,#8b6a0a_160deg,transparent_190deg,transparent_360deg)]
+                "
+              />
+
+              {/* PARTE INTERNA */}
+
+              <span
+                className="
+                  relative
+                  z-10
+
+                  flex
+
+                  min-h-[66px]
+                  w-full
+
+                  items-center
+                  justify-center
+
+                  gap-2.5
+
+                  overflow-hidden
+
+                  rounded-[18px]
+
+                  border
+                  border-white/[0.06]
+
+                  bg-gradient-to-br
+                  from-[#171717]
+                  via-[#070707]
+                  to-black
+
+                  px-3
+                  py-2
+
+                  shadow-[inset_0_1px_0_rgba(255,255,255,0.07)]
+
+                  sm:min-h-[72px]
+                  sm:gap-4
+                  sm:px-5
+
+                  md:min-h-[78px]
+                "
               >
-                Seu estabelecimento
+                {/* BRILHO */}
 
                 <span
-                  className={`block ${
-                    clienteLogado
-                      ? "text-gray-300"
-                      : "text-amber-400"
-                  }`}
+                  aria-hidden="true"
+                  className="
+                    pointer-events-none
+
+                    absolute
+
+                    -left-20
+                    top-1/2
+
+                    h-24
+                    w-24
+
+                    -translate-y-1/2
+
+                    rounded-full
+
+                    bg-[#d4af37]/20
+
+                    blur-[32px]
+
+                    transition-all
+                    duration-700
+
+                    group-hover:left-[90%]
+                  "
+                />
+
+                {/* ÍCONE */}
+
+                <img
+                  src={
+                    restauranteEmoji
+                  }
+                  alt=""
+                  aria-hidden="true"
+                  draggable={false}
+                  className="
+                    relative
+                    z-20
+
+                    h-[58px]
+                    w-[58px]
+
+                    shrink-0
+
+                    object-contain
+
+                    drop-shadow-[0_0_11px_rgba(255,215,80,0.58)]
+
+                    transition-all
+                    duration-300
+
+                    group-hover:-rotate-3
+                    group-hover:scale-110
+
+                    min-[380px]:h-[64px]
+                    min-[380px]:w-[64px]
+
+                    sm:h-[72px]
+                    sm:w-[72px]
+
+                    md:h-[78px]
+                    md:w-[78px]
+                  "
+                />
+
+                {/* TEXTO */}
+
+                <span
+                  className="
+                    relative
+                    z-20
+
+                    whitespace-nowrap
+
+                    text-[12px]
+                    font-black
+
+                    uppercase
+
+                    tracking-[0.04em]
+
+                    text-white
+
+                    drop-shadow-[0_2px_4px_rgba(0,0,0,1)]
+
+                    min-[360px]:text-[13px]
+
+                    sm:text-[14px]
+                    sm:tracking-[0.06em]
+
+                    md:text-[15px]
+                  "
                 >
-                  aqui!
+                  Ver Restaurantes
                 </span>
-              </h2>
 
-              <p className="mt-4 max-w-2xl text-sm leading-7 text-gray-200 sm:text-base">
-                Faça parte da nossa rede gastronômica.
-                Cadastre sua empresa para solicitar uma
-                parceria com o Império Chalés.
-              </p>
+                {/* SETA */}
 
-              <p
-                className={`mt-3 max-w-2xl text-sm leading-6 ${
-                  clienteLogado
-                    ? "text-gray-300"
-                    : "text-amber-100"
-                }`}
-              >
-                Já possui cadastro? Entre na sua conta
-                para acompanhar a aprovação e acessar
-                o Portal do Parceiro.
-              </p>
+                <span
+                  className="
+                    relative
+                    z-20
 
-              {/* INFORMAÇÕES */}
+                    ml-1
+                    shrink-0
 
-              <div className="mt-6 flex flex-wrap gap-2">
+                    text-base
 
-                {[
-                  "✅ Cadastro online",
-                  "⏳ Acompanhe a aprovação",
-                  "📋 Portal exclusivo",
-                ].map((texto) => (
+                    text-[#f1c93d]
 
-                  <span
-                    key={texto}
-                    className="rounded-full border border-white/15 bg-white/10 px-3 py-2 text-[11px] font-semibold text-gray-100"
-                  >
-                    {texto}
-                  </span>
+                    transition-transform
+                    duration-300
 
-                ))}
+                    group-hover:translate-x-1.5
 
-              </div>
-
-            </div>
-
-            {/* BOTÕES */}
-
-            <div className="flex w-full flex-col gap-4 lg:w-80">
-
-              <Link
-                to="/parceiro/login"
-                className={`flex min-h-16 w-full items-center justify-center gap-2 rounded-2xl border-b-[5px] px-5 py-4 text-center text-sm font-black shadow-lg transition hover:-translate-y-0.5 sm:text-base ${
-                  clienteLogado
-                    ? "border-gray-500 bg-white text-black hover:bg-gray-200"
-                    : "border-amber-700 bg-gradient-to-b from-yellow-200 via-amber-400 to-yellow-500 text-black hover:brightness-105"
-                }`}
-              >
-                🔐 Sou parceiro — Entrar →
-              </Link>
-
-              <Link
-                to="/parceiro/cadastro"
-                className="flex min-h-16 w-full items-center justify-center gap-2 rounded-2xl border border-white/25 bg-white/10 px-5 py-4 text-center text-sm font-bold text-white transition hover:bg-white/15 sm:text-base"
-              >
-                🏪 Cadastrar meu estabelecimento →
-              </Link>
-
-              <p className="text-center text-xs leading-5 text-gray-300">
-                O acesso ao painel depende da aprovação
-                do cadastro pela administração.
-              </p>
-
-            </div>
-
+                    sm:text-lg
+                  "
+                >
+                  →
+                </span>
+              </span>
+            </button>
           </div>
 
-        </div>
+          {/* MOBILE */}
 
-        </section>
+          <p
+            className="
+              mt-4
+
+              text-center
+              text-[10px]
+
+              text-white/35
+
+              sm:hidden
+            "
+          >
+            Deslize a imagem para ver mais
+          </p>
+        </div>
+      </section>
+
+      {/* ===================================================
+          ÁREA DO CLIENTE OU PARCEIRO
+      =================================================== */}
+
+      {clienteLogado ? (
+        <ExperienciasEscolhidas
+          onExplorar={() =>
+            navegarParaSecao(
+              "categorias"
+            )
+          }
+        />
+      ) : (
+        <EspacoParceiro />
       )}
 
-      {/* ==================================== */}
-      {/* CONTEÚDO DO CATÁLOGO                 */}
-      {/* ==================================== */}
+      {/* ===================================================
+          APRESENTAÇÃO DO CATÁLOGO
+      =================================================== */}
 
-      {/*
-        Nesta etapa, preservamos completamente
-        o componente CatalogoConteudo.
+      <CatalogoApresentacao />
 
-        Ele ainda possui estilos internos próprios.
+      {/* ===================================================
+          CONTEÚDO DO CATÁLOGO
+      =================================================== */}
 
-        O tema preto/cinza completo dos cartões,
-        filtros e carrinho será ajustado
-        diretamente naquele arquivo.
-      */}
+      <CatalogoConteudo
+        temaCliente={
+          clienteLogado
+        }
+      />
 
-<CatalogoConteudo temaCliente={clienteLogado} />
-
-      {/* ==================================== */}
-      {/* RODAPÉ                              */}
-      {/* ==================================== */}
+      {/* ===================================================
+          RODAPÉ
+      =================================================== */}
 
       <footer
-        className={`border-t px-6 py-12 text-center text-white transition-colors ${
-          clienteLogado
-            ? "border-white/10 bg-[#080808]"
-            : "border-white/10 bg-[#081510]"
-        }`}
-      >
+        className="
+          border-t
+          border-white/10
 
-        <div className="mx-auto max-w-4xl">
+          bg-[#050505]
+
+          px-4
+          py-10
+
+          text-center
+          text-white
+
+          sm:px-6
+          sm:py-12
+        "
+      >
+        <div
+          className="
+            mx-auto
+            max-w-4xl
+          "
+        >
+          {/* LOGO */}
 
           <img
             src="/logo-imperio.png"
             alt="Império Chalés"
-            className="mx-auto mb-5 h-16 w-16 rounded-full object-contain"
+            draggable={false}
+            className="
+              mx-auto
+              mb-5
+
+              h-14
+              w-14
+
+              rounded-full
+
+              object-contain
+
+              sm:h-16
+              sm:w-16
+            "
           />
 
-          <h2 className="text-xl font-bold">
-            Império Chalés – Vila do Sossego
+          {/* NOME */}
+
+          <h2
+            className="
+              text-lg
+              font-bold
+
+              sm:text-xl
+            "
+          >
+            Império Chalés – Vila do
+            Sossego
           </h2>
 
+          {/* LOCAL */}
+
           <p
-            className={`mt-3 text-sm ${
-              clienteLogado
-                ? "text-gray-300"
-                : "text-amber-300"
-            }`}
+            className="
+              mt-3
+
+              text-xs
+
+              text-amber-300
+
+              sm:text-sm
+            "
           >
-            Sabores da Chapada • Alto Paraíso de Goiás
+            Sabores da Chapada • Alto
+            Paraíso de Goiás
           </p>
 
-          <div className="mx-auto my-6 h-px max-w-md bg-white/10" />
+          {/* LINHA */}
 
-          <p className="mx-auto max-w-2xl text-xs leading-6 text-gray-400">
-            Este site é um catálogo informativo.
-            Pedidos e pagamentos são realizados
-            diretamente com os estabelecimentos
-            parceiros. Retiradas pelo anfitrião
-            dependem de consulta, disponibilidade
-            e confirmação prévia.
+          <div
+            className="
+              mx-auto
+              my-6
+
+              h-px
+              max-w-md
+
+              bg-white/10
+            "
+          />
+
+          {/* AVISO */}
+
+          <p
+            className="
+              mx-auto
+              max-w-2xl
+
+              text-[11px]
+              leading-6
+
+              text-gray-400
+
+              sm:text-xs
+            "
+          >
+            Este site é um catálogo
+            informativo. Pedidos e
+            pagamentos são realizados
+            diretamente com os
+            estabelecimentos parceiros.
+            Retiradas pelo anfitrião
+            dependem de consulta,
+            disponibilidade e confirmação
+            prévia.
           </p>
+
+          {/* VOLTAR */}
 
           <Link
             to="/"
-            className="mt-8 inline-block rounded-full border border-white/20 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+            className="
+              mt-7
+
+              inline-flex
+
+              items-center
+              justify-center
+
+              rounded-full
+
+              border
+              border-white/20
+
+              px-5
+              py-3
+
+              text-xs
+              font-semibold
+
+              text-white
+
+              transition-all
+              duration-300
+
+              hover:border-[#d4af37]
+              hover:bg-white/10
+              hover:text-[#d4af37]
+
+              sm:mt-8
+              sm:px-6
+              sm:text-sm
+            "
           >
             ← Voltar ao site dos chalés
           </Link>
 
-          <p className="mt-8 text-xs text-gray-500">
-            © Império Chalés – Vila do Sossego
+          {/* COPYRIGHT */}
+
+          <p
+            className="
+              mt-7
+
+              text-[10px]
+
+              text-gray-500
+
+              sm:mt-8
+              sm:text-xs
+            "
+          >
+            © {new Date().getFullYear()} Império Chalés – Vila do Sossego
           </p>
-
         </div>
-
       </footer>
-
     </main>
   );
 }
