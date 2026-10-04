@@ -1,32 +1,83 @@
+import { Link } from "react-router-dom";
+
 import type {
   PratoPublico,
   RestaurantePublico,
 } from "./catalogoTypes";
 
+import perfilIcon from "./perfil.png";
+import restauranteIcon from "./restaurante-emoji.png";
+
+/* =========================================================
+   TIPOS
+========================================================= */
+
 type RestauranteModalProps = {
   restaurante: RestaurantePublico | null;
-
   pratos: PratoPublico[];
-
   carregandoPratos?: boolean;
-
+  clienteLogado: boolean;
   onFechar: () => void;
-
   onAdicionarPrato: (
     prato: PratoPublico
   ) => void;
 };
 
+/* =========================================================
+   FUNÇÕES AUXILIARES
+========================================================= */
+
+function formatarPreco(
+  valor: number
+) {
+  return valor.toLocaleString(
+    "pt-BR",
+    {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }
+  );
+}
+
+function obterDescricaoRestaurante(
+  restaurante: RestaurantePublico
+) {
+  const descricaoAtual =
+    restaurante.descricao?.trim() || "";
+
+  const descricaoFicticia =
+    "Estabelecimento fictício para testar o cadastro do Sabores da Chapada.";
+
+  if (
+    !descricaoAtual ||
+    descricaoAtual === descricaoFicticia
+  ) {
+    return "Sabores preparados com carinho, ingredientes selecionados e opções especiais para tornar sua experiência gastronômica na Chapada ainda melhor.";
+  }
+
+  return descricaoAtual;
+}
+
+/* =========================================================
+   COMPONENTE
+========================================================= */
+
 export function RestauranteModal({
   restaurante,
   pratos,
   carregandoPratos = false,
+  clienteLogado,
   onFechar,
   onAdicionarPrato,
 }: RestauranteModalProps) {
   if (!restaurante) {
     return null;
   }
+
+  const descricaoRestaurante =
+    obterDescricaoRestaurante(
+      restaurante
+    );
 
   return (
     <div
@@ -36,7 +87,6 @@ export function RestauranteModal({
         z-[200]
 
         flex
-
         items-center
         justify-center
 
@@ -60,6 +110,10 @@ export function RestauranteModal({
         }
       }}
     >
+      {/* ===================================================
+          MODAL
+      =================================================== */}
+
       <div
         className="
           relative
@@ -89,14 +143,13 @@ export function RestauranteModal({
           shadow-[0_35px_120px_rgba(0,0,0,0.85)]
         "
       >
-        {/* =====================================================
+        {/* =================================================
             CABEÇALHO
-        ====================================================== */}
+        ================================================== */}
 
         <div
           className="
             relative
-
             shrink-0
 
             border-b
@@ -133,7 +186,6 @@ export function RestauranteModal({
               z-10
 
               flex
-
               items-start
               justify-between
 
@@ -143,9 +195,7 @@ export function RestauranteModal({
             <div
               className="
                 flex
-
                 min-w-0
-
                 items-center
 
                 gap-4
@@ -156,7 +206,6 @@ export function RestauranteModal({
               <div
                 className="
                   flex
-
                   h-16
                   w-16
 
@@ -173,53 +222,80 @@ export function RestauranteModal({
                   border-white/15
 
                   bg-black/45
+
+                  shadow-[0_10px_30px_rgba(0,0,0,0.40)]
                 "
               >
                 {restaurante.logoUrl ? (
                   <img
-                    src={restaurante.logoUrl}
-                    alt={restaurante.nome}
+                    src={
+                      restaurante.logoUrl
+                    }
+                    alt={
+                      restaurante.nome
+                    }
+                    draggable={false}
                     className="
                       h-full
                       w-full
-
                       object-cover
                     "
                   />
                 ) : (
-                  <span className="text-2xl">
-                    🍽️
-                  </span>
+                  <img
+                    src={
+                      restauranteIcon
+                    }
+                    alt=""
+                    aria-hidden="true"
+                    draggable={false}
+                    className="
+                      h-12
+                      w-12
+                      object-contain
+                      drop-shadow-[0_8px_14px_rgba(0,0,0,0.45)]
+                    "
+                  />
                 )}
               </div>
+
+              {/* TÍTULO */}
 
               <div className="min-w-0">
                 <p
                   className="
                     text-[9px]
                     font-black
-
                     uppercase
-
                     tracking-[0.2em]
-
-                    text-[#d4af37]
+                    text-[#ffd447]
                   "
                 >
-                  {restaurante.categoria}
+                  {restaurante.categoria ||
+                    "Gastronomia"}
                 </p>
 
                 <h2
                   className="
                     mt-1
 
-                    truncate
-
-                    text-2xl
+                    text-xl
                     font-black
+                    uppercase
+
+                    leading-tight
+                    tracking-[-0.03em]
+
+                    text-white
 
                     sm:text-3xl
                   "
+                  style={{
+                    fontFamily:
+                      "'Arial Black', 'Montserrat', sans-serif",
+                    textShadow:
+                      "0 2px 0 rgba(0,0,0,1), 0 7px 20px rgba(0,0,0,0.45)",
+                  }}
                 >
                   {restaurante.nome}
                 </h2>
@@ -234,7 +310,6 @@ export function RestauranteModal({
               aria-label="Fechar cardápio"
               className="
                 flex
-
                 h-11
                 w-11
 
@@ -251,7 +326,6 @@ export function RestauranteModal({
                 bg-black/40
 
                 text-xl
-
                 text-white/70
 
                 transition-all
@@ -266,35 +340,33 @@ export function RestauranteModal({
             </button>
           </div>
 
-          {restaurante.descricao && (
-            <p
-              className="
-                relative
-                z-10
+          {/* DESCRIÇÃO */}
 
-                mt-5
+          <p
+            className="
+              relative
+              z-10
 
-                max-w-3xl
+              mt-5
+              max-w-3xl
 
-                text-sm
-                leading-6
+              text-sm
+              leading-6
 
-                text-white/50
-              "
-            >
-              {restaurante.descricao}
-            </p>
-          )}
+              text-white/60
+            "
+          >
+            {descricaoRestaurante}
+          </p>
         </div>
 
-        {/* =====================================================
-            PRATOS
-        ====================================================== */}
+        {/* =================================================
+            CORPO
+        ================================================== */}
 
         <div
           className="
             flex-1
-
             overflow-y-auto
 
             p-5
@@ -306,9 +378,7 @@ export function RestauranteModal({
             <div
               className="
                 flex
-
                 min-h-[300px]
-
                 items-center
                 justify-center
               "
@@ -317,14 +387,10 @@ export function RestauranteModal({
                 <div
                   className="
                     mx-auto
-
                     h-10
                     w-10
-
                     animate-spin
-
                     rounded-full
-
                     border-4
                     border-white/10
                     border-t-[#d4af37]
@@ -334,9 +400,7 @@ export function RestauranteModal({
                 <p
                   className="
                     mt-4
-
                     text-sm
-
                     text-white/45
                   "
                 >
@@ -349,8 +413,7 @@ export function RestauranteModal({
               className="
                 grid
                 grid-cols-1
-
-                gap-4
+                gap-5
 
                 md:grid-cols-2
               "
@@ -359,9 +422,12 @@ export function RestauranteModal({
                 <article
                   key={prato.id}
                   className="
+                    group/prato
+                    relative
+
                     overflow-hidden
 
-                    rounded-[22px]
+                    rounded-[24px]
 
                     border
                     border-white/10
@@ -371,21 +437,24 @@ export function RestauranteModal({
                     via-[#171717]
                     to-[#090909]
 
+                    shadow-[0_16px_40px_rgba(0,0,0,0.32)]
+
                     transition-all
                     duration-300
 
-                    hover:border-[#d4af37]/45
+                    hover:-translate-y-1
+                    hover:border-white/20
+                    hover:shadow-[0_22px_50px_rgba(0,0,0,0.45)]
                   "
                 >
-                  {/* FOTO */}
+                  {/* IMAGEM DO PRATO */}
 
-                  {prato.imagemUrl && (
+                  {prato.imagemUrl ? (
                     <div
                       className="
+                        relative
                         h-[190px]
-
                         overflow-hidden
-
                         bg-black
                       "
                     >
@@ -396,21 +465,83 @@ export function RestauranteModal({
                         className="
                           h-full
                           w-full
-
                           object-cover
+                          transition-transform
+                          duration-500
+                          group-hover/prato:scale-[1.04]
+                        "
+                      />
+
+                      <div
+                        aria-hidden="true"
+                        className="
+                          pointer-events-none
+                          absolute
+                          inset-0
+                          bg-gradient-to-t
+                          from-black/60
+                          via-transparent
+                          to-transparent
+                        "
+                      />
+                    </div>
+                  ) : (
+                    <div
+                      className="
+                        relative
+                        flex
+                        h-[150px]
+                        items-center
+                        justify-center
+                        overflow-hidden
+                        bg-gradient-to-br
+                        from-[#252525]
+                        via-[#151515]
+                        to-[#080808]
+                      "
+                    >
+                      <div
+                        aria-hidden="true"
+                        className="
+                          absolute
+                          h-24
+                          w-24
+                          rounded-full
+                          bg-[#ffd447]/10
+                          blur-[35px]
+                        "
+                      />
+
+                      <img
+                        src={
+                          restauranteIcon
+                        }
+                        alt=""
+                        aria-hidden="true"
+                        draggable={false}
+                        className="
+                          relative
+                          z-10
+
+                          h-24
+                          w-24
+
+                          object-contain
+
+                          drop-shadow-[0_14px_22px_rgba(0,0,0,0.50)]
                         "
                       />
                     </div>
                   )}
 
+                  {/* CONTEÚDO */}
+
                   <div className="p-5">
                     <div
                       className="
                         flex
-
                         items-start
                         justify-between
-
                         gap-4
                       "
                     >
@@ -419,24 +550,33 @@ export function RestauranteModal({
                           className="
                             text-lg
                             font-black
-
+                            uppercase
+                            leading-tight
                             text-white
                           "
+                          style={{
+                            fontFamily:
+                              "'Arial Black', 'Montserrat', sans-serif",
+                            textShadow:
+                              "0 2px 0 rgba(0,0,0,1)",
+                          }}
                         >
                           {prato.nome}
                         </h3>
 
-                        {prato.pessoas > 0 && (
+                        {prato.pessoas >
+                          0 && (
                           <p
                             className="
-                              mt-1
-
-                              text-xs
-
+                              mt-2
+                              text-[10px]
+                              font-bold
+                              uppercase
+                              tracking-[0.04em]
                               text-white/40
                             "
                           >
-                            👥 Serve aproximadamente{" "}
+                            Serve aproximadamente{" "}
                             {prato.pessoas}{" "}
                             {prato.pessoas === 1
                               ? "pessoa"
@@ -448,23 +588,16 @@ export function RestauranteModal({
                       <strong
                         className="
                           whitespace-nowrap
-
                           text-lg
                           font-black
-
-                          text-[#f0cb49]
+                          text-[#ffd447]
                         "
+                        style={{
+                          textShadow:
+                            "0 2px 0 rgba(0,0,0,1), 0 0 12px rgba(255,212,71,0.16)",
+                        }}
                       >
-                        R${" "}
-                        {prato.preco.toLocaleString(
-                          "pt-BR",
-                          {
-                            minimumFractionDigits:
-                              2,
-                            maximumFractionDigits:
-                              2,
-                          }
-                        )}
+                        R$ {formatarPreco(prato.preco)}
                       </strong>
                     </div>
 
@@ -472,10 +605,8 @@ export function RestauranteModal({
                       <p
                         className="
                           mt-4
-
                           text-sm
                           leading-6
-
                           text-white/45
                         "
                       >
@@ -483,62 +614,351 @@ export function RestauranteModal({
                       </p>
                     )}
 
-                    <button
-                      type="button"
-                      disabled={
-                        !prato.disponivel
-                      }
-                      onClick={() =>
-                        onAdicionarPrato(
-                          prato
-                        )
-                      }
-                      className="
-                        mt-5
+                    {/* =====================================
+                        BOTÃO QUANDO LOGADO
+                    ====================================== */}
 
-                        flex
-                        w-full
+                    {clienteLogado ? (
+                      <button
+                        type="button"
+                        disabled={
+                          !prato.disponivel
+                        }
+                        onClick={() =>
+                          onAdicionarPrato(
+                            prato
+                          )
+                        }
+                        className="
+                          group/adicionar
+                          relative
 
-                        items-center
-                        justify-center
+                          mt-5
 
-                        gap-2
+                          flex
+                          w-full
 
-                        rounded-2xl
+                          items-center
+                          justify-center
 
-                        border
-                        border-[#d4af37]/40
+                          gap-3
 
-                        bg-gradient-to-r
-                        from-[#cba425]
-                        via-[#f0cf50]
-                        to-[#cba425]
+                          overflow-hidden
 
-                        px-4
-                        py-3
+                          rounded-[18px]
 
-                        text-sm
-                        font-black
+                          border
+                          border-[#64c4ff]
 
-                        text-black
+                          bg-gradient-to-r
+                          from-[#046dcc]
+                          via-[#079cff]
+                          to-[#046dcc]
 
-                        transition-all
-                        duration-300
+                          px-4
+                          py-3.5
 
-                        hover:-translate-y-0.5
-                        hover:brightness-110
+                          shadow-[0_12px_30px_rgba(0,140,255,0.25)]
 
-                        disabled:cursor-not-allowed
-                        disabled:border-white/10
-                        disabled:bg-none
-                        disabled:bg-[#222]
-                        disabled:text-white/30
-                      "
-                    >
-                      {prato.disponivel
-                        ? "🛒 Adicionar"
-                        : "Indisponível"}
-                    </button>
+                          transition-all
+                          duration-300
+
+                          hover:-translate-y-0.5
+                          hover:border-[#9cddff]
+                          hover:shadow-[0_15px_35px_rgba(0,150,255,0.38)]
+
+                          disabled:cursor-not-allowed
+                          disabled:border-white/10
+                          disabled:bg-none
+                          disabled:bg-[#222]
+                          disabled:shadow-none
+                        "
+                      >
+                        <span
+                          aria-hidden="true"
+                          className="
+                            pointer-events-none
+
+                            absolute
+                            -left-20
+                            top-0
+
+                            h-full
+                            w-14
+
+                            skew-x-[-20deg]
+
+                            bg-white/15
+
+                            blur-[3px]
+
+                            transition-all
+                            duration-700
+
+                            group-hover/adicionar:left-[110%]
+                          "
+                        />
+
+                        <span
+                          className="
+                            relative
+                            z-10
+
+                            text-[13px]
+                            font-black
+                            uppercase
+                            tracking-[0.045em]
+                            text-white
+
+                            sm:text-[14px]
+                          "
+                          style={{
+                            fontFamily:
+                              "'Arial Black', 'Montserrat', sans-serif",
+                            WebkitTextStroke:
+                              "0.65px rgba(0,0,0,0.95)",
+                            textShadow:
+                              "0 2px 0 rgba(0,0,0,1), 0 4px 7px rgba(0,0,0,0.65)",
+                          }}
+                        >
+                          {prato.disponivel
+                            ? "ADICIONAR AO CARRINHO"
+                            : "INDISPONÍVEL"}
+                        </span>
+                      </button>
+                    ) : (
+                      /* ===================================
+                          BOTÃO QUANDO DESLOGADO
+                      ==================================== */
+                      <div
+                        className="
+                          mt-5
+
+                          rounded-[20px]
+
+                          border
+                          border-[#21ff78]/15
+
+                          bg-black/35
+
+                          p-3
+
+                          shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]
+                        "
+                      >
+                        <p
+                          className="
+                            mb-4
+
+                            text-center
+
+                            text-[11px]
+                            font-black
+
+                            uppercase
+
+                            leading-5
+                            tracking-[0.08em]
+
+                            text-white
+
+                            sm:text-[12px]
+                          "
+                          style={{
+                            fontFamily:
+                              "'Arial Black', 'Montserrat', sans-serif",
+                            textShadow:
+                              "0 2px 0 rgba(0,0,0,1), 0 4px 8px rgba(0,0,0,0.45)",
+                          }}
+                        >
+                          PARA ADICIONAR AO
+                          CARRINHO É NECESSÁRIO
+                          FAZER LOGIN
+                        </p>
+
+                        <Link
+                          to="/cliente/login"
+                          className="
+                            group/login
+                            relative
+
+                            flex
+                            min-h-[66px]
+                            w-full
+
+                            items-center
+
+                            gap-3
+
+                            overflow-hidden
+
+                            rounded-[18px]
+
+                            border
+                            border-[#65ff9b]/70
+
+                            bg-gradient-to-r
+                            from-[#08c858]
+                            via-[#13ef6d]
+                            to-[#08cf59]
+
+                            px-4
+                            py-3
+
+                            shadow-[0_12px_30px_rgba(20,240,110,0.24)]
+
+                            transition-all
+                            duration-300
+
+                            hover:-translate-y-1
+                            hover:scale-[1.01]
+                            hover:shadow-[0_16px_38px_rgba(20,240,110,0.38)]
+                          "
+                        >
+                          <span
+                            aria-hidden="true"
+                            className="
+                              pointer-events-none
+
+                              absolute
+                              -left-20
+                              top-0
+
+                              h-full
+                              w-14
+
+                              skew-x-[-20deg]
+
+                              bg-white/25
+
+                              blur-[4px]
+
+                              transition-all
+                              duration-700
+
+                              group-hover/login:left-[110%]
+                            "
+                          />
+
+                          <div
+                            className="
+                              relative
+                              z-10
+
+                              flex
+                              h-12
+                              w-12
+
+                              shrink-0
+
+                              items-center
+                              justify-center
+
+                              rounded-[14px]
+
+                              bg-black/10
+
+                              shadow-[inset_0_1px_0_rgba(255,255,255,0.20)]
+                            "
+                          >
+                            <img
+                              src={perfilIcon}
+                              alt=""
+                              aria-hidden="true"
+                              draggable={false}
+                              className="
+                                h-11
+                                w-11
+
+                                object-contain
+
+                                drop-shadow-[0_6px_10px_rgba(0,0,0,0.38)]
+
+                                transition-transform
+                                duration-300
+
+                                group-hover/login:scale-110
+                              "
+                            />
+                          </div>
+
+                          <div
+                            className="
+                              relative
+                              z-10
+
+                              min-w-0
+                              flex-1
+
+                              text-left
+                            "
+                          >
+                            <p
+                              className="
+                                text-[8px]
+                                font-black
+                                uppercase
+                                tracking-[0.16em]
+                                text-black/60
+                              "
+                            >
+                              Acesse sua conta
+                            </p>
+
+                            <p
+                              className="
+                                mt-0.5
+
+                                text-[14px]
+                                font-black
+                                uppercase
+
+                                leading-tight
+                                tracking-[-0.015em]
+
+                                text-white
+
+                                sm:text-[15px]
+                              "
+                              style={{
+                                fontFamily:
+                                  "'Arial Black', 'Montserrat', sans-serif",
+                                WebkitTextStroke:
+                                  "0.8px rgba(0,0,0,0.95)",
+                                textShadow:
+                                  "0 2px 0 rgba(0,0,0,1), 0 4px 6px rgba(0,0,0,0.50)",
+                              }}
+                            >
+                              ENTRAR PARA
+                              ADICIONAR
+                            </p>
+                          </div>
+
+                          <span
+                            className="
+                              relative
+                              z-10
+
+                              shrink-0
+
+                              text-xl
+                              font-black
+
+                              text-white
+
+                              drop-shadow-[0_2px_2px_rgba(0,0,0,1)]
+
+                              transition-transform
+                              duration-300
+
+                              group-hover/login:translate-x-1
+                            "
+                          >
+                            →
+                          </span>
+                        </Link>
+                      </div>
+                    )}
                   </div>
                 </article>
               ))}
@@ -547,7 +967,6 @@ export function RestauranteModal({
             <div
               className="
                 flex
-
                 min-h-[300px]
 
                 items-center
@@ -559,7 +978,10 @@ export function RestauranteModal({
                 border-dashed
                 border-white/15
 
-                bg-black/20
+                bg-gradient-to-br
+                from-[#202020]
+                via-[#111111]
+                to-[#060606]
 
                 p-8
 
@@ -567,32 +989,48 @@ export function RestauranteModal({
               "
             >
               <div>
-                <div className="text-4xl">
-                  🍽️
-                </div>
+                <img
+                  src={
+                    restauranteIcon
+                  }
+                  alt=""
+                  aria-hidden="true"
+                  draggable={false}
+                  className="
+                    mx-auto
+                    h-24
+                    w-24
+                    object-contain
+                    drop-shadow-[0_12px_20px_rgba(0,0,0,0.50)]
+                  "
+                />
 
                 <h3
                   className="
                     mt-4
-
                     text-xl
                     font-black
+                    uppercase
+                    text-white
                   "
+                  style={{
+                    fontFamily:
+                      "'Arial Black', 'Montserrat', sans-serif",
+                  }}
                 >
-                  Cardápio em atualização
+                  CARDÁPIO EM ATUALIZAÇÃO
                 </h3>
 
                 <p
                   className="
                     mt-2
-
                     text-sm
-
                     text-white/40
                   "
                 >
-                  Ainda não encontramos pratos
-                  disponíveis neste restaurante.
+                  Ainda não encontramos
+                  pratos disponíveis neste
+                  restaurante.
                 </p>
               </div>
             </div>
@@ -602,3 +1040,5 @@ export function RestauranteModal({
     </div>
   );
 }
+
+export default RestauranteModal;

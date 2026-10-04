@@ -1,19 +1,21 @@
-
 import {
   useEffect,
   useState,
   type FormEvent,
 } from "react";
 
-import { Link, useNavigate } from "react-router-dom";
+import {
+  Link,
+  useNavigate,
+} from "react-router-dom";
 
 import {
   addDoc,
   collection,
+  doc,
   onSnapshot,
   serverTimestamp,
   updateDoc,
-  doc,
   type Timestamp,
 } from "firebase/firestore";
 
@@ -22,11 +24,16 @@ import {
   type User,
 } from "firebase/auth";
 
-import { auth, db } from "../firebase/config";
+import {
+  auth,
+  db,
+} from "../firebase/config";
 
-// ==========================================
-// TIPOS
-// ==========================================
+import restauranteEmoji from "../components/catalogo/restaurante-emoji.png";
+
+/* =========================================================
+   TIPOS
+========================================================= */
 
 type StatusPrato =
   | "pendente"
@@ -35,27 +42,39 @@ type StatusPrato =
 
 interface Prato {
   id: string;
+
   nome: string;
+
   preco: number;
+
   pessoas: number;
+
   descricao: string;
+
   status: StatusPrato;
+
   imagemUrl?: string;
+
   motivoRecusa?: string;
+
   criadoEm?: Timestamp;
+
   atualizadoEm?: Timestamp;
 }
 
 interface DadosFormulario {
   nome: string;
+
   preco: string;
+
   pessoas: string;
+
   descricao: string;
 }
 
-// ==========================================
-// ESTADO INICIAL
-// ==========================================
+/* =========================================================
+   ESTADO INICIAL
+========================================================= */
 
 const formularioInicial: DadosFormulario = {
   nome: "",
@@ -64,25 +83,26 @@ const formularioInicial: DadosFormulario = {
   descricao: "",
 };
 
-// ==========================================
-// FUNÇÕES AUXILIARES
-// ==========================================
+/* =========================================================
+   FUNÇÕES
+========================================================= */
 
-function formatarMoeda(valor: number): string {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(valor);
+function formatarMoeda(
+  valor: number
+): string {
+  return new Intl.NumberFormat(
+    "pt-BR",
+    {
+      style: "currency",
+      currency: "BRL",
+    }
+  ).format(valor);
 }
 
-function converterPreco(valor: string): number {
+function converterPreco(
+  valor: string
+): number {
   const texto = valor.trim();
-
-  // Aceita:
-  // 59
-  // 59,90
-  // 59.90
-  // 1.259,90
 
   if (
     !/^\d+(?:,\d{1,2})?$/.test(texto) &&
@@ -92,437 +112,615 @@ function converterPreco(valor: string): number {
     return NaN;
   }
 
-  const normalizado = texto.includes(",")
-    ? texto.replace(/\./g, "").replace(",", ".")
-    : texto;
+  const normalizado =
+    texto.includes(",")
+      ? texto
+          .replace(/\./g, "")
+          .replace(",", ".")
+      : texto;
 
   return Number(normalizado);
 }
 
-function formatarData(data?: Timestamp): string {
+function formatarData(
+  data?: Timestamp
+): string {
   if (!data?.toDate) {
     return "Aguardando registro";
   }
 
-  return data.toDate().toLocaleString("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  });
+  return data
+    .toDate()
+    .toLocaleString(
+      "pt-BR",
+      {
+        dateStyle: "short",
+        timeStyle: "short",
+      }
+    );
 }
 
-function obterMensagemErro(erro: unknown): string {
+function obterMensagemErro(
+  erro: unknown
+): string {
   const codigo =
     typeof erro === "object" &&
     erro !== null &&
     "code" in erro
-      ? String(erro.code)
+      ? String(
+          (
+            erro as {
+              code: unknown;
+            }
+          ).code
+        )
       : "";
 
-  if (codigo === "permission-denied") {
+  if (
+    codigo ===
+    "permission-denied"
+  ) {
     return (
       "O Firebase não autorizou esta operação. " +
-      "Confirme se o estabelecimento está aprovado " +
-      "e se as regras do Firestore foram publicadas."
+      "Confirme se o estabelecimento está aprovado."
     );
   }
 
-  if (codigo === "unavailable") {
+  if (
+    codigo ===
+    "unavailable"
+  ) {
     return (
       "Não foi possível conectar ao Firebase. " +
-      "Verifique sua conexão e tente novamente."
+      "Verifique sua conexão."
     );
   }
 
-  if (codigo === "unauthenticated") {
-    return "Sua sessão expirou. Faça login novamente.";
+  if (
+    codigo ===
+    "unauthenticated"
+  ) {
+    return (
+      "Sua sessão expirou. Faça login novamente."
+    );
   }
 
   return "Ocorreu um erro. Tente novamente.";
 }
 
-function informacoesStatus(status: StatusPrato) {
+function informacoesStatus(
+  status: StatusPrato
+) {
   switch (status) {
     case "aprovado":
       return {
-        titulo: "Aprovado",
-        icone: "✅",
-        classe: "bg-green-100 text-green-800",
-        explicacao:
-          "Este prato foi aprovado pela administração.",
+        titulo: "APROVADO",
+        classe:
+          "border-[#00ef78]/30 bg-[#00ef78]/10 text-[#00ef78]",
       };
 
     case "rejeitado":
       return {
-        titulo: "Correção necessária",
-        icone: "❌",
-        classe: "bg-red-100 text-red-800",
-        explicacao:
-          "A administração solicitou alterações neste prato.",
+        titulo:
+          "PRECISA DE CORREÇÃO",
+        classe:
+          "border-red-500/30 bg-red-500/10 text-red-400",
       };
 
     default:
       return {
-        titulo: "Aguardando aprovação",
-        icone: "⏳",
-        classe: "bg-amber-100 text-amber-900",
-        explicacao:
-          "Este prato aguarda a análise da administração.",
+        titulo:
+          "EM ANÁLISE",
+        classe:
+          "border-[#ffd429]/30 bg-[#ffd429]/10 text-[#ffd429]",
       };
   }
 }
 
-// ==========================================
-// COMPONENTE PRINCIPAL
-// ==========================================
+/* =========================================================
+   COMPONENTE
+========================================================= */
 
 export function ParceiroPratos() {
-  const navigate = useNavigate();
+  const navigate =
+    useNavigate();
 
-  // ========================================
-  // AUTENTICAÇÃO
-  // ========================================
+  /* =======================================================
+     AUTENTICAÇÃO
+  ======================================================= */
 
-  const [usuario, setUsuario] = useState<User | null>(
-    null
-  );
-
-  const [verificandoSessao, setVerificandoSessao] =
-    useState(true);
-
-  // ========================================
-  // PRATOS DO FIRESTORE
-  // ========================================
-
-  const [pratos, setPratos] = useState<Prato[]>([]);
-
-  const [carregandoPratos, setCarregandoPratos] =
-    useState(true);
-
-  // ========================================
-  // FORMULÁRIO
-  // ========================================
-
-  const [formulario, setFormulario] =
-    useState<DadosFormulario>(formularioInicial);
-
-  const [editandoId, setEditandoId] = useState<
-    string | null
-  >(null);
-
-  const [salvando, setSalvando] = useState(false);
-
-  const [erro, setErro] = useState("");
-
-  const [mensagem, setMensagem] = useState("");
-
-  // ========================================
-  // VERIFICAR AUTENTICAÇÃO
-  // ========================================
-
-  useEffect(() => {
-    const cancelarAutenticacao = onAuthStateChanged(
-      auth,
-      (usuarioAtual) => {
-        setUsuario(usuarioAtual);
-        setVerificandoSessao(false);
-
-        if (!usuarioAtual) {
-          navigate("/parceiro/login", {
-            replace: true,
-          });
-        }
-      }
+  const [
+    usuario,
+    setUsuario,
+  ] =
+    useState<User | null>(
+      null
     );
 
-    return () => cancelarAutenticacao();
+  const [
+    verificandoSessao,
+    setVerificandoSessao,
+  ] =
+    useState(true);
+
+  /* =======================================================
+     PRATOS
+  ======================================================= */
+
+  const [
+    pratos,
+    setPratos,
+  ] =
+    useState<Prato[]>([]);
+
+  const [
+    carregandoPratos,
+    setCarregandoPratos,
+  ] =
+    useState(true);
+
+  /* =======================================================
+     FORMULÁRIO
+  ======================================================= */
+
+  const [
+    formulario,
+    setFormulario,
+  ] =
+    useState<DadosFormulario>(
+      formularioInicial
+    );
+
+  const [
+    editandoId,
+    setEditandoId,
+  ] =
+    useState<
+      string | null
+    >(null);
+
+  const [
+    salvando,
+    setSalvando,
+  ] =
+    useState(false);
+
+  const [
+    erro,
+    setErro,
+  ] =
+    useState("");
+
+  const [
+    mensagem,
+    setMensagem,
+  ] =
+    useState("");
+
+  /* =======================================================
+     AUTENTICAÇÃO
+  ======================================================= */
+
+  useEffect(() => {
+    const cancelarAutenticacao =
+      onAuthStateChanged(
+        auth,
+
+        (
+          usuarioAtual
+        ) => {
+          setUsuario(
+            usuarioAtual
+          );
+
+          setVerificandoSessao(
+            false
+          );
+
+          if (
+            !usuarioAtual
+          ) {
+            navigate(
+              "/parceiro/login",
+              {
+                replace: true,
+              }
+            );
+          }
+        }
+      );
+
+    return () =>
+      cancelarAutenticacao();
   }, [navigate]);
 
-  // ========================================
-  // CONSULTAR PRATOS EM TEMPO REAL
-  // ========================================
+  /* =======================================================
+     CONSULTAR PRATOS
+  ======================================================= */
 
   useEffect(() => {
     if (!usuario) {
       setPratos([]);
-      setCarregandoPratos(false);
+
+      setCarregandoPratos(
+        false
+      );
+
       return;
     }
 
-    setCarregandoPratos(true);
-
-    const referenciaPratos = collection(
-      db,
-      "restaurantes",
-      usuario.uid,
-      "pratos"
+    setCarregandoPratos(
+      true
     );
 
-    const cancelarConsulta = onSnapshot(
-      referenciaPratos,
+    const referenciaPratos =
+      collection(
+        db,
+        "restaurantes",
+        usuario.uid,
+        "pratos"
+      );
 
-      (resultado) => {
-        const pratosEncontrados: Prato[] =
-          resultado.docs.map((documento) => {
-            const dados = documento.data();
+    const cancelarConsulta =
+      onSnapshot(
+        referenciaPratos,
 
-            return {
-              id: documento.id,
+        (
+          resultado
+        ) => {
+          const pratosEncontrados:
+            Prato[] =
+            resultado.docs.map(
+              (
+                documento
+              ) => {
+                const dados =
+                  documento.data();
 
-              nome:
-                typeof dados.nome === "string"
-                  ? dados.nome
-                  : "",
+                return {
+                  id:
+                    documento.id,
 
-              preco:
-                typeof dados.preco === "number"
-                  ? dados.preco
-                  : 0,
+                  nome:
+                    typeof dados.nome ===
+                    "string"
+                      ? dados.nome
+                      : "",
 
-              pessoas:
-                typeof dados.pessoas === "number"
-                  ? dados.pessoas
-                  : 1,
+                  preco:
+                    typeof dados.preco ===
+                    "number"
+                      ? dados.preco
+                      : 0,
 
-              descricao:
-                typeof dados.descricao === "string"
-                  ? dados.descricao
-                  : "",
+                  pessoas:
+                    typeof dados.pessoas ===
+                    "number"
+                      ? dados.pessoas
+                      : 1,
 
-              status:
-                dados.status === "aprovado" ||
-                dados.status === "rejeitado"
-                  ? dados.status
-                  : "pendente",
+                  descricao:
+                    typeof dados.descricao ===
+                    "string"
+                      ? dados.descricao
+                      : "",
 
-              imagemUrl:
-                typeof dados.imagemUrl === "string"
-                  ? dados.imagemUrl
-                  : "",
+                  status:
+                    dados.status ===
+                      "aprovado" ||
+                    dados.status ===
+                      "rejeitado"
+                      ? dados.status
+                      : "pendente",
 
-              motivoRecusa:
-                typeof dados.motivoRecusa === "string"
-                  ? dados.motivoRecusa
-                  : "",
+                  imagemUrl:
+                    typeof dados.imagemUrl ===
+                    "string"
+                      ? dados.imagemUrl
+                      : "",
 
-              criadoEm: dados.criadoEm as
-                | Timestamp
-                | undefined,
+                  motivoRecusa:
+                    typeof dados.motivoRecusa ===
+                    "string"
+                      ? dados.motivoRecusa
+                      : "",
 
-              atualizadoEm: dados.atualizadoEm as
-                | Timestamp
-                | undefined,
-            };
-          });
+                  criadoEm:
+                    dados.criadoEm as
+                      | Timestamp
+                      | undefined,
 
-        // Ordenação local para não exigir
-        // índice adicional no Firestore.
+                  atualizadoEm:
+                    dados.atualizadoEm as
+                      | Timestamp
+                      | undefined,
+                };
+              }
+            );
 
-        pratosEncontrados.sort((a, b) => {
-          const dataA = a.criadoEm?.toMillis() ?? 0;
-          const dataB = b.criadoEm?.toMillis() ?? 0;
+          pratosEncontrados.sort(
+            (
+              a,
+              b
+            ) => {
+              const dataA =
+                a.criadoEm?.toMillis() ??
+                0;
 
-          return dataB - dataA;
-        });
+              const dataB =
+                b.criadoEm?.toMillis() ??
+                0;
 
-        setPratos(pratosEncontrados);
-        setCarregandoPratos(false);
-      },
+              return (
+                dataB -
+                dataA
+              );
+            }
+          );
 
-      (erroConsulta) => {
-        console.error(
-          "Erro ao consultar pratos:",
+          setPratos(
+            pratosEncontrados
+          );
+
+          setCarregandoPratos(
+            false
+          );
+        },
+
+        (
           erroConsulta
-        );
+        ) => {
+          console.error(
+            "Erro ao consultar pratos:",
+            erroConsulta
+          );
 
-        setErro(obterMensagemErro(erroConsulta));
-        setCarregandoPratos(false);
-      }
-    );
+          setErro(
+            obterMensagemErro(
+              erroConsulta
+            )
+          );
 
-    return () => cancelarConsulta();
+          setCarregandoPratos(
+            false
+          );
+        }
+      );
+
+    return () =>
+      cancelarConsulta();
   }, [usuario]);
 
-  // ========================================
-  // ATUALIZAR CAMPOS
-  // ========================================
+  /* =======================================================
+     FORMULÁRIO
+  ======================================================= */
 
   function atualizarCampo(
-    campo: keyof DadosFormulario,
+    campo:
+      keyof DadosFormulario,
+
     valor: string
   ) {
-    setFormulario((anterior) => ({
-      ...anterior,
-      [campo]: valor,
-    }));
+    setFormulario(
+      (
+        anterior
+      ) => ({
+        ...anterior,
+
+        [campo]:
+          valor,
+      })
+    );
 
     setErro("");
+
     setMensagem("");
   }
 
-  // ========================================
-  // LIMPAR FORMULÁRIO
-  // ========================================
-
   function limparFormulario() {
-    setFormulario(formularioInicial);
-    setEditandoId(null);
+    setFormulario(
+      formularioInicial
+    );
+
+    setEditandoId(
+      null
+    );
+
     setErro("");
   }
 
-  // ========================================
-  // SALVAR PRATO NO FIRESTORE
-  // ========================================
+  /* =======================================================
+     SALVAR
+  ======================================================= */
 
   async function salvarPrato(
-    event: FormEvent<HTMLFormElement>
+    event:
+      FormEvent<HTMLFormElement>
   ) {
     event.preventDefault();
 
-    if (salvando) return;
+    if (salvando) {
+      return;
+    }
 
     setErro("");
+
     setMensagem("");
 
-    const usuarioAtual = auth.currentUser;
+    const usuarioAtual =
+      auth.currentUser;
 
     if (!usuarioAtual) {
       setErro(
         "Sua sessão não está disponível. Faça login novamente."
       );
+
       return;
     }
 
-    const nomeLimpo = formulario.nome.trim();
+    const nomeLimpo =
+      formulario.nome.trim();
 
     const descricaoLimpa =
       formulario.descricao.trim();
 
-    const precoNumerico = converterPreco(
-      formulario.preco
-    );
+    const precoNumerico =
+      converterPreco(
+        formulario.preco
+      );
 
-    const pessoasNumerico = Number(
-      formulario.pessoas
-    );
+    const pessoasNumerico =
+      Number(
+        formulario.pessoas
+      );
 
-    // ======================================
-    // VALIDAÇÕES
-    // ======================================
+    /* VALIDAR NOME */
 
     if (
-      nomeLimpo.length < 3 ||
-      nomeLimpo.length > 120
+      nomeLimpo.length <
+        3 ||
+      nomeLimpo.length >
+        120
     ) {
       setErro(
         "O nome do prato deve ter entre 3 e 120 caracteres."
       );
+
       return;
     }
 
+    /* VALIDAR PREÇO */
+
     if (
-      !Number.isFinite(precoNumerico) ||
-      precoNumerico <= 0 ||
-      precoNumerico > 100000
+      !Number.isFinite(
+        precoNumerico
+      ) ||
+      precoNumerico <=
+        0 ||
+      precoNumerico >
+        100000
     ) {
       setErro(
         "Informe um preço válido maior que zero."
       );
+
       return;
     }
 
+    /* VALIDAR PESSOAS */
+
     if (
-      !/^\d+$/.test(formulario.pessoas) ||
-      !Number.isInteger(pessoasNumerico) ||
-      pessoasNumerico < 1 ||
-      pessoasNumerico > 100
+      !/^\d+$/.test(
+        formulario.pessoas
+      ) ||
+      !Number.isInteger(
+        pessoasNumerico
+      ) ||
+      pessoasNumerico <
+        1 ||
+      pessoasNumerico >
+        100
     ) {
       setErro(
-        "Informe um número inteiro entre 1 e 100 pessoas."
+        "Informe entre 1 e 100 pessoas."
       );
+
       return;
     }
 
+    /* VALIDAR DESCRIÇÃO */
+
     if (
-      descricaoLimpa.length < 10 ||
-      descricaoLimpa.length > 1000
+      descricaoLimpa.length <
+        10 ||
+      descricaoLimpa.length >
+        1000
     ) {
       setErro(
         "A descrição deve ter entre 10 e 1000 caracteres."
       );
+
       return;
     }
 
-    // ======================================
-    // DADOS PERMITIDOS AO PARCEIRO
-    // ======================================
-
-    // Não enviamos:
-    // imagemUrl
-    // motivoRecusa
-    // analisadoEm
-    // analisadoPor
-    //
-    // Esses campos são administrados
-    // exclusivamente pelo Império Chalés.
-
     const dadosPrato = {
-      nome: nomeLimpo,
-      preco: precoNumerico,
-      pessoas: pessoasNumerico,
-      descricao: descricaoLimpa,
-      status: "pendente" as const,
+      nome:
+        nomeLimpo,
+
+      preco:
+        precoNumerico,
+
+      pessoas:
+        pessoasNumerico,
+
+      descricao:
+        descricaoLimpa,
+
+      status:
+        "pendente" as const,
     };
 
-    setSalvando(true);
+    setSalvando(
+      true
+    );
 
     try {
-      if (editandoId) {
-        // ==================================
-        // ATUALIZAÇÃO
-        // ==================================
+      if (
+        editandoId
+      ) {
+        const referenciaPrato =
+          doc(
+            db,
 
-        const referenciaPrato = doc(
-          db,
-          "restaurantes",
-          usuarioAtual.uid,
-          "pratos",
-          editandoId
+            "restaurantes",
+
+            usuarioAtual.uid,
+
+            "pratos",
+
+            editandoId
+          );
+
+        await updateDoc(
+          referenciaPrato,
+          {
+            ...dadosPrato,
+
+            atualizadoEm:
+              serverTimestamp(),
+          }
         );
 
-        await updateDoc(referenciaPrato, {
-          ...dadosPrato,
-          atualizadoEm: serverTimestamp(),
-        });
-
         setMensagem(
-          "Prato atualizado e reenviado para análise! " +
-          "A administração precisa aprovar novamente " +
-          "as informações."
+          "Prato atualizado e enviado novamente para análise."
         );
       } else {
-        // ==================================
-        // NOVO PRATO
-        // ==================================
+        const referenciaPratos =
+          collection(
+            db,
 
-        const referenciaPratos = collection(
-          db,
-          "restaurantes",
-          usuarioAtual.uid,
-          "pratos"
+            "restaurantes",
+
+            usuarioAtual.uid,
+
+            "pratos"
+          );
+
+        await addDoc(
+          referenciaPratos,
+          {
+            ...dadosPrato,
+
+            criadoEm:
+              serverTimestamp(),
+
+            atualizadoEm:
+              serverTimestamp(),
+          }
         );
 
-        await addDoc(referenciaPratos, {
-          ...dadosPrato,
-
-          criadoEm: serverTimestamp(),
-
-          atualizadoEm: serverTimestamp(),
-        });
-
         setMensagem(
-          "Prato enviado com sucesso! " +
-          "Ele foi salvo no Firebase e está " +
-          "aguardando aprovação da administração."
+          "Prato enviado para análise."
         );
       }
 
@@ -530,99 +728,201 @@ export function ParceiroPratos() {
 
       window.scrollTo({
         top: 0,
-        behavior: "smooth",
+
+        behavior:
+          "smooth",
       });
-    } catch (erroSalvar) {
+    } catch (
+      erroSalvar
+    ) {
       console.error(
-        "Erro ao salvar o prato:",
+        "Erro ao salvar prato:",
         erroSalvar
       );
 
-      setErro(obterMensagemErro(erroSalvar));
+      setErro(
+        obterMensagemErro(
+          erroSalvar
+        )
+      );
     } finally {
-      setSalvando(false);
+      setSalvando(
+        false
+      );
     }
   }
 
-  // ========================================
-  // EDITAR PRATO
-  // ========================================
+  /* =======================================================
+     EDITAR
+  ======================================================= */
 
-  function editarPrato(prato: Prato) {
-    setEditandoId(prato.id);
+  function editarPrato(
+    prato: Prato
+  ) {
+    setEditandoId(
+      prato.id
+    );
 
     setFormulario({
-      nome: prato.nome,
+      nome:
+        prato.nome,
 
-      preco: prato.preco
-        .toFixed(2)
-        .replace(".", ","),
+      preco:
+        prato.preco
+          .toFixed(2)
+          .replace(
+            ".",
+            ","
+          ),
 
-      pessoas: String(prato.pessoas),
+      pessoas:
+        String(
+          prato.pessoas
+        ),
 
-      descricao: prato.descricao,
+      descricao:
+        prato.descricao,
     });
 
     setErro("");
+
     setMensagem("");
 
     document
-      .getElementById("formulario-prato")
+      .getElementById(
+        "formulario-prato"
+      )
       ?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
+        behavior:
+          "smooth",
+
+        block:
+          "start",
       });
   }
 
-  // ========================================
-  // CANCELAR EDIÇÃO
-  // ========================================
-
   function cancelarEdicao() {
     limparFormulario();
-    setMensagem("Edição cancelada.");
+
+    setMensagem(
+      "Edição cancelada."
+    );
   }
 
-  // ========================================
-  // ESTATÍSTICAS
-  // ========================================
+  /* =======================================================
+     ESTATÍSTICAS
+  ======================================================= */
 
-  const totalPendentes = pratos.filter(
-    (prato) => prato.status === "pendente"
-  ).length;
+  const totalPendentes =
+    pratos.filter(
+      (
+        prato
+      ) =>
+        prato.status ===
+        "pendente"
+    ).length;
 
-  const totalAprovados = pratos.filter(
-    (prato) => prato.status === "aprovado"
-  ).length;
+  const totalAprovados =
+    pratos.filter(
+      (
+        prato
+      ) =>
+        prato.status ===
+        "aprovado"
+    ).length;
 
-  const totalRejeitados = pratos.filter(
-    (prato) => prato.status === "rejeitado"
-  ).length;
+  const totalRejeitados =
+    pratos.filter(
+      (
+        prato
+      ) =>
+        prato.status ===
+        "rejeitado"
+    ).length;
 
-  // ========================================
-  // ESTILOS
-  // ========================================
+  /* =======================================================
+     ESTILOS
+  ======================================================= */
 
-  const classeLabel =
-    "block text-sm font-bold text-[#19352b]";
+  const classeLabel = `
+    block
 
-  const classeInput =
-    "mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-sm text-[#19352b] outline-none transition focus:border-green-600 focus:ring-2 focus:ring-green-100";
+    text-[10px]
+    font-black
 
-  // ========================================
-  // TELA DE CARREGAMENTO
-  // ========================================
+    uppercase
 
-  if (verificandoSessao) {
+    tracking-[0.14em]
+
+    text-white/60
+  `;
+
+  const classeInput = `
+    mt-2
+
+    w-full
+
+    rounded-xl
+
+    border
+    border-white/10
+
+    bg-[#111111]
+
+    px-4
+    py-4
+
+    text-sm
+    font-semibold
+
+    text-white
+
+    outline-none
+
+    transition
+
+    placeholder:text-white/20
+
+    focus:border-red-500/70
+
+    disabled:opacity-50
+  `;
+
+  /* =======================================================
+     CARREGAMENTO
+  ======================================================= */
+
+  if (
+    verificandoSessao
+  ) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#f8f6ef] px-4">
-        <div className="rounded-2xl bg-white p-8 text-center shadow-sm">
-          <div className="text-4xl">🍽️</div>
+      <main
+        className="
+          flex
+          min-h-screen
 
-          <p className="mt-4 font-bold text-[#19352b]">
-            Verificando sua conta...
-          </p>
-        </div>
+          items-center
+          justify-center
+
+          bg-black
+
+          px-4
+        "
+      >
+        <p
+          className="
+            text-sm
+            font-black
+
+            uppercase
+
+            tracking-widest
+
+            text-white/50
+          "
+        >
+          Carregando...
+        </p>
       </main>
     );
   }
@@ -631,258 +931,616 @@ export function ParceiroPratos() {
     return null;
   }
 
-  // ========================================
-  // INTERFACE
-  // ========================================
+  /* =======================================================
+     INTERFACE
+  ======================================================= */
 
   return (
-    <main className="min-h-screen bg-[#f8f6ef] text-[#19352b]">
+    <main
+      className="
+        min-h-screen
 
-      {/* ==================================== */}
-      {/* CABEÇALHO                            */}
-      {/* ==================================== */}
+        bg-black
 
-      <header className="bg-[#101813] px-4 py-5 text-white">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4">
+        text-white
+      "
+      style={{
+        fontFamily:
+          "'Arial Black', 'Montserrat', Arial, sans-serif",
+      }}
+    >
+      {/* ===================================================
+          CABEÇALHO
+      =================================================== */}
 
-          <div className="flex items-center gap-3">
+      <header
+        className="
+          sticky
+          top-0
+          z-50
 
+          border-b
+          border-white/10
+
+          bg-black/95
+
+          px-4
+          py-4
+
+          backdrop-blur-xl
+        "
+      >
+        <div
+          className="
+            mx-auto
+
+            flex
+            max-w-6xl
+
+            items-center
+            justify-between
+
+            gap-4
+          "
+        >
+          <div
+            className="
+              flex
+              items-center
+
+              gap-3
+            "
+          >
             <img
-              src="/logo-imperio.png"
-              alt="Império Chalés"
-              className="h-12 w-12 rounded-full object-contain"
+              src="/coroa.png"
+              alt="Império"
+              draggable={false}
+              className="
+                h-9
+                w-9
+
+                object-contain
+              "
             />
 
             <div>
-              <h1 className="text-lg font-black">
-                Portal do Parceiro
-              </h1>
+              <p
+                className="
+                  text-[11px]
+                  font-black
 
-              <p className="text-xs font-bold tracking-widest text-amber-300">
-                MEUS PRATOS
+                  uppercase
+
+                  text-white
+                "
+              >
+                Portal do Parceiro
+              </p>
+
+              <p
+                className="
+                  mt-1
+
+                  text-[7px]
+                  font-black
+
+                  uppercase
+
+                  tracking-[0.20em]
+
+                  text-red-500
+                "
+              >
+                Meus pratos
               </p>
             </div>
-
           </div>
 
           <Link
             to="/parceiro/dashboard"
-            className="rounded-xl border border-white/20 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/10"
-          >
-            ← Voltar ao painel
-          </Link>
+            className="
+              rounded-xl
 
+              border
+              border-white/15
+
+              bg-[#111]
+
+              px-4
+              py-3
+
+              text-[9px]
+              font-black
+
+              uppercase
+
+              text-white
+
+              transition
+
+              hover:border-red-500/50
+            "
+          >
+            ← Painel
+          </Link>
         </div>
       </header>
 
-      {/* ==================================== */}
-      {/* CONTEÚDO                             */}
-      {/* ==================================== */}
+      {/* ===================================================
+          CONTEÚDO
+      =================================================== */}
 
-      <div className="mx-auto max-w-6xl px-4 py-8 md:py-12">
+      <div
+        className="
+          mx-auto
 
-        {/* ================================== */}
-        {/* APRESENTAÇÃO                       */}
-        {/* ================================== */}
+          max-w-6xl
 
-        <section className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#10251d] via-[#143627] to-[#0e2019] p-6 text-white shadow-xl md:p-10">
+          px-4
+          py-8
 
-          <span className="inline-flex rounded-full border border-lime-400/50 bg-lime-400/10 px-4 py-2 text-xs font-black tracking-wider text-lime-300">
-            🍽️ CARDÁPIO DO ESTABELECIMENTO
-          </span>
+          md:py-12
+        "
+      >
+        {/* =================================================
+            TÍTULO
+        ================================================= */}
 
-          <h2 className="mt-6 text-4xl font-black uppercase leading-tight md:text-6xl">
-            MONTE SEU
+        <section>
+          <p
+            className="
+              text-[9px]
+              font-black
 
-            <span className="block text-lime-400">
-              CARDÁPIO AQUI!
-            </span>
-          </h2>
+              uppercase
 
-          <p className="mt-5 max-w-3xl text-sm leading-7 text-gray-200 md:text-base">
-            Cadastre seus pratos, informe os preços,
-            descreva os ingredientes e indique
-            quantas pessoas cada opção serve.
+              tracking-[0.28em]
+
+              text-red-500
+            "
+          >
+            Cardápio
           </p>
 
-          <div className="mt-7 grid gap-3 sm:grid-cols-3">
+          <h1
+            className="
+              mt-3
 
-            <div className="rounded-2xl border border-white/10 bg-white/10 p-4">
-              <span className="text-3xl">📝</span>
+              text-4xl
+              font-black
 
-              <p className="mt-3 font-black">
-                Descreva o prato
-              </p>
+              uppercase
 
-              <p className="mt-2 text-xs leading-5 text-gray-200">
-                Informe os ingredientes e acompanhamentos.
-              </p>
-            </div>
+              leading-none
 
-            <div className="rounded-2xl border border-white/10 bg-white/10 p-4">
-              <span className="text-3xl">💰</span>
+              text-white
 
-              <p className="mt-3 font-black">
-                Defina o preço
-              </p>
+              md:text-6xl
+            "
+          >
+            MEUS{" "}
+            <span
+              className="
+                text-red-500
+              "
+            >
+              PRATOS
+            </span>
+          </h1>
 
-              <p className="mt-2 text-xs leading-5 text-gray-200">
-                Cadastre o valor de venda do prato.
-              </p>
-            </div>
+          <p
+            className="
+              mt-4
 
-            <div className="rounded-2xl border border-white/10 bg-white/10 p-4">
-              <span className="text-3xl">📷</span>
+              max-w-xl
 
-              <p className="mt-3 font-black">
-                Imagem ilustrativa
-              </p>
+              text-sm
+              leading-6
 
-              <p className="mt-2 text-xs leading-5 text-gray-200">
-                A equipe do Império preparará a imagem
-                com base na descrição cadastrada.
-              </p>
-            </div>
-
-          </div>
-
+              text-white/40
+            "
+          >
+            Cadastre e atualize
+            os pratos do seu
+            estabelecimento.
+          </p>
         </section>
 
-        {/* ================================== */}
-        {/* AVISO DE APROVAÇÃO                 */}
-        {/* ================================== */}
+        {/* =================================================
+            RESUMO
+        ================================================= */}
 
-        <div className="mt-6 rounded-2xl border border-blue-200 bg-blue-50 p-5 text-sm leading-7 text-blue-900">
-          🔗 <strong>Cadastro conectado ao Firebase.</strong>
+        <section
+          className="
+            mt-7
 
-          <p className="mt-2">
-            Seus pratos são salvos no banco de dados,
-            mas não aparecem automaticamente para
-            os hóspedes. A equipe do Império Chalés
-            revisará as informações, preparará
-            a imagem ilustrativa e decidirá
-            sobre a aprovação.
-          </p>
-        </div>
+            grid
+            grid-cols-3
 
-        {/* ================================== */}
-        {/* MENSAGENS                          */}
-        {/* ================================== */}
+            gap-3
+          "
+        >
+          <div
+            className="
+              rounded-2xl
+
+              border
+              border-[#ffd429]/20
+
+              bg-[#111]
+
+              p-4
+
+              text-center
+            "
+          >
+            <p
+              className="
+                text-2xl
+                font-black
+
+                text-[#ffd429]
+              "
+            >
+              {
+                totalPendentes
+              }
+            </p>
+
+            <p
+              className="
+                mt-1
+
+                text-[8px]
+                font-black
+
+                uppercase
+
+                text-white/35
+              "
+            >
+              Em análise
+            </p>
+          </div>
+
+          <div
+            className="
+              rounded-2xl
+
+              border
+              border-[#00ef78]/20
+
+              bg-[#111]
+
+              p-4
+
+              text-center
+            "
+          >
+            <p
+              className="
+                text-2xl
+                font-black
+
+                text-[#00ef78]
+              "
+            >
+              {
+                totalAprovados
+              }
+            </p>
+
+            <p
+              className="
+                mt-1
+
+                text-[8px]
+                font-black
+
+                uppercase
+
+                text-white/35
+              "
+            >
+              Aprovados
+            </p>
+          </div>
+
+          <div
+            className="
+              rounded-2xl
+
+              border
+              border-red-500/20
+
+              bg-[#111]
+
+              p-4
+
+              text-center
+            "
+          >
+            <p
+              className="
+                text-2xl
+                font-black
+
+                text-red-500
+              "
+            >
+              {
+                totalRejeitados
+              }
+            </p>
+
+            <p
+              className="
+                mt-1
+
+                text-[8px]
+                font-black
+
+                uppercase
+
+                text-white/35
+              "
+            >
+              Correções
+            </p>
+          </div>
+        </section>
+
+        {/* =================================================
+            MENSAGENS
+        ================================================= */}
 
         {erro && (
           <div
             role="alert"
-            className="mt-6 rounded-2xl border border-red-200 bg-red-50 p-5 text-sm font-bold text-red-800"
+            className="
+              mt-6
+
+              rounded-xl
+
+              border
+              border-red-500/25
+
+              bg-red-500/10
+
+              p-4
+
+              text-sm
+              font-bold
+
+              text-red-400
+            "
           >
-            ⚠️ {erro}
+            {erro}
           </div>
         )}
 
         {mensagem && (
           <div
             role="status"
-            className="mt-6 rounded-2xl border border-green-200 bg-green-50 p-5 text-sm font-bold text-green-800"
+            className="
+              mt-6
+
+              rounded-xl
+
+              border
+              border-[#00ef78]/25
+
+              bg-[#00ef78]/10
+
+              p-4
+
+              text-sm
+              font-bold
+
+              text-[#00ef78]
+            "
           >
-            ✅ {mensagem}
+            {mensagem}
           </div>
         )}
 
-        {/* ================================== */}
-        {/* FORMULÁRIO                         */}
-        {/* ================================== */}
+        {/* =================================================
+            FORMULÁRIO
+        ================================================= */}
 
         <section
           id="formulario-prato"
-          className="mt-8 scroll-mt-6 overflow-hidden rounded-[28px] border border-gray-100 bg-white shadow-sm"
+          className="
+            mt-8
+
+            scroll-mt-24
+
+            rounded-[24px]
+
+            border
+            border-white/10
+
+            bg-[#0b0b0b]
+
+            p-5
+
+            sm:p-7
+          "
         >
+          <div
+            className="
+              flex
+              flex-wrap
 
-          <div className="bg-[#19352b] px-6 py-6 text-white md:px-8">
+              items-end
+              justify-between
 
-            <h3 className="text-2xl font-black">
-              {editandoId
-                ? "✏️ Editar prato"
-                : "➕ Adicionar novo prato"}
-            </h3>
+              gap-3
+            "
+          >
+            <div>
+              <p
+                className="
+                  text-[8px]
+                  font-black
 
-            <p className="mt-2 text-sm text-gray-200">
-              {editandoId
-                ? "Ao salvar as alterações, o prato voltará para análise."
-                : "Preencha os dados para enviar o prato à administração."}
-            </p>
+                  uppercase
 
+                  tracking-[0.20em]
+
+                  text-red-500
+                "
+              >
+                {
+                  editandoId
+                    ? "EDITANDO"
+                    : "NOVO PRATO"
+                }
+              </p>
+
+              <h2
+                className="
+                  mt-2
+
+                  text-2xl
+                  font-black
+
+                  uppercase
+                "
+              >
+                {editandoId
+                  ? "EDITAR PRATO"
+                  : "ADICIONAR PRATO"}
+              </h2>
+            </div>
+
+            {editandoId && (
+              <button
+                type="button"
+                onClick={
+                  cancelarEdicao
+                }
+                disabled={
+                  salvando
+                }
+                className="
+                  text-[9px]
+                  font-black
+
+                  uppercase
+
+                  text-white/40
+
+                  hover:text-white
+                "
+              >
+                Cancelar
+              </button>
+            )}
           </div>
 
           <form
-            onSubmit={salvarPrato}
-            className="space-y-6 p-6 md:p-8"
-          >
+            onSubmit={
+              salvarPrato
+            }
+            className="
+              mt-6
 
+              space-y-5
+            "
+          >
             {/* NOME */}
 
             <div>
               <label
                 htmlFor="nomePrato"
-                className={classeLabel}
+                className={
+                  classeLabel
+                }
               >
-                Nome do prato *
+                NOME DO PRATO
               </label>
 
               <input
                 id="nomePrato"
                 required
-                maxLength={120}
-                value={formulario.nome}
-                disabled={salvando}
-                onChange={(event) =>
+                maxLength={
+                  120
+                }
+                value={
+                  formulario.nome
+                }
+                disabled={
+                  salvando
+                }
+                onChange={(
+                  event
+                ) =>
                   atualizarCampo(
                     "nome",
                     event.target.value
                   )
                 }
                 placeholder="Ex.: Frango caipira com arroz"
-                className={classeInput}
+                className={
+                  classeInput
+                }
               />
             </div>
 
-            {/* PREÇO E PESSOAS */}
+            {/* PREÇO / PESSOAS */}
 
-            <div className="grid gap-5 md:grid-cols-2">
+            <div
+              className="
+                grid
+                gap-4
 
+                sm:grid-cols-2
+              "
+            >
               <div>
                 <label
                   htmlFor="precoPrato"
-                  className={classeLabel}
+                  className={
+                    classeLabel
+                  }
                 >
-                  💰 Preço do prato (R$) *
+                  PREÇO
                 </label>
 
                 <input
                   id="precoPrato"
                   required
                   inputMode="decimal"
-                  value={formulario.preco}
-                  disabled={salvando}
-                  onChange={(event) =>
+                  value={
+                    formulario.preco
+                  }
+                  disabled={
+                    salvando
+                  }
+                  onChange={(
+                    event
+                  ) =>
                     atualizarCampo(
                       "preco",
                       event.target.value
                     )
                   }
-                  placeholder="Ex.: 59,90"
-                  className={classeInput}
+                  placeholder="59,90"
+                  className={
+                    classeInput
+                  }
                 />
-
-                <p className="mt-2 text-xs text-gray-500">
-                  Informe o preço de venda.
-                </p>
               </div>
 
               <div>
                 <label
                   htmlFor="pessoasPrato"
-                  className={classeLabel}
+                  className={
+                    classeLabel
+                  }
                 >
-                  👥 Serve quantas pessoas? *
+                  SERVE QUANTAS PESSOAS?
                 </label>
 
                 <input
@@ -893,474 +1551,747 @@ export function ParceiroPratos() {
                   min={1}
                   max={100}
                   step={1}
-                  value={formulario.pessoas}
-                  disabled={salvando}
-                  onChange={(event) =>
+                  value={
+                    formulario.pessoas
+                  }
+                  disabled={
+                    salvando
+                  }
+                  onChange={(
+                    event
+                  ) =>
                     atualizarCampo(
                       "pessoas",
                       event.target.value
                     )
                   }
-                  placeholder="Ex.: 2"
-                  className={classeInput}
+                  placeholder="2"
+                  className={
+                    classeInput
+                  }
                 />
-
-                <p className="mt-2 text-xs text-gray-500">
-                  Digite somente o número de pessoas.
-                </p>
               </div>
-
             </div>
 
             {/* DESCRIÇÃO */}
 
             <div>
-              <label
-                htmlFor="descricaoPrato"
-                className={classeLabel}
+              <div
+                className="
+                  flex
+                  items-center
+                  justify-between
+                "
               >
-                📋 Descrição do prato *
-              </label>
+                <label
+                  htmlFor="descricaoPrato"
+                  className={
+                    classeLabel
+                  }
+                >
+                  DESCRIÇÃO
+                </label>
+
+                <span
+                  className="
+                    text-[9px]
+
+                    text-white/25
+                  "
+                >
+                  {
+                    formulario
+                      .descricao
+                      .length
+                  }
+                  /1000
+                </span>
+              </div>
 
               <textarea
                 id="descricaoPrato"
                 required
-                maxLength={1000}
-                rows={5}
-                value={formulario.descricao}
-                disabled={salvando}
-                onChange={(event) =>
+                maxLength={
+                  1000
+                }
+                rows={4}
+                value={
+                  formulario.descricao
+                }
+                disabled={
+                  salvando
+                }
+                onChange={(
+                  event
+                ) =>
                   atualizarCampo(
                     "descricao",
                     event.target.value
                   )
                 }
-                placeholder="Descreva os ingredientes, acompanhamentos e detalhes do prato..."
-                className={classeInput}
+                placeholder="Ingredientes, acompanhamentos e detalhes..."
+                className={
+                  classeInput
+                }
               />
-
-              <div className="mt-2 flex justify-between gap-3 text-xs text-gray-500">
-
-                <span>
-                  Descreva o prato com detalhes.
-                </span>
-
-                <span>
-                  {formulario.descricao.length}/1000
-                </span>
-
-              </div>
             </div>
 
-            {/* IMAGEM */}
+            {/* AVISO IMAGEM */}
 
-            <div className="rounded-2xl border border-dashed border-lime-300 bg-lime-50 p-5">
+            <p
+              className="
+                text-[10px]
+                leading-5
 
-              <div className="flex items-start gap-4">
+                text-white/30
+              "
+            >
+              A imagem do prato
+              será adicionada pela
+              administração após a
+              análise.
+            </p>
 
-                <span className="text-3xl">
-                  📷
-                </span>
+            {/* SALVAR */}
 
-                <div>
+            <button
+              type="submit"
+              disabled={
+                salvando
+              }
+              className="
+                w-full
 
-                  <h4 className="font-black text-green-900">
-                    Imagem do prato
-                  </h4>
+                rounded-xl
 
-                  <p className="mt-2 text-sm leading-6 text-green-800">
-                    Você não precisa enviar fotografias.
-                    Nossa equipe preparará uma imagem
-                    ilustrativa a partir da descrição
-                    cadastrada e a adicionará ao catálogo
-                    após a revisão.
-                  </p>
+                bg-red-500
 
-                  <p className="mt-3 text-xs text-green-700">
-                    A imagem será incluída manualmente
-                    nos arquivos do site.
-                  </p>
+                px-6
+                py-4
 
-                </div>
+                text-xs
+                font-black
 
-              </div>
+                uppercase
 
-            </div>
+                text-white
 
-            {/* BOTÕES */}
+                shadow-[0_0_25px_rgba(239,68,68,0.20)]
 
-            <div className="flex flex-col gap-3 sm:flex-row">
+                transition
 
-              <button
-                type="submit"
-                disabled={salvando}
-                className="flex-1 rounded-2xl border-b-4 border-lime-700 bg-lime-400 px-6 py-5 text-base font-black uppercase text-black shadow-lg transition hover:-translate-y-1 hover:bg-lime-300 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {salvando
-                  ? "⏳ Salvando no Firebase..."
-                  : editandoId
-                    ? "✅ Salvar e reenviar para análise"
-                    : "➕ Enviar prato para aprovação"}
-              </button>
+                hover:bg-red-600
 
-              {editandoId && (
-                <button
-                  type="button"
-                  disabled={salvando}
-                  onClick={cancelarEdicao}
-                  className="rounded-2xl border border-gray-200 bg-white px-6 py-4 text-sm font-bold text-gray-700 transition hover:bg-gray-50 disabled:opacity-60"
-                >
-                  Cancelar edição
-                </button>
-              )}
-
-            </div>
-
+                disabled:cursor-not-allowed
+                disabled:opacity-50
+              "
+            >
+              {salvando
+                ? "SALVANDO..."
+                : editandoId
+                  ? "SALVAR ALTERAÇÕES"
+                  : "ENVIAR PARA ANÁLISE"}
+            </button>
           </form>
-
         </section>
 
-        {/* ================================== */}
-        {/* INDICADORES                        */}
-        {/* ================================== */}
+        {/* =================================================
+            LISTAGEM
+        ================================================= */}
 
-        <section className="mt-10 grid gap-4 sm:grid-cols-3">
+        <section
+          className="
+            mt-12
+          "
+        >
+          <div
+            className="
+              flex
+              items-end
+              justify-between
 
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
-            <p className="text-sm font-bold text-amber-900">
-              ⏳ Pendentes
-            </p>
-
-            <p className="mt-3 text-3xl font-black text-amber-800">
-              {totalPendentes}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-green-200 bg-green-50 p-5">
-            <p className="text-sm font-bold text-green-900">
-              ✅ Aprovados
-            </p>
-
-            <p className="mt-3 text-3xl font-black text-green-800">
-              {totalAprovados}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-red-200 bg-red-50 p-5">
-            <p className="text-sm font-bold text-red-900">
-              ❌ Correção necessária
-            </p>
-
-            <p className="mt-3 text-3xl font-black text-red-800">
-              {totalRejeitados}
-            </p>
-          </div>
-
-        </section>
-
-        {/* ================================== */}
-        {/* LISTA DE PRATOS                    */}
-        {/* ================================== */}
-
-        <section className="mt-12">
-
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-
+              gap-4
+            "
+          >
             <div>
+              <p
+                className="
+                  text-[8px]
+                  font-black
 
-              <span className="text-xs font-black uppercase tracking-[0.3em] text-amber-700">
-                ORGANIZAÇÃO DO CARDÁPIO
-              </span>
+                  uppercase
 
-              <h3 className="mt-3 text-3xl font-black">
-                Meus pratos
-              </h3>
+                  tracking-[0.20em]
 
-              <p className="mt-2 text-sm text-gray-500">
-                Os pratos desta lista são consultados
-                diretamente no Firebase.
+                  text-red-500
+                "
+              >
+                Cardápio
               </p>
 
+              <h2
+                className="
+                  mt-2
+
+                  text-2xl
+                  font-black
+
+                  uppercase
+                "
+              >
+                PRATOS CADASTRADOS
+              </h2>
             </div>
 
-            <span className="rounded-full bg-lime-100 px-5 py-3 text-sm font-black text-green-900">
-              🍽️ {pratos.length} prato(s)
-            </span>
+            <span
+              className="
+                text-xs
+                font-black
 
+                text-white/35
+              "
+            >
+              {
+                pratos.length
+              }
+            </span>
           </div>
 
-          {/* CARREGAMENTO */}
+          {/* CARREGANDO */}
 
           {carregandoPratos && (
-            <div className="rounded-3xl bg-white p-10 text-center shadow-sm">
-              <div className="text-4xl">⏳</div>
+            <div
+              className="
+                mt-6
 
-              <p className="mt-4 font-bold">
-                Carregando seus pratos...
-              </p>
+                rounded-2xl
+
+                border
+                border-white/10
+
+                bg-[#0d0d0d]
+
+                p-8
+
+                text-center
+
+                text-sm
+                font-bold
+
+                text-white/40
+              "
+            >
+              Carregando...
             </div>
           )}
 
-          {/* LISTA VAZIA */}
+          {/* VAZIO */}
 
-          {!carregandoPratos && pratos.length === 0 && (
-            <div className="rounded-[28px] border-2 border-dashed border-gray-200 bg-white p-8 text-center shadow-sm md:p-12">
+          {!carregandoPratos &&
+            pratos.length ===
+              0 && (
+              <div
+                className="
+                  mt-6
 
-              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-lime-100 text-4xl">
-                🍽️
-              </div>
+                  rounded-[24px]
 
-              <h4 className="mt-6 text-2xl font-black">
-                Seu cardápio começa aqui!
-              </h4>
+                  border
+                  border-dashed
+                  border-white/15
 
-              <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-gray-500">
-                Nenhum prato cadastrado neste
-                estabelecimento. Preencha o formulário
-                acima para enviar o primeiro prato
-                à administração.
-              </p>
+                  bg-[#0a0a0a]
 
-              <button
-                type="button"
-                onClick={() =>
-                  document
-                    .getElementById("formulario-prato")
-                    ?.scrollIntoView({
-                      behavior: "smooth",
-                    })
-                }
-                className="mt-6 rounded-xl bg-[#19352b] px-6 py-4 text-sm font-black text-white transition hover:bg-[#28533e]"
+                  p-10
+
+                  text-center
+                "
               >
-                ➕ Cadastrar meu primeiro prato
-              </button>
+                <img
+                  src={
+                    restauranteEmoji
+                  }
+                  alt=""
+                  draggable={
+                    false
+                  }
+                  className="
+                    mx-auto
 
-            </div>
-          )}
+                    h-24
+                    w-24
 
-          {/* PRATOS CADASTRADOS */}
+                    object-contain
 
-          {!carregandoPratos && pratos.length > 0 && (
-            <div className="grid gap-5 md:grid-cols-2">
+                    opacity-70
+                  "
+                />
 
-              {pratos.map((prato) => {
-                const status = informacoesStatus(
-                  prato.status
-                );
+                <h3
+                  className="
+                    mt-4
 
-                return (
-                  <article
-                    key={prato.id}
-                    className="overflow-hidden rounded-[28px] border border-gray-100 bg-white shadow-sm"
-                  >
+                    text-xl
+                    font-black
 
-                    {/* CABEÇALHO */}
+                    uppercase
+                  "
+                >
+                  NENHUM PRATO
+                </h3>
 
-                    <div className="bg-[#19352b] p-5 text-white">
+                <p
+                  className="
+                    mt-2
 
-                      <div className="flex items-start gap-4">
+                    text-xs
 
-                        <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white/10 text-4xl">
+                    text-white/35
+                  "
+                >
+                  Cadastre seu
+                  primeiro prato
+                  acima.
+                </p>
+              </div>
+            )}
 
-                          {prato.imagemUrl ? (
-                            <img
-                              src={prato.imagemUrl}
-                              alt={`Imagem ilustrativa de ${prato.nome}`}
-                              className="h-full w-full object-contain"
-                            />
-                          ) : (
-                            <span>🍽️</span>
-                          )}
+          {/* PRATOS */}
 
-                        </div>
+          {!carregandoPratos &&
+            pratos.length >
+              0 && (
+              <div
+                className="
+                  mt-6
 
-                        <div className="min-w-0 flex-1">
+                  grid
+                  gap-4
 
-                          <span
-                            className={`inline-flex rounded-full px-3 py-1 text-xs font-black ${status.classe}`}
-                          >
-                            {status.icone} {status.titulo}
-                          </span>
+                  md:grid-cols-2
+                "
+              >
+                {pratos.map(
+                  (
+                    prato
+                  ) => {
+                    const status =
+                      informacoesStatus(
+                        prato.status
+                      );
 
-                          <h4 className="mt-3 break-words text-xl font-black">
-                            {prato.nome}
-                          </h4>
+                    return (
+                      <article
+                        key={
+                          prato.id
+                        }
+                        className="
+                          overflow-hidden
 
-                        </div>
+                          rounded-[22px]
 
-                      </div>
+                          border
+                          border-white/10
 
-                    </div>
+                          bg-[#0c0c0c]
+                        "
+                      >
+                        {/* CABEÇALHO */}
 
-                    {/* INFORMAÇÕES */}
+                        <div
+                          className="
+                            flex
 
-                    <div className="p-5">
+                            items-center
 
-                      <div className="grid grid-cols-2 gap-3">
+                            gap-4
 
-                        <div className="rounded-xl bg-lime-50 p-4">
+                            border-b
+                            border-white/10
 
-                          <p className="text-xs text-green-800">
-                            💰 Preço
-                          </p>
-
-                          <p className="mt-2 text-xl font-black text-green-900">
-                            {formatarMoeda(prato.preco)}
-                          </p>
-
-                        </div>
-
-                        <div className="rounded-xl bg-amber-50 p-4">
-
-                          <p className="text-xs text-amber-900">
-                            👥 Serve
-                          </p>
-
-                          <p className="mt-2 text-xl font-black text-amber-900">
-                            {prato.pessoas}{" "}
-                            {prato.pessoas === 1
-                              ? "pessoa"
-                              : "pessoas"}
-                          </p>
-
-                        </div>
-
-                      </div>
-
-                      {/* DESCRIÇÃO */}
-
-                      <div className="mt-5">
-
-                        <h5 className="text-sm font-black">
-                          Descrição
-                        </h5>
-
-                        <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-7 text-gray-600">
-                          {prato.descricao}
-                        </p>
-
-                      </div>
-
-                      {/* STATUS */}
-
-                      <div className="mt-5 rounded-xl border border-gray-100 bg-[#f8f6ef] p-4">
-
-                        <p className="text-sm font-black">
-                          {status.icone} {status.titulo}
-                        </p>
-
-                        <p className="mt-2 text-xs leading-6 text-gray-600">
-                          {status.explicacao}
-                        </p>
-
-                        {prato.status === "aprovado" && (
-                          <p className="mt-2 text-xs font-bold text-green-800">
-                            Aprovado pela administração.
-                            A publicação pública será
-                            ativada após a integração
-                            com o catálogo.
-                          </p>
-                        )}
-
-                      </div>
-
-                      {/* MOTIVO DA RECUSA */}
-
-                      {prato.status === "rejeitado" &&
-                        prato.motivoRecusa && (
-                          <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
-
-                            <p className="text-sm font-black text-red-800">
-                              ⚠️ O que precisa ser corrigido?
-                            </p>
-
-                            <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-red-900">
-                              {prato.motivoRecusa}
-                            </p>
-
-                          </div>
-                        )}
-
-                      {/* IMAGEM */}
-
-                      <div className="mt-5 rounded-xl border border-dashed border-gray-200 bg-[#f8f6ef] p-4 text-xs text-gray-600">
-
-                        {prato.imagemUrl
-                          ? "📷 Imagem ilustrativa adicionada pela administração."
-                          : "📷 Imagem ilustrativa aguardando preparação pela equipe do Império Chalés."}
-
-                      </div>
-
-                      {/* DATA */}
-
-                      <div className="mt-4 text-xs text-gray-400">
-                        Cadastrado em:{" "}
-                        {formatarData(prato.criadoEm)}
-                      </div>
-
-                      {/* AÇÕES */}
-
-                      <div className="mt-6">
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            editarPrato(prato)
-                          }
-                          className="w-full rounded-xl border border-blue-200 bg-blue-50 px-4 py-4 text-sm font-black text-blue-800 transition hover:bg-blue-100"
+                            p-4
+                          "
                         >
-                          {prato.status === "rejeitado"
-                            ? "✏️ Corrigir e reenviar prato"
-                            : "✏️ Editar prato"}
-                        </button>
+                          <div
+                            className="
+                              flex
 
-                        <p className="mt-3 text-center text-xs leading-5 text-gray-500">
-                          Para solicitar a exclusão
-                          deste prato, entre em contato
-                          com a administração.
-                        </p>
+                              h-20
+                              w-20
 
-                      </div>
+                              shrink-0
 
-                    </div>
+                              items-center
+                              justify-center
 
-                  </article>
-                );
-              })}
+                              overflow-hidden
 
-            </div>
-          )}
+                              rounded-xl
 
+                              bg-black
+                            "
+                          >
+                            {prato.imagemUrl ? (
+                              <img
+                                src={
+                                  prato.imagemUrl
+                                }
+                                alt={
+                                  prato.nome
+                                }
+                                className="
+                                  h-full
+                                  w-full
+
+                                  object-cover
+                                "
+                              />
+                            ) : (
+                              <img
+                                src={
+                                  restauranteEmoji
+                                }
+                                alt=""
+                                draggable={
+                                  false
+                                }
+                                className="
+                                  h-16
+                                  w-16
+
+                                  object-contain
+                                "
+                              />
+                            )}
+                          </div>
+
+                          <div
+                            className="
+                              min-w-0
+                              flex-1
+                            "
+                          >
+                            <span
+                              className={`
+                                inline-flex
+
+                                rounded-full
+
+                                border
+
+                                px-3
+                                py-1.5
+
+                                text-[8px]
+                                font-black
+
+                                uppercase
+
+                                ${status.classe}
+                              `}
+                            >
+                              {
+                                status.titulo
+                              }
+                            </span>
+
+                            <h3
+                              className="
+                                mt-3
+
+                                break-words
+
+                                text-lg
+                                font-black
+
+                                uppercase
+
+                                text-white
+                              "
+                            >
+                              {
+                                prato.nome
+                              }
+                            </h3>
+                          </div>
+                        </div>
+
+                        {/* CONTEÚDO */}
+
+                        <div
+                          className="
+                            p-4
+                          "
+                        >
+                          <div
+                            className="
+                              flex
+                              items-center
+                              justify-between
+
+                              gap-4
+
+                              border-b
+                              border-white/10
+
+                              pb-4
+                            "
+                          >
+                            <div>
+                              <p
+                                className="
+                                  text-[8px]
+                                  font-black
+
+                                  uppercase
+
+                                  text-white/30
+                                "
+                              >
+                                PREÇO
+                              </p>
+
+                              <p
+                                className="
+                                  mt-1
+
+                                  text-lg
+                                  font-black
+
+                                  text-[#00ef78]
+                                "
+                              >
+                                {formatarMoeda(
+                                  prato.preco
+                                )}
+                              </p>
+                            </div>
+
+                            <div
+                              className="
+                                text-right
+                              "
+                            >
+                              <p
+                                className="
+                                  text-[8px]
+                                  font-black
+
+                                  uppercase
+
+                                  text-white/30
+                                "
+                              >
+                                SERVE
+                              </p>
+
+                              <p
+                                className="
+                                  mt-1
+
+                                  text-sm
+                                  font-black
+
+                                  text-white
+                                "
+                              >
+                                {
+                                  prato.pessoas
+                                }{" "}
+                                {prato.pessoas ===
+                                1
+                                  ? "pessoa"
+                                  : "pessoas"}
+                              </p>
+                            </div>
+                          </div>
+
+                          <p
+                            className="
+                              mt-4
+
+                              whitespace-pre-wrap
+
+                              text-xs
+                              leading-6
+
+                              text-white/45
+                            "
+                          >
+                            {
+                              prato.descricao
+                            }
+                          </p>
+
+                          {/* RECUSA */}
+
+                          {prato.status ===
+                            "rejeitado" &&
+                            prato.motivoRecusa && (
+                              <div
+                                className="
+                                  mt-4
+
+                                  rounded-xl
+
+                                  border
+                                  border-red-500/20
+
+                                  bg-red-500/10
+
+                                  p-3
+                                "
+                              >
+                                <p
+                                  className="
+                                    text-[8px]
+                                    font-black
+
+                                    uppercase
+
+                                    text-red-400
+                                  "
+                                >
+                                  CORREÇÃO SOLICITADA
+                                </p>
+
+                                <p
+                                  className="
+                                    mt-2
+
+                                    whitespace-pre-wrap
+
+                                    text-xs
+                                    leading-5
+
+                                    text-red-300
+                                  "
+                                >
+                                  {
+                                    prato.motivoRecusa
+                                  }
+                                </p>
+                              </div>
+                            )}
+
+                          {/* DATA */}
+
+                          <p
+                            className="
+                              mt-4
+
+                              text-[9px]
+
+                              text-white/20
+                            "
+                          >
+                            Cadastrado em{" "}
+                            {formatarData(
+                              prato.criadoEm
+                            )}
+                          </p>
+
+                          {/* EDITAR */}
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              editarPrato(
+                                prato
+                              )
+                            }
+                            className="
+                              mt-4
+
+                              w-full
+
+                              rounded-xl
+
+                              border
+                              border-white/10
+
+                              bg-[#151515]
+
+                              px-4
+                              py-3
+
+                              text-[9px]
+                              font-black
+
+                              uppercase
+
+                              text-white
+
+                              transition
+
+                              hover:border-red-500/40
+                              hover:text-red-400
+                            "
+                          >
+                            {prato.status ===
+                            "rejeitado"
+                              ? "CORRIGIR PRATO"
+                              : "EDITAR PRATO"}
+                          </button>
+                        </div>
+                      </article>
+                    );
+                  }
+                )}
+              </div>
+            )}
         </section>
-
-        {/* ================================== */}
-        {/* AVISO FINAL                        */}
-        {/* ================================== */}
-
-        <div className="mt-12 rounded-3xl bg-[#19352b] p-6 text-white md:p-8">
-
-          <h3 className="text-2xl font-black">
-            🚀 Seu cardápio está tomando forma!
-          </h3>
-
-          <p className="mt-3 max-w-3xl text-sm leading-7 text-gray-200">
-            Seus pratos ficam registrados no Firebase.
-            A administração revisará cada solicitação,
-            preparará a imagem ilustrativa e poderá
-            aprovar o prato ou solicitar correções.
-          </p>
-
-          <p className="mt-3 text-sm leading-7 text-gray-200">
-            Os produtos ainda não são publicados
-            automaticamente no catálogo dos hóspedes.
-            Essa integração será realizada na
-            próxima etapa.
-          </p>
-
-        </div>
-
       </div>
 
+      {/* ===================================================
+          RODAPÉ
+      =================================================== */}
+
+      <footer
+        className="
+          mt-12
+
+          border-t
+          border-white/10
+
+          px-4
+          py-10
+
+          text-center
+        "
+      >
+        <img
+          src="/coroa.png"
+          alt=""
+          className="
+            mx-auto
+
+            h-8
+            w-8
+
+            object-contain
+
+            opacity-40
+          "
+        />
+
+        <p
+          className="
+            mt-3
+
+            text-[8px]
+            font-black
+
+            uppercase
+
+            tracking-[0.18em]
+
+            text-white/20
+          "
+        >
+          Império Chalés • Portal do Parceiro
+        </p>
+      </footer>
     </main>
   );
 }

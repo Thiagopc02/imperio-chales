@@ -16,7 +16,6 @@ import { ParceirosCarrossel } from "../ParceirosCarrossel";
 
 import { FiltrosCatalogo } from "./FiltrosCatalogo";
 import { SecaoEntrega } from "./SecaoEntrega";
-import { SecaoRetirada } from "./SecaoRetirada";
 import { RestauranteModal } from "./RestauranteModal";
 import { CarrinhoModal } from "./CarrinhoModal";
 
@@ -103,14 +102,12 @@ export function CatalogoConteudo({
   const [
     categoria,
     setCategoria,
-  ] =
-    useState<string>("Todos");
+  ] = useState<string>("Todos");
 
   const [
     busca,
     setBusca,
-  ] =
-    useState("");
+  ] = useState("");
 
   /* =======================================================
      RESTAURANTES
@@ -207,7 +204,9 @@ export function CatalogoConteudo({
     pagamento,
     setPagamento,
   ] =
-    useState<Pagamento>("pix");
+    useState<Pagamento>(
+      "pix"
+    );
 
   const [
     respostaConsulta,
@@ -218,7 +217,7 @@ export function CatalogoConteudo({
     );
 
   /* =======================================================
-     CONTROLE DE DUPLICIDADE DA CONSULTA
+     CONTROLE DE DUPLICIDADE
   ======================================================= */
 
   const tentativaConsultaRef =
@@ -333,20 +332,13 @@ export function CatalogoConteudo({
 
           setRestaurantes(
             lista.filter(
-              (
-                restaurante
-              ) =>
+              (restaurante) =>
                 restaurante.ativo
             )
           );
 
-          setCarregando(
-            false
-          );
-
-          setErroCatalogo(
-            ""
-          );
+          setCarregando(false);
+          setErroCatalogo("");
         },
 
         (erro) => {
@@ -356,14 +348,10 @@ export function CatalogoConteudo({
           );
 
           setErroCatalogo(
-            mensagemErro(
-              erro
-            )
+            mensagemErro(erro)
           );
 
-          setCarregando(
-            false
-          );
+          setCarregando(false);
         }
       );
 
@@ -380,22 +368,14 @@ export function CatalogoConteudo({
       !restauranteAberto
     ) {
       setPratos([]);
-
-      setCarregandoPratos(
-        false
-      );
-
+      setCarregandoPratos(false);
       setErroPratos("");
 
       return;
     }
 
-    setCarregandoPratos(
-      true
-    );
-
+    setCarregandoPratos(true);
     setErroPratos("");
-
     setPratos([]);
 
     const cancelar =
@@ -463,8 +443,7 @@ export function CatalogoConteudo({
                 prato.status ===
                   "aprovado" &&
                 prato.disponivel &&
-                prato.preco >
-                  0
+                prato.preco > 0
             )
           );
 
@@ -472,9 +451,7 @@ export function CatalogoConteudo({
             false
           );
 
-          setErroPratos(
-            ""
-          );
+          setErroPratos("");
         },
 
         (erro) => {
@@ -484,9 +461,7 @@ export function CatalogoConteudo({
           );
 
           setErroPratos(
-            mensagemErro(
-              erro
-            )
+            mensagemErro(erro)
           );
 
           setCarregandoPratos(
@@ -514,8 +489,7 @@ export function CatalogoConteudo({
     }
 
     const rolagemAnterior =
-      document.body.style
-        .overflow;
+      document.body.style.overflow;
 
     document.body.style.overflow =
       "hidden";
@@ -577,29 +551,18 @@ export function CatalogoConteudo({
     ]);
 
   /* =======================================================
-     SEPARAR ENTREGA E RETIRADA
+     RESTAURANTES COM ENTREGA
   ======================================================= */
 
   const comEntrega =
     restaurantesFiltrados.filter(
-      (
-        restaurante
-      ) =>
+      (restaurante) =>
         restaurante.modalidadeEntrega ===
         "entrega_propria"
     );
 
-  const semEntrega =
-    restaurantesFiltrados.filter(
-      (
-        restaurante
-      ) =>
-        restaurante.modalidadeEntrega ===
-        "retirada_anfitriao"
-    );
-
   /* =======================================================
-     CARRINHO
+     QUANTIDADE DO CARRINHO
   ======================================================= */
 
   const quantidadeTotal =
@@ -629,7 +592,6 @@ export function CatalogoConteudo({
     );
 
     setErroPratos("");
-
     setErroPedido("");
   }
 
@@ -643,7 +605,6 @@ export function CatalogoConteudo({
     );
 
     setPratos([]);
-
     setErroPratos("");
   }
 
@@ -654,6 +615,18 @@ export function CatalogoConteudo({
   function adicionarPrato(
     prato: PratoPublico
   ) {
+    /* -----------------------------------------------------
+       CLIENTE PRECISA ESTAR LOGADO
+    ----------------------------------------------------- */
+
+    if (!temaCliente) {
+      setErroPedido(
+        "Para adicionar pratos ao carrinho, faça login."
+      );
+
+      return;
+    }
+
     if (
       !restauranteAberto
     ) {
@@ -664,6 +637,10 @@ export function CatalogoConteudo({
       restauranteAberto;
 
     setErroPedido("");
+
+    /* -----------------------------------------------------
+       BLOQUEAR ITENS DE RESTAURANTES DIFERENTES
+    ----------------------------------------------------- */
 
     if (
       carrinho.some(
@@ -916,6 +893,18 @@ export function CatalogoConteudo({
     );
 
     /* -----------------------------------------------------
+       LOGIN
+    ----------------------------------------------------- */
+
+    if (!temaCliente) {
+      setErroPedido(
+        "Faça login para continuar com sua consulta."
+      );
+
+      return;
+    }
+
+    /* -----------------------------------------------------
        CARRINHO
     ----------------------------------------------------- */
 
@@ -1088,10 +1077,7 @@ export function CatalogoConteudo({
         itens: [
           ...itensParaServidor,
         ].sort(
-          (
-            a,
-            b
-          ) =>
+          (a, b) =>
             a.pratoId.localeCompare(
               b.pratoId
             )
@@ -1262,13 +1248,7 @@ export function CatalogoConteudo({
             indice
           ) => {
             const linhas = [
-              `${
-                indice + 1
-              }. ${
-                item.quantidade
-              }x ${
-                item.nome
-              }`,
+              `${indice + 1}. ${item.quantidade}x ${item.nome}`,
 
               `Valor: ${dinheiro(
                 item.subtotal
@@ -1403,9 +1383,7 @@ export function CatalogoConteudo({
     <div
       className={`
         relative
-
         overflow-hidden
-
         bg-black
         text-white
 
@@ -1426,19 +1404,19 @@ export function CatalogoConteudo({
           z-10
 
           mx-auto
-
           w-full
           max-w-7xl
 
           px-4
-
-          pb-24
+          pb-8
           pt-6
 
           sm:px-6
+          sm:pb-10
           sm:pt-8
 
           lg:px-8
+          lg:pb-12
           lg:pt-10
         "
       >
@@ -1517,9 +1495,7 @@ export function CatalogoConteudo({
             <span
               className="
                 mr-2
-
                 inline-block
-
                 animate-spin
               "
             >
@@ -1577,134 +1553,11 @@ export function CatalogoConteudo({
           )}
 
         {/* ===============================================
-            RETIRADA
+            FIM DO CATÁLOGO
+
+            A PARTIR DAQUI O CARDAPIO.TSX MOSTRA
+            DIRETAMENTE O RODAPÉ.
         =============================================== */}
-
-        {!carregando &&
-          !erroCatalogo && (
-            <SecaoRetirada
-              restaurantes={
-                semEntrega
-              }
-              onAbrirRestaurante={
-                abrirRestaurante
-              }
-            />
-          )}
-
-        {/* ===============================================
-            AVISO FINAL
-        =============================================== */}
-
-        <section
-          className="
-            relative
-
-            mt-12
-
-            overflow-hidden
-
-            rounded-[28px]
-
-            border
-            border-white/10
-
-            bg-gradient-to-br
-            from-[#303030]
-            via-[#171717]
-            to-[#070707]
-
-            p-7
-
-            text-center
-
-            shadow-[0_20px_60px_rgba(0,0,0,0.45)]
-
-            sm:p-9
-
-            md:p-12
-          "
-        >
-          {/* BRILHO SUPERIOR */}
-
-          <div
-            aria-hidden="true"
-            className="
-              pointer-events-none
-
-              absolute
-              left-1/2
-              top-0
-
-              h-48
-              w-80
-
-              -translate-x-1/2
-              -translate-y-1/2
-
-              rounded-full
-
-              bg-[#d4af37]/10
-
-              blur-[90px]
-            "
-          />
-
-          <div
-            className="
-              relative
-              z-10
-            "
-          >
-            <span
-              className="
-                text-3xl
-
-                sm:text-4xl
-              "
-            >
-              🌿
-            </span>
-
-            <h2
-              className="
-                mt-4
-
-                text-2xl
-                font-black
-
-                text-white
-
-                sm:text-3xl
-              "
-            >
-              Saboreie cada momento
-              da sua viagem.
-            </h2>
-
-            <p
-              className="
-                mx-auto
-                mt-4
-
-                max-w-2xl
-
-                text-sm
-                leading-7
-
-                text-white/50
-              "
-            >
-              Nosso catálogo apresenta
-              restaurantes parceiros.
-              Disponibilidade, valor
-              final, pedido, pagamento
-              e entrega devem ser
-              confirmados diretamente
-              com o estabelecimento.
-            </p>
-          </div>
-        </section>
       </main>
 
       {/* ===================================================
@@ -1720,6 +1573,9 @@ export function CatalogoConteudo({
         }
         carregandoPratos={
           carregandoPratos
+        }
+        clienteLogado={
+          temaCliente
         }
         onFechar={
           fecharRestaurante
@@ -1776,99 +1632,101 @@ export function CatalogoConteudo({
 
       {/* ===================================================
           BOTÃO FLUTUANTE DO CARRINHO
+          APENAS PARA CLIENTE LOGADO
       =================================================== */}
 
-      {!carrinhoAberto && (
-        <button
-          type="button"
-          onClick={() => {
-            setCarrinhoAberto(
-              true
-            );
+      {temaCliente &&
+        !carrinhoAberto && (
+          <button
+            type="button"
+            onClick={() => {
+              setCarrinhoAberto(
+                true
+              );
 
-            setRestauranteAberto(
-              null
-            );
-          }}
-          aria-label={`Abrir carrinho com ${quantidadeTotal} itens`}
-          className="
-            fixed
+              setRestauranteAberto(
+                null
+              );
+            }}
+            aria-label={`Abrir carrinho com ${quantidadeTotal} itens`}
+            className="
+              fixed
 
-            bottom-5
-            right-4
+              bottom-5
+              right-4
 
-            z-[150]
+              z-[150]
 
-            flex
-            h-16
-            w-16
+              flex
+              h-16
+              w-16
 
-            items-center
-            justify-center
+              items-center
+              justify-center
 
-            rounded-full
+              rounded-full
 
-            border-2
-            border-[#d4af37]
+              border-2
+              border-[#d4af37]
 
-            bg-gradient-to-br
-            from-[#333333]
-            via-[#181818]
-            to-black
+              bg-gradient-to-br
+              from-[#333333]
+              via-[#181818]
+              to-black
 
-            text-2xl
+              text-2xl
 
-            shadow-[0_0_30px_rgba(212,175,55,0.32)]
+              shadow-[0_0_30px_rgba(212,175,55,0.32)]
 
-            transition-all
-            duration-300
+              transition-all
+              duration-300
 
-            hover:scale-110
+              hover:scale-110
 
-            sm:bottom-7
-            sm:right-7
-          "
-        >
-          🛒
+              sm:bottom-7
+              sm:right-7
+            "
+          >
+            🛒
 
-          {quantidadeTotal >
-            0 && (
-            <span
-              className="
-                absolute
+            {quantidadeTotal >
+              0 && (
+              <span
+                className="
+                  absolute
 
-                -right-1
-                -top-1
+                  -right-1
+                  -top-1
 
-                flex
-                h-7
-                min-w-7
+                  flex
+                  h-7
+                  min-w-7
 
-                items-center
-                justify-center
+                  items-center
+                  justify-center
 
-                rounded-full
+                  rounded-full
 
-                border-2
-                border-black
+                  border-2
+                  border-black
 
-                bg-[#d4af37]
+                  bg-[#d4af37]
 
-                px-1
+                  px-1
 
-                text-xs
-                font-black
+                  text-xs
+                  font-black
 
-                text-black
-              "
-            >
-              {
-                quantidadeTotal
-              }
-            </span>
-          )}
-        </button>
-      )}
+                  text-black
+                "
+              >
+                {
+                  quantidadeTotal
+                }
+              </span>
+            )}
+          </button>
+        )}
 
       {/* ===================================================
           MODAL DO CARRINHO
@@ -1973,17 +1831,13 @@ export function CatalogoConteudo({
           >
             <span>
               ⚠️{" "}
-              {
-                erroPedido
-              }
+              {erroPedido}
             </span>
 
             <button
               type="button"
               onClick={() =>
-                setErroPedido(
-                  ""
-                )
+                setErroPedido("")
               }
               className="
                 shrink-0

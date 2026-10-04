@@ -1,9 +1,9 @@
-
 import {
   useEffect,
   useMemo,
   useState,
 } from "react";
+
 import { Link } from "react-router-dom";
 
 import {
@@ -22,9 +22,13 @@ import { onAuthStateChanged } from "firebase/auth";
 
 import { auth, db } from "../firebase/config";
 import { isAdmin } from "../firebase/admin";
-// =====================================================
-// TIPOS
-// =====================================================
+
+import estabelecimentoIcon from "../components/catalogo/estabelecimento.png";
+import restauranteEmoji from "../components/catalogo/restaurante-emoji.png";
+
+/* =========================================================
+   TIPOS
+========================================================= */
 
 type StatusRestaurante =
   | "pendente"
@@ -90,9 +94,9 @@ interface FormularioPublicacao {
   horarioFuncionamento: string;
 }
 
-// =====================================================
-// CONSTANTES
-// =====================================================
+/* =========================================================
+   CONSTANTES
+========================================================= */
 
 const CATEGORIAS: CategoriaPublica[] = [
   "Hambúrgueres",
@@ -111,9 +115,9 @@ const FORMULARIO_VAZIO: FormularioPublicacao = {
   horarioFuncionamento: "",
 };
 
-// =====================================================
-// FUNÇÕES AUXILIARES
-// =====================================================
+/* =========================================================
+   FUNÇÕES AUXILIARES
+========================================================= */
 
 function formatarData(
   data: Timestamp | null
@@ -122,13 +126,16 @@ function formatarData(
     return "Data não informada";
   }
 
-  return data.toDate().toLocaleString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return data.toDate().toLocaleString(
+    "pt-BR",
+    {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }
+  );
 }
 
 function formatarModalidade(
@@ -136,16 +143,16 @@ function formatarModalidade(
 ): string {
   switch (valor) {
     case "entrega_propria":
-      return "🛵 Entrega própria";
+      return "Entrega própria";
 
     case "somente_retirada":
-      return "📦 Somente retirada";
+      return "Somente retirada";
 
     case "retirada_anfitriao":
-      return "🛍️ Retirada sob consulta";
+      return "Retirada sob consulta";
 
     case "ambas":
-      return "✅ Entrega própria e retirada";
+      return "Entrega e retirada";
 
     default:
       return "Não informada";
@@ -157,13 +164,13 @@ function formatarStatus(
 ): string {
   switch (status) {
     case "pendente":
-      return "⏳ Aguardando aprovação";
+      return "AGUARDANDO";
 
     case "aprovado":
-      return "✅ Aprovado";
+      return "APROVADO";
 
     case "rejeitado":
-      return "❌ Rejeitado";
+      return "REJEITADO";
   }
 }
 
@@ -172,20 +179,35 @@ function classeStatus(
 ): string {
   switch (status) {
     case "pendente":
-      return "border-amber-200 bg-amber-100 text-amber-800";
+      return `
+        border-[#ffd429]/25
+        bg-[#ffd429]/10
+        text-[#ffd429]
+      `;
 
     case "aprovado":
-      return "border-green-200 bg-green-100 text-green-800";
+      return `
+        border-emerald-400/25
+        bg-emerald-400/10
+        text-emerald-300
+      `;
 
     case "rejeitado":
-      return "border-red-200 bg-red-100 text-red-800";
+      return `
+        border-red-500/25
+        bg-red-500/10
+        text-red-400
+      `;
   }
 }
 
 function somenteNumeros(
   valor: string
 ): string {
-  return valor.replace(/\D/g, "");
+  return valor.replace(
+    /\D/g,
+    ""
+  );
 }
 
 function obterErro(
@@ -194,10 +216,15 @@ function obterErro(
   if (erro instanceof Error) {
     const codigo =
       "code" in erro
-        ? String(erro.code)
+        ? String(
+            erro.code
+          )
         : "";
 
-    if (codigo === "permission-denied") {
+    if (
+      codigo ===
+      "permission-denied"
+    ) {
       return (
         "O Firebase negou a operação. Confira a conta " +
         "administrativa e as regras publicadas."
@@ -210,355 +237,561 @@ function obterErro(
   return "Não foi possível concluir a operação.";
 }
 
-// =====================================================
-// COMPONENTE
-// =====================================================
+/* =========================================================
+   COMPONENTE
+========================================================= */
 
 export function AdminRestaurantes() {
-  // ---------------------------------------------------
-  // DADOS
-  // ---------------------------------------------------
+  /* =======================================================
+     DADOS
+  ======================================================= */
 
-  const [restaurantes, setRestaurantes] =
-    useState<Restaurante[]>([]);
+  const [
+    restaurantes,
+    setRestaurantes,
+  ] =
+    useState<
+      Restaurante[]
+    >([]);
 
-  const [publicados, setPublicados] =
-    useState<RestaurantePublicado[]>([]);
+  const [
+    publicados,
+    setPublicados,
+  ] =
+    useState<
+      RestaurantePublicado[]
+    >([]);
 
-  const [carregando, setCarregando] =
+  const [
+    carregando,
+    setCarregando,
+  ] =
     useState(true);
 
-  const [carregandoPublicos, setCarregandoPublicos] =
+  const [
+    carregandoPublicos,
+    setCarregandoPublicos,
+  ] =
     useState(true);
 
-  const [erro, setErro] = useState("");
+  const [
+    erro,
+    setErro,
+  ] =
+    useState("");
 
-  const [mensagem, setMensagem] = useState("");
+  const [
+    mensagem,
+    setMensagem,
+  ] =
+    useState("");
 
-  // ---------------------------------------------------
-  // FILTROS
-  // ---------------------------------------------------
+  /* =======================================================
+     FILTROS
+  ======================================================= */
 
-  const [filtro, setFiltro] =
-    useState<FiltroRestaurante>("todos");
+  const [
+    filtro,
+    setFiltro,
+  ] =
+    useState<FiltroRestaurante>(
+      "todos"
+    );
 
-  const [busca, setBusca] = useState("");
+  const [
+    busca,
+    setBusca,
+  ] =
+    useState("");
 
-  // ---------------------------------------------------
-  // AÇÕES
-  // ---------------------------------------------------
+  /* =======================================================
+     AÇÕES
+  ======================================================= */
 
-  const [processandoId, setProcessandoId] =
-    useState<string | null>(null);
+  const [
+    processandoId,
+    setProcessandoId,
+  ] =
+    useState<
+      string | null
+    >(null);
 
-  const [detalhesAbertos, setDetalhesAbertos] =
-    useState<string | null>(null);
+  const [
+    detalhesAbertos,
+    setDetalhesAbertos,
+  ] =
+    useState<
+      string | null
+    >(null);
 
-  const [publicacaoAberta, setPublicacaoAberta] =
-    useState<string | null>(null);
+  const [
+    publicacaoAberta,
+    setPublicacaoAberta,
+  ] =
+    useState<
+      string | null
+    >(null);
 
-  const [formulario, setFormulario] =
+  const [
+    formulario,
+    setFormulario,
+  ] =
     useState<FormularioPublicacao>(
       FORMULARIO_VAZIO
     );
 
-// ===================================================
-// CONSULTAR CADASTROS PRIVADOS
-// ===================================================
+  /* =======================================================
+     CADASTROS PRIVADOS
+  ======================================================= */
 
-useEffect(() => {
-  let cancelarRestaurantes: (() => void) | null = null;
+  useEffect(() => {
+    let cancelarRestaurantes:
+      | (() => void)
+      | null = null;
 
-  const cancelarAutenticacao = onAuthStateChanged(
-    auth,
+    const cancelarAutenticacao =
+      onAuthStateChanged(
+        auth,
 
-    (usuario) => {
-      // =============================================
-      // USUÁRIO NÃO AUTENTICADO
-      // =============================================
-
-      if (!usuario) {
-        setRestaurantes([]);
-        setErro("Sessão administrativa não autenticada.");
-        setCarregando(false);
-        return;
-      }
-
-      // =============================================
-      // VERIFICAR ADMINISTRADOR
-      // =============================================
-
-      if (!isAdmin(usuario.uid, usuario.email)) {
-        console.warn(
-          "Usuário autenticado sem permissão administrativa:",
-          {
-            uid: usuario.uid,
-            email: usuario.email,
+        (
+          usuario
+        ) => {
+          if (!usuario) {
+            setRestaurantes([]);
+            setErro(
+              "Sessão administrativa não autenticada."
+            );
+            setCarregando(
+              false
+            );
+            return;
           }
-        );
 
-        setRestaurantes([]);
-        setErro("Sessão administrativa não autorizada.");
-        setCarregando(false);
-        return;
-      }
+          if (
+            !isAdmin(
+              usuario.uid,
+              usuario.email
+            )
+          ) {
+            setRestaurantes([]);
+            setErro(
+              "Sessão administrativa não autorizada."
+            );
+            setCarregando(
+              false
+            );
+            return;
+          }
 
-      // =============================================
-      // CONSULTAR RESTAURANTES
-      // =============================================
+          const referencia =
+            collection(
+              db,
+              "restaurantes"
+            );
 
-      const referencia = collection(
-        db,
-        "restaurantes"
-      );
+          cancelarRestaurantes =
+            onSnapshot(
+              referencia,
 
-      cancelarRestaurantes = onSnapshot(
-        referencia,
+              (
+                resultado
+              ) => {
+                const lista:
+                  Restaurante[] =
+                  resultado.docs.map(
+                    (
+                      documento
+                    ) => {
+                      const dados =
+                        documento.data();
 
-        (resultado) => {
-          const lista: Restaurante[] =
-            resultado.docs.map((documento) => {
-              const dados = documento.data();
+                      const status:
+                        StatusRestaurante =
+                        dados.status ===
+                          "aprovado" ||
+                        dados.status ===
+                          "rejeitado"
+                          ? dados.status
+                          : "pendente";
 
-              const status: StatusRestaurante =
-                dados.status === "aprovado" ||
-                dados.status === "rejeitado"
-                  ? dados.status
-                  : "pendente";
+                      return {
+                        id:
+                          documento.id,
 
-              return {
-                id: documento.id,
+                        uid:
+                          typeof dados.uid ===
+                          "string"
+                            ? dados.uid
+                            : documento.id,
 
-                uid:
-                  typeof dados.uid === "string"
-                    ? dados.uid
-                    : documento.id,
+                        nomeEmpresa:
+                          dados.nomeEmpresa ??
+                          "",
 
-                nomeEmpresa:
-                  dados.nomeEmpresa ?? "",
+                        nomeResponsavel:
+                          dados.nomeResponsavel ??
+                          "",
 
-                nomeResponsavel:
-                  dados.nomeResponsavel ?? "",
+                        email:
+                          dados.email ??
+                          "",
 
-                email:
-                  dados.email ?? "",
+                        telefone:
+                          dados.telefone ??
+                          "",
 
-                telefone:
-                  dados.telefone ?? "",
+                        documento:
+                          dados.documento ??
+                          "",
 
-                documento:
-                  dados.documento ?? "",
+                        cep:
+                          dados.cep ??
+                          "",
 
-                cep:
-                  dados.cep ?? "",
+                        endereco:
+                          dados.endereco ??
+                          "",
 
-                endereco:
-                  dados.endereco ?? "",
+                        numero:
+                          dados.numero ??
+                          "",
 
-                numero:
-                  dados.numero ?? "",
+                        bairro:
+                          dados.bairro ??
+                          "",
 
-                bairro:
-                  dados.bairro ?? "",
+                        cidade:
+                          dados.cidade ??
+                          "",
 
-                cidade:
-                  dados.cidade ?? "",
+                        complemento:
+                          dados.complemento ??
+                          "",
 
-                complemento:
-                  dados.complemento ?? "",
+                        modalidadeEntrega:
+                          dados.modalidadeEntrega ??
+                          "",
 
-                modalidadeEntrega:
-                  dados.modalidadeEntrega ?? "",
+                        descricao:
+                          dados.descricao ??
+                          "",
 
-                descricao:
-                  dados.descricao ?? "",
+                        logoUrl:
+                          dados.logoUrl ??
+                          "",
 
-                logoUrl:
-                  dados.logoUrl ?? "",
+                        status,
 
-                status,
+                        criadoEm:
+                          dados.criadoEm ??
+                          null,
+                      };
+                    }
+                  );
 
-                criadoEm:
-                  dados.criadoEm ?? null,
-              };
-            });
+                lista.sort(
+                  (
+                    a,
+                    b
+                  ) => {
+                    const dataA =
+                      a.criadoEm?.toMillis() ??
+                      0;
 
-          lista.sort((a, b) => {
-            const dataA =
-              a.criadoEm?.toMillis() ?? 0;
+                    const dataB =
+                      b.criadoEm?.toMillis() ??
+                      0;
 
-            const dataB =
-              b.criadoEm?.toMillis() ?? 0;
+                    return (
+                      dataB -
+                      dataA
+                    );
+                  }
+                );
 
-            return dataB - dataA;
-          });
+                setRestaurantes(
+                  lista
+                );
 
-          setRestaurantes(lista);
-          setCarregando(false);
-          setErro("");
+                setCarregando(
+                  false
+                );
+
+                setErro("");
+              },
+
+              (
+                erroFirebase
+              ) => {
+                console.error(
+                  "Erro ao consultar restaurantes:",
+                  erroFirebase
+                );
+
+                setErro(
+                  obterErro(
+                    erroFirebase
+                  )
+                );
+
+                setCarregando(
+                  false
+                );
+              }
+            );
         },
 
-        (erroFirebase) => {
+        (
+          erroAutenticacao
+        ) => {
           console.error(
-            "Erro ao consultar restaurantes:",
+            "Erro ao verificar autenticação administrativa:",
+            erroAutenticacao
+          );
+
+          setRestaurantes([]);
+
+          setErro(
+            "Não foi possível verificar a sessão administrativa."
+          );
+
+          setCarregando(
+            false
+          );
+        }
+      );
+
+    return () => {
+      cancelarAutenticacao();
+
+      if (
+        cancelarRestaurantes
+      ) {
+        cancelarRestaurantes();
+      }
+    };
+  }, []);
+
+  /* =======================================================
+     VITRINE PÚBLICA
+  ======================================================= */
+
+  useEffect(() => {
+    const referencia =
+      collection(
+        db,
+        "catalogoPublico"
+      );
+
+    const cancelar =
+      onSnapshot(
+        referencia,
+
+        (
+          resultado
+        ) => {
+          const lista:
+            RestaurantePublicado[] =
+            resultado.docs.map(
+              (
+                documento
+              ) => {
+                const dados =
+                  documento.data();
+
+                return {
+                  id:
+                    documento.id,
+
+                  nome:
+                    dados.nome ??
+                    "",
+
+                  categoria:
+                    dados.categoria ??
+                    "",
+
+                  descricao:
+                    dados.descricao ??
+                    "",
+
+                  modalidadeEntrega:
+                    dados.modalidadeEntrega ??
+                    "",
+
+                  ativo:
+                    dados.ativo ===
+                    true,
+
+                  logo:
+                    dados.logo ??
+                    "",
+
+                  telefone:
+                    dados.telefone ??
+                    "",
+
+                  whatsapp:
+                    dados.whatsapp ??
+                    "",
+                };
+              }
+            );
+
+          setPublicados(
+            lista
+          );
+
+          setCarregandoPublicos(
+            false
+          );
+        },
+
+        (
+          erroFirebase
+        ) => {
+          console.error(
+            "Erro ao consultar catálogo público:",
             erroFirebase
           );
 
-          setErro(obterErro(erroFirebase));
-          setCarregando(false);
+          setErro(
+            obterErro(
+              erroFirebase
+            )
+          );
+
+          setCarregandoPublicos(
+            false
+          );
         }
       );
-    },
 
-    (erroAutenticacao) => {
-      console.error(
-        "Erro ao verificar autenticação administrativa:",
-        erroAutenticacao
+    return () =>
+      cancelar();
+  }, []);
+
+  /* =======================================================
+     MAPA PUBLICADOS
+  ======================================================= */
+
+  const mapaPublicados =
+    useMemo(() => {
+      return new Map(
+        publicados.map(
+          (
+            restaurante
+          ) => [
+            restaurante.id,
+            restaurante,
+          ]
+        )
       );
+    }, [
+      publicados,
+    ]);
 
-      setRestaurantes([]);
-      setErro(
-        "Não foi possível verificar a sessão administrativa."
-      );
-      setCarregando(false);
-    }
-  );
+  /* =======================================================
+     INDICADORES
+  ======================================================= */
 
-  return () => {
-    cancelarAutenticacao();
+  const total =
+    restaurantes.length;
 
-    if (cancelarRestaurantes) {
-      cancelarRestaurantes();
-    }
-  };
-}, []);
+  const pendentes =
+    restaurantes.filter(
+      (
+        restaurante
+      ) =>
+        restaurante.status ===
+        "pendente"
+    ).length;
 
-  // ===================================================
-  // CONSULTAR VITRINE PÚBLICA
-  // ===================================================
+  const aprovados =
+    restaurantes.filter(
+      (
+        restaurante
+      ) =>
+        restaurante.status ===
+        "aprovado"
+    ).length;
 
-  useEffect(() => {
-    const referencia = collection(
-      db,
-      "catalogoPublico"
-    );
+  const rejeitados =
+    restaurantes.filter(
+      (
+        restaurante
+      ) =>
+        restaurante.status ===
+        "rejeitado"
+    ).length;
 
-    const cancelar = onSnapshot(
-      referencia,
+  const totalPublicados =
+    publicados.filter(
+      (
+        restaurante
+      ) =>
+        restaurante.ativo
+    ).length;
 
-      (resultado) => {
-        const lista: RestaurantePublicado[] =
-          resultado.docs.map((documento) => {
-            const dados = documento.data();
+  /* =======================================================
+     FILTROS
+  ======================================================= */
 
-            return {
-              id: documento.id,
-              nome: dados.nome ?? "",
-              categoria: dados.categoria ?? "",
-              descricao: dados.descricao ?? "",
-              modalidadeEntrega:
-                dados.modalidadeEntrega ?? "",
-              ativo: dados.ativo === true,
-              logo: dados.logo ?? "",
-              telefone: dados.telefone ?? "",
-              whatsapp: dados.whatsapp ?? "",
-            };
-          });
+  const restaurantesFiltrados =
+    restaurantes.filter(
+      (
+        restaurante
+      ) => {
+        const correspondeFiltro =
+          filtro ===
+            "todos" ||
+          restaurante.status ===
+            filtro;
 
-        setPublicados(lista);
-        setCarregandoPublicos(false);
-      },
+        const termo =
+          busca
+            .trim()
+            .toLocaleLowerCase(
+              "pt-BR"
+            );
 
-      (erroFirebase) => {
-        console.error(
-          "Erro ao consultar catálogo público:",
-          erroFirebase
+        const correspondeBusca =
+          !termo ||
+          [
+            restaurante.nomeEmpresa,
+            restaurante.nomeResponsavel,
+            restaurante.email,
+          ]
+            .join(" ")
+            .toLocaleLowerCase(
+              "pt-BR"
+            )
+            .includes(
+              termo
+            );
+
+        return (
+          correspondeFiltro &&
+          correspondeBusca
         );
-
-        setErro(obterErro(erroFirebase));
-        setCarregandoPublicos(false);
       }
     );
 
-    return () => cancelar();
-  }, []);
-
-  // ===================================================
-  // ÍNDICE DOS RESTAURANTES PUBLICADOS
-  // ===================================================
-
-  const mapaPublicados = useMemo(() => {
-    return new Map(
-      publicados.map((restaurante) => [
-        restaurante.id,
-        restaurante,
-      ])
-    );
-  }, [publicados]);
-
-  // ===================================================
-  // INDICADORES
-  // ===================================================
-
-  const total = restaurantes.length;
-
-  const pendentes = restaurantes.filter(
-    (restaurante) =>
-      restaurante.status === "pendente"
-  ).length;
-
-  const aprovados = restaurantes.filter(
-    (restaurante) =>
-      restaurante.status === "aprovado"
-  ).length;
-
-  const rejeitados = restaurantes.filter(
-    (restaurante) =>
-      restaurante.status === "rejeitado"
-  ).length;
-
-  const totalPublicados = publicados.filter(
-    (restaurante) =>
-      restaurante.ativo
-  ).length;
-
-  // ===================================================
-  // FILTROS
-  // ===================================================
-
-  const restaurantesFiltrados = restaurantes.filter(
-    (restaurante) => {
-      const correspondeFiltro =
-        filtro === "todos" ||
-        restaurante.status === filtro;
-
-      const termo = busca
-        .trim()
-        .toLocaleLowerCase("pt-BR");
-
-      const correspondeBusca =
-        !termo ||
-        [
-          restaurante.nomeEmpresa,
-          restaurante.nomeResponsavel,
-          restaurante.email,
-        ]
-          .join(" ")
-          .toLocaleLowerCase("pt-BR")
-          .includes(termo);
-
-      return correspondeFiltro && correspondeBusca;
-    }
-  );
-
-  // ===================================================
-  // VALIDAR SESSÃO ADMINISTRATIVA
-  // ===================================================
+  /* =======================================================
+     ADMIN
+  ======================================================= */
 
   function verificarAdministrador(): boolean {
-    const usuario = auth.currentUser;
+    const usuario =
+      auth.currentUser;
 
-    if (!usuario || !isAdmin(usuario.uid, usuario.email)) {
+    if (
+      !usuario ||
+      !isAdmin(
+        usuario.uid,
+        usuario.email
+      )
+    ) {
       setErro(
         "Faça login com a conta administrativa."
       );
@@ -569,42 +802,62 @@ useEffect(() => {
     return true;
   }
 
-  // ===================================================
-  // APROVAR OU REJEITAR EMPRESA
-  // ===================================================
+  /* =======================================================
+     APROVAR / REJEITAR
+  ======================================================= */
 
   async function alterarStatus(
     restaurante: Restaurante,
-    novoStatus: "aprovado" | "rejeitado"
+    novoStatus:
+      | "aprovado"
+      | "rejeitado"
   ) {
-    if (processandoId !== null) return;
+    if (
+      processandoId !==
+      null
+    ) {
+      return;
+    }
 
     setErro("");
     setMensagem("");
 
-    if (restaurante.status !== "pendente") {
+    if (
+      restaurante.status !==
+      "pendente"
+    ) {
       setErro(
         "Esta solicitação já foi analisada."
       );
       return;
     }
 
-    if (!verificarAdministrador()) return;
+    if (
+      !verificarAdministrador()
+    ) {
+      return;
+    }
 
     const acao =
-      novoStatus === "aprovado"
+      novoStatus ===
+      "aprovado"
         ? "APROVAR"
         : "REJEITAR";
 
-    const confirmou = window.confirm(
-      `Deseja ${acao} a empresa "${restaurante.nomeEmpresa}"?\n\n` +
-      "Esta ação altera o cadastro privado. " +
-      "Ela não publica automaticamente o restaurante."
+    const confirmou =
+      window.confirm(
+        `Deseja ${acao} a empresa "${restaurante.nomeEmpresa}"?\n\n` +
+          "Esta ação altera o cadastro privado. " +
+          "Ela não publica automaticamente o restaurante."
+      );
+
+    if (!confirmou) {
+      return;
+    }
+
+    setProcessandoId(
+      restaurante.id
     );
-
-    if (!confirmou) return;
-
-    setProcessandoId(restaurante.id);
 
     try {
       await updateDoc(
@@ -614,55 +867,76 @@ useEffect(() => {
           restaurante.id
         ),
         {
-          status: novoStatus,
+          status:
+            novoStatus,
 
           analisadoEm:
             serverTimestamp(),
 
           analisadoPor:
-            auth.currentUser!.uid,
+            auth.currentUser!
+              .uid,
         }
       );
 
       setMensagem(
-        novoStatus === "aprovado"
-          ? `Empresa "${restaurante.nomeEmpresa}" aprovada. Agora você pode preparar sua publicação.`
+        novoStatus ===
+          "aprovado"
+          ? `Empresa "${restaurante.nomeEmpresa}" aprovada.`
           : `Solicitação de "${restaurante.nomeEmpresa}" rejeitada.`
       );
-    } catch (erroFirebase) {
+    } catch (
+      erroFirebase
+    ) {
       console.error(
         "Erro ao alterar status:",
         erroFirebase
       );
 
-      setErro(obterErro(erroFirebase));
+      setErro(
+        obterErro(
+          erroFirebase
+        )
+      );
     } finally {
-      setProcessandoId(null);
+      setProcessandoId(
+        null
+      );
     }
   }
 
-  // ===================================================
-  // ABRIR FORMULÁRIO DE PUBLICAÇÃO
-  // ===================================================
+  /* =======================================================
+     ABRIR PUBLICAÇÃO
+  ======================================================= */
 
   function abrirPublicacao(
     restaurante: Restaurante
   ) {
-    if (processandoId !== null) return;
+    if (
+      processandoId !==
+      null
+    ) {
+      return;
+    }
 
-    if (restaurante.status !== "aprovado") {
+    if (
+      restaurante.status !==
+      "aprovado"
+    ) {
       setErro(
         "Apenas restaurantes aprovados podem ser publicados."
       );
       return;
     }
 
-    const publicado = mapaPublicados.get(
-      restaurante.id
-    );
+    const publicado =
+      mapaPublicados.get(
+        restaurante.id
+      );
 
     let modalidade:
-      ModalidadePublica | "" = "";
+      ModalidadePublica | "" =
+      "";
 
     if (
       publicado?.modalidadeEntrega ===
@@ -676,7 +950,8 @@ useEffect(() => {
       restaurante.modalidadeEntrega ===
       "entrega_propria"
     ) {
-      modalidade = "entrega_propria";
+      modalidade =
+        "entrega_propria";
     }
 
     setFormulario({
@@ -684,43 +959,62 @@ useEffect(() => {
         CATEGORIAS.includes(
           publicado?.categoria as CategoriaPublica
         )
-          ? publicado!.categoria as CategoriaPublica
+          ? (
+              publicado!
+                .categoria as CategoriaPublica
+            )
           : "",
 
       descricao:
         publicado?.descricao ??
         restaurante.descricao,
 
-      modalidadeEntrega: modalidade,
+      modalidadeEntrega:
+        modalidade,
 
       whatsapp:
         publicado?.whatsapp ??
         restaurante.telefone,
 
-      horarioFuncionamento: "",
+      horarioFuncionamento:
+        "",
     });
 
-    setPublicacaoAberta(restaurante.id);
+    setPublicacaoAberta(
+      restaurante.id
+    );
 
     setErro("");
     setMensagem("");
   }
 
-  // ===================================================
-  // PUBLICAR RESTAURANTE
-  // ===================================================
+  /* =======================================================
+     PUBLICAR RESTAURANTE
+  ======================================================= */
 
   async function publicarRestaurante(
     restaurante: Restaurante
   ) {
-    if (processandoId !== null) return;
+    if (
+      processandoId !==
+      null
+    ) {
+      return;
+    }
 
     setErro("");
     setMensagem("");
 
-    if (!verificarAdministrador()) return;
+    if (
+      !verificarAdministrador()
+    ) {
+      return;
+    }
 
-    if (restaurante.status !== "aprovado") {
+    if (
+      restaurante.status !==
+      "aprovado"
+    ) {
       setErro(
         "A empresa precisa estar aprovada."
       );
@@ -744,9 +1038,11 @@ useEffect(() => {
     const nome =
       restaurante.nomeEmpresa.trim();
 
-    if (!CATEGORIAS.includes(
-      categoria as CategoriaPublica
-    )) {
+    if (
+      !CATEGORIAS.includes(
+        categoria as CategoriaPublica
+      )
+    ) {
       setErro(
         "Selecione a categoria do estabelecimento."
       );
@@ -761,8 +1057,10 @@ useEffect(() => {
     }
 
     if (
-      nome.length < 3 ||
-      nome.length > 100
+      nome.length <
+        3 ||
+      nome.length >
+        100
     ) {
       setErro(
         "O nome comercial deve ter de 3 a 100 caracteres."
@@ -771,7 +1069,8 @@ useEffect(() => {
     }
 
     if (
-      descricao.length > 1000
+      descricao.length >
+      1000
     ) {
       setErro(
         "A descrição pode ter até 1000 caracteres."
@@ -780,8 +1079,10 @@ useEffect(() => {
     }
 
     if (
-      whatsapp.length < 10 ||
-      whatsapp.length > 13
+      whatsapp.length <
+        10 ||
+      whatsapp.length >
+        13
     ) {
       setErro(
         "Informe um WhatsApp comercial válido, com DDD."
@@ -789,57 +1090,64 @@ useEffect(() => {
       return;
     }
 
-    const confirmou = window.confirm(
-      `Publicar "${nome}" no Sabores da Chapada?\n\n` +
-      "Apenas os dados comerciais definidos neste " +
-      "formulário serão enviados à vitrine pública. " +
-      "Os pratos serão publicados separadamente."
+    const confirmou =
+      window.confirm(
+        `Publicar "${nome}" no Sabores da Chapada?\n\n` +
+          "Apenas os dados comerciais definidos neste " +
+          "formulário serão enviados à vitrine pública."
+      );
+
+    if (!confirmou) {
+      return;
+    }
+
+    setProcessandoId(
+      restaurante.id
     );
 
-    if (!confirmou) return;
-
-    setProcessandoId(restaurante.id);
-
     try {
-      const referenciaPrivada = doc(
-        db,
-        "restaurantes",
-        restaurante.id
-      );
+      const referenciaPrivada =
+        doc(
+          db,
+          "restaurantes",
+          restaurante.id
+        );
 
-      const referenciaPublica = doc(
-        db,
-        "catalogoPublico",
-        restaurante.id
-      );
-
-      // Transação: conferimos novamente o cadastro
-      // privado antes de criar a vitrine pública.
+      const referenciaPublica =
+        doc(
+          db,
+          "catalogoPublico",
+          restaurante.id
+        );
 
       await runTransaction(
         db,
-        async (transacao) => {
-          const cadastro = await transacao.get(
-            referenciaPrivada
-          );
 
-          if (!cadastro.exists()) {
+        async (
+          transacao
+        ) => {
+          const cadastro =
+            await transacao.get(
+              referenciaPrivada
+            );
+
+          if (
+            !cadastro.exists()
+          ) {
             throw new Error(
               "O cadastro do restaurante não foi encontrado."
             );
           }
 
           if (
-            cadastro.data().status !==
+            cadastro.data()
+              .status !==
             "aprovado"
           ) {
             throw new Error(
-              "O restaurante deixou de estar aprovado. Publicação cancelada."
+              "O restaurante deixou de estar aprovado."
             );
           }
-
-          // Permitimos somente dados comerciais.
-          // Não copiamos o documento privado inteiro.
 
           transacao.set(
             referenciaPublica,
@@ -847,474 +1155,599 @@ useEffect(() => {
               nome,
               categoria,
               descricao,
-              modalidadeEntrega: modalidade,
-              ativo: true,
+              modalidadeEntrega:
+                modalidade,
+
+              ativo:
+                true,
 
               logo:
-                typeof cadastro.data().logoUrl ===
-                  "string"
-                  ? cadastro.data().logoUrl
+                typeof cadastro.data()
+                  .logoUrl ===
+                "string"
+                  ? cadastro.data()
+                      .logoUrl
                   : "",
 
-              // Não publicamos o endereço pessoal
-              // do responsável ou outros dados
-              // privados do cadastro.
-
               whatsapp,
-              telefone: whatsapp,
+
+              telefone:
+                whatsapp,
 
               horarioFuncionamento:
-                formulario.horarioFuncionamento.trim(),
+                formulario
+                  .horarioFuncionamento
+                  .trim(),
 
-              diasFuncionamento: [],
-              formasPagamento: [],
+              diasFuncionamento:
+                [],
+
+              formasPagamento:
+                [],
             }
           );
         }
       );
 
-      setPublicacaoAberta(null);
+      setPublicacaoAberta(
+        null
+      );
 
       setMensagem(
-        `"${nome}" foi publicado em catalogoPublico. ` +
-        "Agora precisamos publicar seus pratos aprovados."
+        `"${nome}" foi publicado no catálogo.`
       );
-    } catch (erroFirebase) {
+    } catch (
+      erroFirebase
+    ) {
       console.error(
         "Erro ao publicar restaurante:",
         erroFirebase
       );
 
-      setErro(obterErro(erroFirebase));
+      setErro(
+        obterErro(
+          erroFirebase
+        )
+      );
     } finally {
-      setProcessandoId(null);
+      setProcessandoId(
+        null
+      );
     }
   }
 
-  // ===================================================
-  // RETIRAR RESTAURANTE DO CATÁLOGO
-  // ===================================================
+  /* =======================================================
+     RETIRAR PUBLICAÇÃO
+  ======================================================= */
 
   async function retirarPublicacao(
     restaurante: Restaurante
   ) {
-    if (processandoId !== null) return;
+    if (
+      processandoId !==
+      null
+    ) {
+      return;
+    }
 
     setErro("");
     setMensagem("");
 
-    if (!verificarAdministrador()) return;
+    if (
+      !verificarAdministrador()
+    ) {
+      return;
+    }
 
-    const confirmou = window.confirm(
-      `Retirar "${restaurante.nomeEmpresa}" do catálogo?\n\n` +
-      "O restaurante e seus pratos públicos serão " +
-      "excluídos da vitrine. O cadastro privado e " +
-      "os pratos originais permanecerão no Firebase."
+    const confirmou =
+      window.confirm(
+        `Retirar "${restaurante.nomeEmpresa}" do catálogo?\n\n` +
+          "O restaurante e seus pratos públicos serão excluídos da vitrine."
+      );
+
+    if (!confirmou) {
+      return;
+    }
+
+    setProcessandoId(
+      restaurante.id
     );
 
-    if (!confirmou) return;
-
-    setProcessandoId(restaurante.id);
-
     try {
-      const referenciaPublica = doc(
-        db,
-        "catalogoPublico",
-        restaurante.id
-      );
+      const referenciaPublica =
+        doc(
+          db,
+          "catalogoPublico",
+          restaurante.id
+        );
 
-      const referenciaPratosPublicos = collection(
-        db,
-        "catalogoPublico",
-        restaurante.id,
-        "pratos"
-      );
+      const referenciaPratosPublicos =
+        collection(
+          db,
+          "catalogoPublico",
+          restaurante.id,
+          "pratos"
+        );
 
-      const resultado = await getDocs(
-        referenciaPratosPublicos
-      );
+      const resultado =
+        await getDocs(
+          referenciaPratosPublicos
+        );
 
-      // Para manter a retirada atômica,
-      // não efetuamos exclusões parciais
-      // se o total ultrapassar o limite
-      // desta operação em lote.
-
-      if (resultado.size > 400) {
+      if (
+        resultado.size >
+        400
+      ) {
         throw new Error(
-          "Este restaurante possui muitos pratos públicos. " +
-          "A retirada precisa ser realizada por uma rotina " +
-          "administrativa no servidor."
+          "Este restaurante possui muitos pratos públicos para esta operação."
         );
       }
 
-      const lote = writeBatch(db);
+      const lote =
+        writeBatch(db);
 
-      resultado.docs.forEach((prato) => {
-        lote.delete(prato.ref);
-      });
+      resultado.docs.forEach(
+        (
+          prato
+        ) => {
+          lote.delete(
+            prato.ref
+          );
+        }
+      );
 
-      lote.delete(referenciaPublica);
+      lote.delete(
+        referenciaPublica
+      );
 
       await lote.commit();
 
-      setPublicacaoAberta(null);
+      setPublicacaoAberta(
+        null
+      );
 
       setMensagem(
-        `"${restaurante.nomeEmpresa}" foi retirado do catálogo, ` +
-        "junto com seus pratos públicos."
+        `"${restaurante.nomeEmpresa}" foi retirado do catálogo.`
       );
-    } catch (erroFirebase) {
+    } catch (
+      erroFirebase
+    ) {
       console.error(
         "Erro ao retirar publicação:",
         erroFirebase
       );
 
-      setErro(obterErro(erroFirebase));
+      setErro(
+        obterErro(
+          erroFirebase
+        )
+      );
     } finally {
-      setProcessandoId(null);
+      setProcessandoId(
+        null
+      );
     }
   }
 
-  // ===================================================
-  // ESTILOS
-  // ===================================================
+  /* =======================================================
+     ESTILOS
+  ======================================================= */
 
-  const classeInput =
-    "mt-2 w-full rounded-xl border border-gray-200 " +
-    "bg-white px-4 py-3 text-sm outline-none " +
-    "focus:border-green-600 focus:ring-2 focus:ring-green-100";
+  const classeInput = `
+    mt-2
+    w-full
+    rounded-xl
+    border
+    border-white/10
+    bg-[#101010]
+    px-4
+    py-3
+    text-sm
+    text-white
+    outline-none
+    placeholder:text-white/20
+    focus:border-[#ffd429]/60
+  `;
 
-  const classeFiltro =
-    "rounded-full border px-4 py-2 text-sm font-bold transition";
-
-  // ===================================================
-  // INTERFACE
-  // ===================================================
+  /* =======================================================
+     INTERFACE
+  ======================================================= */
 
   return (
-    <main className="min-h-screen bg-[#f8f6ef] text-[#19352b]">
+    <main
+      className="
+        min-h-screen
+        bg-black
+        text-white
+      "
+      style={{
+        fontFamily:
+          "'Arial Black', 'Montserrat', Arial, sans-serif",
+      }}
+    >
+      {/* ===================================================
+          CABEÇALHO
+      =================================================== */}
 
-      {/* ============================================= */}
-      {/* CABEÇALHO                                     */}
-      {/* ============================================= */}
-
-      <header className="bg-[#101813] px-4 py-5 text-white">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4">
-
+      <header
+        className="
+          sticky
+          top-0
+          z-50
+          border-b
+          border-white/10
+          bg-black/95
+          px-4
+          py-4
+          backdrop-blur-xl
+        "
+      >
+        <div
+          className="
+            mx-auto
+            flex
+            max-w-7xl
+            items-center
+            justify-between
+            gap-4
+          "
+        >
           <div className="flex items-center gap-3">
             <img
-              src="/logo-imperio.png"
+              src="/coroa.png"
               alt="Império Chalés"
-              className="h-12 w-12 rounded-full object-contain"
+              className="h-10 w-10 object-contain"
             />
 
-            <div>
-              <h1 className="text-lg font-black">
-                Império Chalés
-              </h1>
+            <div className="hidden sm:block">
+              <p className="text-[11px] font-black uppercase">
+                Central Administrativa
+              </p>
 
-              <p className="text-xs font-bold tracking-widest text-amber-300">
-                RESTAURANTES PARCEIROS
+              <p className="mt-1 text-[7px] font-black uppercase tracking-[0.18em] text-[#ffd429]">
+                Restaurantes parceiros
               </p>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex gap-2">
             <Link
               to="/admin/pratos"
-              className="rounded-xl border border-amber-400/40 bg-amber-400/10 px-4 py-3 text-sm font-bold text-amber-300"
+              className="
+                rounded-xl
+                border
+                border-[#ffd429]/25
+                bg-[#ffd429]/10
+                px-4
+                py-3
+                text-[9px]
+                font-black
+                uppercase
+                text-[#ffd429]
+              "
             >
-              🍽️ Aprovar pratos
+              PRATOS
             </Link>
 
             <Link
               to="/admin/dashboard"
-              className="rounded-xl border border-white/20 px-4 py-3 text-sm font-bold text-white"
+              className="
+                rounded-xl
+                border
+                border-white/10
+                bg-white/[0.04]
+                px-4
+                py-3
+                text-[9px]
+                font-black
+                uppercase
+                text-white
+              "
             >
-              ← Dashboard
+              ← PAINEL
             </Link>
           </div>
-
         </div>
       </header>
 
-      {/* ============================================= */}
-      {/* CONTEÚDO                                      */}
-      {/* ============================================= */}
+      {/* ===================================================
+          CONTEÚDO
+      =================================================== */}
 
-      <div className="mx-auto max-w-7xl px-4 py-10">
+      <div
+        className="
+          mx-auto
+          max-w-7xl
+          px-4
+          py-10
+          sm:px-6
+          lg:px-8
+        "
+      >
+        {/* =================================================
+            TÍTULO
+        ================================================= */}
 
-        <section className="flex flex-wrap items-center justify-between gap-5">
+        <section className="text-center">
+          <p className="text-[8px] font-black uppercase tracking-[0.22em] text-[#ffd429]">
+            ESTABELECIMENTOS
+          </p>
 
-          <div>
-            <span className="text-xs font-bold uppercase tracking-[0.3em] text-amber-700">
-              CENTRAL ADMINISTRATIVA
-            </span>
-
-            <h2 className="mt-3 text-3xl font-black md:text-4xl">
-              Restaurantes parceiros
-            </h2>
-
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-gray-500">
-              Analise solicitações, gerencie os estabelecimentos
-              e escolha quais empresas serão publicadas
-              no Sabores da Chapada.
-            </p>
-          </div>
-
-          <Link
-            to="/parceiro/cadastro"
-            className="rounded-2xl border-b-4 border-amber-600 bg-amber-400 px-5 py-4 text-center text-sm font-black text-black shadow-md transition hover:bg-amber-300"
+          <h1
+            className="
+              mt-3
+              text-4xl
+              font-black
+              uppercase
+              leading-none
+              sm:text-5xl
+              md:text-6xl
+            "
           >
-            ➕ Abrir cadastro de parceiros
-          </Link>
-
+            RESTAURANTES{" "}
+            <span className="text-[#ffd429]">
+              PARCEIROS
+            </span>
+          </h1>
         </section>
 
-        {/* =========================================== */}
-        {/* AVISO                                         */}
-        {/* =========================================== */}
+        {/* =================================================
+            INDICADORES
+        ================================================= */}
 
-        <div className="mt-8 rounded-2xl border border-blue-200 bg-blue-50 p-5 text-sm leading-7 text-blue-900">
+        <section
+          className="
+            mt-8
+            grid
+            grid-cols-2
+            gap-3
+            lg:grid-cols-5
+          "
+        >
+          {[
+            {
+              titulo: "TOTAL",
+              valor: total,
+              cor: "text-white",
+            },
+            {
+              titulo: "PENDENTES",
+              valor: pendentes,
+              cor: "text-[#ffd429]",
+            },
+            {
+              titulo: "APROVADOS",
+              valor: aprovados,
+              cor: "text-emerald-400",
+            },
+            {
+              titulo: "REJEITADOS",
+              valor: rejeitados,
+              cor: "text-red-400",
+            },
+            {
+              titulo: "PUBLICADOS",
+              valor: totalPublicados,
+              cor: "text-sky-400",
+            },
+          ].map(
+            (
+              item
+            ) => (
+              <article
+                key={
+                  item.titulo
+                }
+                className="
+                  rounded-[20px]
+                  border
+                  border-white/10
+                  bg-white/[0.035]
+                  p-5
+                  text-center
+                "
+              >
+                <p
+                  className={`
+                    text-3xl
+                    font-black
+                    ${item.cor}
+                  `}
+                >
+                  {carregando ||
+                  (item.titulo ===
+                    "PUBLICADOS" &&
+                    carregandoPublicos)
+                    ? "—"
+                    : item.valor}
+                </p>
 
-          <p className="font-black">
-            🔗 Central conectada ao Firestore
-          </p>
+                <p className="mt-2 text-[8px] font-black uppercase tracking-[0.12em] text-white/30">
+                  {item.titulo}
+                </p>
+              </article>
+            )
+          )}
+        </section>
 
-          <p className="mt-2">
-            Os cadastros completos permanecem na coleção
-            privada <strong>restaurantes</strong>.
-            A publicação cria um documento separado em
-            <strong> catalogoPublico</strong>, contendo
-            somente os dados comerciais selecionados.
-          </p>
-
-          <p className="mt-2">
-            ⚠️ Publicar a empresa não publica automaticamente
-            seus pratos. Essa integração será realizada
-            na central de aprovação de pratos.
-          </p>
-
-        </div>
-
-        {/* =========================================== */}
-        {/* MENSAGENS                                     */}
-        {/* =========================================== */}
+        {/* =================================================
+            MENSAGENS
+        ================================================= */}
 
         {erro && (
           <div
             role="alert"
-            className="mt-6 rounded-2xl border border-red-300 bg-red-50 p-5 text-sm font-bold text-red-800"
+            className="
+              mt-6
+              rounded-xl
+              border
+              border-red-500/25
+              bg-red-500/10
+              p-4
+              text-xs
+              font-bold
+              text-red-400
+            "
           >
-            ⚠️ {erro}
+            {erro}
           </div>
         )}
 
         {mensagem && (
           <div
             role="status"
-            className="mt-6 rounded-2xl border border-green-300 bg-green-50 p-5 text-sm font-bold text-green-800"
+            className="
+              mt-6
+              rounded-xl
+              border
+              border-emerald-400/25
+              bg-emerald-400/10
+              p-4
+              text-xs
+              font-bold
+              text-emerald-300
+            "
           >
-            ✅ {mensagem}
+            {mensagem}
           </div>
         )}
 
-        {/* =========================================== */}
-        {/* INDICADORES                                   */}
-        {/* =========================================== */}
+        {/* =================================================
+            BUSCA
+        ================================================= */}
 
-        <section className="mt-10 grid grid-cols-2 gap-4 lg:grid-cols-5">
+        <section
+          className="
+            mt-8
+            rounded-[24px]
+            border
+            border-white/10
+            bg-[#080808]
+            p-5
+          "
+        >
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
+            <input
+              type="search"
+              value={busca}
+              onChange={(
+                event
+              ) =>
+                setBusca(
+                  event.target.value
+                )
+              }
+              placeholder="Buscar estabelecimento..."
+              className="
+                min-w-0
+                flex-1
+                rounded-xl
+                border
+                border-white/10
+                bg-[#111]
+                px-5
+                py-4
+                text-sm
+                text-white
+                outline-none
+                placeholder:text-white/25
+                focus:border-[#ffd429]/60
+              "
+            />
 
-          {[
-            {
-              titulo: "Total de cadastros",
-              valor: total,
-              icone: "🏪",
-              cor: "text-[#19352b]",
-            },
-            {
-              titulo: "Pendentes",
-              valor: pendentes,
-              icone: "⏳",
-              cor: "text-amber-700",
-            },
-            {
-              titulo: "Aprovados",
-              valor: aprovados,
-              icone: "✅",
-              cor: "text-green-700",
-            },
-            {
-              titulo: "Rejeitados",
-              valor: rejeitados,
-              icone: "❌",
-              cor: "text-red-700",
-            },
-            {
-              titulo: "Publicados",
-              valor: totalPublicados,
-              icone: "🌐",
-              cor: "text-blue-700",
-            },
-          ].map((item) => (
-            <article
-              key={item.titulo}
-              className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm md:p-6"
-            >
-              <span className="text-2xl">
-                {item.icone}
-              </span>
-
-              <h3 className="mt-4 text-xs font-semibold text-gray-500">
-                {item.titulo}
-              </h3>
-
-              <p
-                className={`mt-3 text-3xl font-black ${item.cor}`}
-              >
-                {carregando ||
-                (item.titulo === "Publicados" &&
-                  carregandoPublicos)
-                  ? "—"
-                  : item.valor}
-              </p>
-            </article>
-          ))}
-
-        </section>
-
-        {/* =========================================== */}
-        {/* FILTROS                                       */}
-        {/* =========================================== */}
-
-        <section className="mt-12 rounded-3xl border border-gray-100 bg-white p-5 shadow-sm md:p-6">
-
-          <div className="flex flex-wrap items-center justify-between gap-4">
-
-            <div>
-              <h3 className="text-xl font-black">
-                🔎 Localizar estabelecimentos
-              </h3>
-
-              <p className="mt-2 text-sm text-gray-500">
-                Filtre por situação ou pesquise
-                pelo nome e e-mail da empresa.
-              </p>
+            <div className="flex flex-wrap gap-2">
+              {[
+                {
+                  valor: "todos",
+                  titulo: "TODOS",
+                },
+                {
+                  valor: "pendente",
+                  titulo: "PENDENTES",
+                },
+                {
+                  valor: "aprovado",
+                  titulo: "APROVADOS",
+                },
+                {
+                  valor: "rejeitado",
+                  titulo: "REJEITADOS",
+                },
+              ].map(
+                (
+                  opcao
+                ) => (
+                  <button
+                    key={
+                      opcao.valor
+                    }
+                    type="button"
+                    onClick={() =>
+                      setFiltro(
+                        opcao.valor as FiltroRestaurante
+                      )
+                    }
+                    className={`
+                      rounded-full
+                      border
+                      px-4
+                      py-2
+                      text-[8px]
+                      font-black
+                      uppercase
+                      transition
+                      ${
+                        filtro ===
+                        opcao.valor
+                          ? "border-[#ffd429] bg-[#ffd429] text-black"
+                          : "border-white/10 bg-white/[0.03] text-white/45"
+                      }
+                    `}
+                  >
+                    {opcao.titulo}
+                  </button>
+                )
+              )}
             </div>
-
-            <span className="rounded-full bg-[#f8f6ef] px-4 py-2 text-xs font-bold">
-              {restaurantesFiltrados.length} resultado(s)
-            </span>
-
           </div>
-
-          <input
-            type="search"
-            value={busca}
-            onChange={(event) =>
-              setBusca(event.target.value)
-            }
-            placeholder="Nome da empresa, responsável ou e-mail..."
-            className={classeInput}
-          />
-
-          <div className="mt-5 flex flex-wrap gap-2">
-
-            {[
-              {
-                valor: "todos",
-                titulo: `Todos (${total})`,
-              },
-              {
-                valor: "pendente",
-                titulo: `⏳ Pendentes (${pendentes})`,
-              },
-              {
-                valor: "aprovado",
-                titulo: `✅ Aprovados (${aprovados})`,
-              },
-              {
-                valor: "rejeitado",
-                titulo: `❌ Rejeitados (${rejeitados})`,
-              },
-            ].map((opcao) => (
-              <button
-                key={opcao.valor}
-                type="button"
-                onClick={() =>
-                  setFiltro(
-                    opcao.valor as FiltroRestaurante
-                  )
-                }
-                aria-pressed={
-                  filtro === opcao.valor
-                }
-                className={`${classeFiltro} ${
-                  filtro === opcao.valor
-                    ? "border-[#19352b] bg-[#19352b] text-white"
-                    : "border-gray-200 bg-white hover:border-green-500"
-                }`}
-              >
-                {opcao.titulo}
-              </button>
-            ))}
-
-          </div>
-
         </section>
 
-        {/* =========================================== */}
-        {/* LISTA DE RESTAURANTES                         */}
-        {/* =========================================== */}
+        {/* =================================================
+            LISTA
+        ================================================= */}
 
-        <section className="mt-12">
-
-          <div className="mb-6">
-            <h3 className="text-2xl font-black">
-              Estabelecimentos cadastrados
-            </h3>
-
-            <p className="mt-2 text-sm text-gray-500">
-              Dados consultados diretamente do Firebase.
-            </p>
-          </div>
-
+        <section className="mt-8">
           {carregando && (
-            <div className="rounded-3xl bg-white p-12 text-center">
-              ⏳ Consultando restaurantes...
+            <div className="rounded-[24px] border border-white/10 bg-[#0a0a0a] p-10 text-center text-xs text-white/35">
+              CARREGANDO ESTABELECIMENTOS...
             </div>
           )}
 
           {!carregando &&
             !erro &&
-            restaurantesFiltrados.length === 0 && (
-              <div className="rounded-3xl border border-dashed border-gray-300 bg-white p-12 text-center">
-
-                <h4 className="text-xl font-black">
-                  Nenhum restaurante encontrado
-                </h4>
-
-                <p className="mt-3 text-sm text-gray-500">
-                  Ajuste os filtros ou aguarde
-                  novos cadastros.
-                </p>
-
+            restaurantesFiltrados.length ===
+              0 && (
+              <div className="rounded-[24px] border border-dashed border-white/10 p-10 text-center text-xs text-white/35">
+                NENHUM ESTABELECIMENTO ENCONTRADO.
               </div>
             )}
 
           {!carregando &&
-            restaurantesFiltrados.length > 0 && (
-              <div className="grid gap-6 lg:grid-cols-2">
-
+            restaurantesFiltrados.length >
+              0 && (
+              <div className="grid gap-5 lg:grid-cols-2">
                 {restaurantesFiltrados.map(
-                  (restaurante) => {
+                  (
+                    restaurante
+                  ) => {
                     const publicado =
                       mapaPublicados.get(
                         restaurante.id
                       );
 
                     const estaPublicado =
-                      publicado?.ativo === true;
+                      publicado?.ativo ===
+                      true;
 
                     const pendente =
                       restaurante.status ===
@@ -1334,45 +1767,76 @@ useEffect(() => {
 
                     return (
                       <article
-                        key={restaurante.id}
-                        className={`overflow-hidden rounded-3xl border-2 bg-white shadow-sm ${
-                          pendente
-                            ? "border-amber-300"
-                            : restaurante.status ===
-                                "aprovado"
-                              ? "border-green-200"
-                              : "border-red-200"
-                        }`}
+                        key={
+                          restaurante.id
+                        }
+                        className="
+                          overflow-hidden
+                          rounded-[26px]
+                          border
+                          border-white/10
+                          bg-gradient-to-br
+                          from-[#151515]
+                          via-[#0b0b0b]
+                          to-black
+                          shadow-[0_20px_50px_rgba(0,0,0,.45)]
+                        "
                       >
-
                         {/* CABEÇALHO */}
 
-                        <div className="bg-gradient-to-r from-[#10251d] to-[#19352b] p-6 text-white">
-
+                        <div className="border-b border-white/10 p-5">
                           <div className="flex items-start gap-4">
-
-                            {restaurante.logoUrl ? (
-                              <img
-                                src={
-                                  restaurante.logoUrl
-                                }
-                                alt={`Logo de ${restaurante.nomeEmpresa}`}
-                                className="h-20 w-20 shrink-0 rounded-2xl bg-white p-2 object-contain"
-                              />
-                            ) : (
-                              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-4xl">
-                                🏪
-                              </div>
-                            )}
+                            <div
+                              className="
+                                flex
+                                h-20
+                                w-20
+                                shrink-0
+                                items-center
+                                justify-center
+                                overflow-hidden
+                                rounded-[18px]
+                                border
+                                border-white/10
+                                bg-black
+                              "
+                            >
+                              {restaurante.logoUrl ? (
+                                <img
+                                  src={
+                                    restaurante.logoUrl
+                                  }
+                                  alt={
+                                    restaurante.nomeEmpresa
+                                  }
+                                  className="h-full w-full object-contain p-2"
+                                />
+                              ) : (
+                                <img
+                                  src={
+                                    estabelecimentoIcon
+                                  }
+                                  alt=""
+                                  className="h-16 w-16 object-contain"
+                                />
+                              )}
+                            </div>
 
                             <div className="min-w-0 flex-1">
-
                               <div className="flex flex-wrap gap-2">
-
                                 <span
-                                  className={`rounded-full border px-3 py-1 text-xs font-black ${classeStatus(
-                                    restaurante.status
-                                  )}`}
+                                  className={`
+                                    rounded-full
+                                    border
+                                    px-3
+                                    py-1.5
+                                    text-[7px]
+                                    font-black
+                                    uppercase
+                                    ${classeStatus(
+                                      restaurante.status
+                                    )}
+                                  `}
                                 >
                                   {formatarStatus(
                                     restaurante.status
@@ -1380,92 +1844,70 @@ useEffect(() => {
                                 </span>
 
                                 {estaPublicado && (
-                                  <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-black text-blue-900">
-                                    🌐 Publicado
+                                  <span
+                                    className="
+                                      rounded-full
+                                      border
+                                      border-sky-400/25
+                                      bg-sky-400/10
+                                      px-3
+                                      py-1.5
+                                      text-[7px]
+                                      font-black
+                                      uppercase
+                                      text-sky-300
+                                    "
+                                  >
+                                    PUBLICADO
                                   </span>
                                 )}
-
                               </div>
 
-                              <h4 className="mt-3 break-words text-xl font-black">
+                              <h2 className="mt-3 break-words text-xl font-black uppercase text-white">
                                 {restaurante.nomeEmpresa}
-                              </h4>
+                              </h2>
 
-                              <p className="mt-2 break-all text-xs text-gray-300">
-                                ID: {restaurante.id}
+                              <p className="mt-2 break-all text-[9px] text-white/30">
+                                {restaurante.email}
                               </p>
-
                             </div>
-
                           </div>
-
                         </div>
 
-                        {/* CONTEÚDO */}
+                        {/* RESUMO */}
 
-                        <div className="p-5 md:p-6">
-
-                          <div className="space-y-4 text-sm">
-
-                            <div>
-                              <p className="text-xs font-bold uppercase text-gray-400">
-                                Responsável
+                        <div className="p-5">
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            <div className="rounded-xl border border-white/10 bg-white/[0.025] p-3">
+                              <p className="text-[7px] font-black uppercase text-white/25">
+                                RESPONSÁVEL
                               </p>
 
-                              <p className="mt-1 font-semibold">
-                                👤 {restaurante.nomeResponsavel}
-                              </p>
-                            </div>
-
-                            <div>
-                              <p className="text-xs font-bold uppercase text-gray-400">
-                                E-mail
-                              </p>
-
-                              <p className="mt-1 break-all font-semibold">
-                                📧 {restaurante.email}
+                              <p className="mt-2 text-xs font-black text-white">
+                                {restaurante.nomeResponsavel ||
+                                  "Não informado"}
                               </p>
                             </div>
 
-                            <div>
-                              <p className="text-xs font-bold uppercase text-gray-400">
-                                WhatsApp cadastrado
+                            <div className="rounded-xl border border-white/10 bg-white/[0.025] p-3">
+                              <p className="text-[7px] font-black uppercase text-white/25">
+                                ATENDIMENTO
                               </p>
 
-                              <p className="mt-1 font-semibold">
-                                📱 {restaurante.telefone}
-                              </p>
-                            </div>
-
-                            <div>
-                              <p className="text-xs font-bold uppercase text-gray-400">
-                                Atendimento
-                              </p>
-
-                              <p className="mt-1 font-semibold">
+                              <p className="mt-2 text-xs font-black text-white">
                                 {formatarModalidade(
                                   restaurante.modalidadeEntrega
                                 )}
                               </p>
                             </div>
-
                           </div>
 
-                          {/* DATA */}
-
-                          <div className="mt-6 rounded-2xl bg-[#f8f6ef] p-4">
-
-                            <p className="text-xs font-bold uppercase text-gray-400">
-                              Solicitação recebida em
-                            </p>
-
-                            <p className="mt-2 text-sm font-bold">
-                              🗓️ {formatarData(
-                                restaurante.criadoEm
-                              )}
-                            </p>
-
-                          </div>
+                          <p className="mt-4 text-[9px] text-white/25">
+                            Cadastro:{" "}
+                            {formatarData(
+                              restaurante.criadoEm
+                            )}
+                          </p>
 
                           {/* DETALHES */}
 
@@ -1478,177 +1920,175 @@ useEffect(() => {
                                   : restaurante.id
                               )
                             }
-                            aria-expanded={
-                              detalhesVisiveis
-                            }
-                            className="mt-5 w-full rounded-xl border border-gray-200 px-5 py-4 text-sm font-bold"
+                            className="
+                              mt-4
+                              w-full
+                              rounded-xl
+                              border
+                              border-white/10
+                              bg-white/[0.03]
+                              px-4
+                              py-3
+                              text-[9px]
+                              font-black
+                              uppercase
+                              text-white/60
+                            "
                           >
                             {detalhesVisiveis
-                              ? "▲ Ocultar dados completos"
-                              : "▼ Ver dados completos"}
+                              ? "OCULTAR DADOS"
+                              : "VER DADOS COMPLETOS"}
                           </button>
 
                           {detalhesVisiveis && (
-                            <div className="mt-4 space-y-4 rounded-2xl bg-[#f8f6ef] p-5 text-sm">
-
+                            <div
+                              className="
+                                mt-4
+                                space-y-4
+                                rounded-[18px]
+                                border
+                                border-white/10
+                                bg-black/50
+                                p-4
+                                text-xs
+                                leading-6
+                                text-white/45
+                              "
+                            >
                               <div>
-                                <p className="font-bold">
-                                  📍 Endereço cadastrado
+                                <p className="font-black uppercase text-white/70">
+                                  ENDEREÇO
                                 </p>
 
-                                <p className="mt-2 leading-6 text-gray-600">
+                                <p className="mt-1">
                                   {restaurante.endereco},{" "}
                                   {restaurante.numero}
-
                                   {restaurante.complemento
                                     ? ` — ${restaurante.complemento}`
                                     : ""}
-
                                   <br />
-
                                   {restaurante.bairro}
-
                                   <br />
-
                                   {restaurante.cidade}
-
                                   <br />
-
                                   CEP: {restaurante.cep}
                                 </p>
                               </div>
 
-                              <div className="border-t pt-4">
-                                <p className="font-bold">
-                                  🪪 CPF/CNPJ
+                              <div className="border-t border-white/10 pt-4">
+                                <p className="font-black uppercase text-white/70">
+                                  CPF/CNPJ
                                 </p>
 
-                                <p className="mt-2">
+                                <p className="mt-1">
                                   {restaurante.documento ||
                                     "Não informado"}
                                 </p>
                               </div>
 
-                              <div className="border-t pt-4">
-                                <p className="font-bold">
-                                  📝 Descrição
+                              <div className="border-t border-white/10 pt-4">
+                                <p className="font-black uppercase text-white/70">
+                                  DESCRIÇÃO
                                 </p>
 
-                                <p className="mt-2 whitespace-pre-wrap">
+                                <p className="mt-1 whitespace-pre-wrap">
                                   {restaurante.descricao ||
                                     "Não informada"}
                                 </p>
                               </div>
 
-                              <div className="border-t pt-4">
-                                <p className="font-bold">
-                                  🔐 UID
+                              <div className="border-t border-white/10 pt-4">
+                                <p className="font-black uppercase text-white/70">
+                                  UID
                                 </p>
 
-                                <p className="mt-2 break-all text-xs">
+                                <p className="mt-1 break-all font-mono text-[9px]">
                                   {restaurante.uid}
                                 </p>
                               </div>
-
                             </div>
                           )}
 
-                          {/* ============================= */}
-                          {/* APROVAR / REJEITAR             */}
-                          {/* ============================= */}
+                          {/* PENDENTE */}
 
                           {pendente && (
-                            <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5">
-
-                              <p className="font-black text-amber-900">
-                                ⏳ Aguardando análise
-                              </p>
-
-                              <p className="mt-2 text-sm text-amber-800">
-                                Confira o cadastro antes
-                                de tomar uma decisão.
-                              </p>
-
-                              <div className="mt-5 grid gap-3 sm:grid-cols-2">
-
-                                <button
-                                  type="button"
-                                  disabled={
-                                    processandoId !== null
-                                  }
-                                  onClick={() =>
-                                    alterarStatus(
-                                      restaurante,
-                                      "aprovado"
-                                    )
-                                  }
-                                  className="rounded-xl bg-green-700 px-5 py-4 text-sm font-black text-white disabled:opacity-50"
-                                >
-                                  {processando
-                                    ? "⏳ Processando..."
-                                    : "✅ Aprovar empresa"}
-                                </button>
-
-                                <button
-                                  type="button"
-                                  disabled={
-                                    processandoId !== null
-                                  }
-                                  onClick={() =>
-                                    alterarStatus(
-                                      restaurante,
-                                      "rejeitado"
-                                    )
-                                  }
-                                  className="rounded-xl border border-red-200 bg-white px-5 py-4 text-sm font-black text-red-700 disabled:opacity-50"
-                                >
-                                  ❌ Rejeitar
-                                </button>
-
-                              </div>
-
-                            </div>
-                          )}
-
-                          {/* ============================= */}
-                          {/* PUBLICAÇÃO                    */}
-                          {/* ============================= */}
-
-                          {restaurante.status ===
-                            "aprovado" && (
-                            <div className="mt-6 rounded-2xl border border-green-200 bg-green-50 p-5">
-
-                              <p className="font-black text-green-900">
-                                ✅ Cadastro aprovado
-                              </p>
-
-                              <p className="mt-2 text-sm leading-6 text-green-800">
-                                O parceiro pode acessar
-                                as rotas protegidas.
-                                A presença no catálogo
-                                é controlada separadamente.
-                              </p>
-
-                              {estaPublicado ? (
-                                <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm font-bold text-blue-900">
-                                  🌐 Este restaurante possui
-                                  um documento na vitrine pública.
-                                </div>
-                              ) : (
-                                <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-bold text-amber-900">
-                                  ⏳ Ainda não publicado
-                                  no catálogo dos hóspedes.
-                                </div>
-                              )}
+                            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                              <button
+                                type="button"
+                                disabled={
+                                  processandoId !==
+                                  null
+                                }
+                                onClick={() =>
+                                  alterarStatus(
+                                    restaurante,
+                                    "aprovado"
+                                  )
+                                }
+                                className="
+                                  rounded-xl
+                                  bg-emerald-400
+                                  px-5
+                                  py-4
+                                  text-[10px]
+                                  font-black
+                                  uppercase
+                                  text-black
+                                  disabled:opacity-40
+                                "
+                              >
+                                {processando
+                                  ? "PROCESSANDO..."
+                                  : "APROVAR"}
+                              </button>
 
                               <button
                                 type="button"
                                 disabled={
-                                  processandoId !== null ||
+                                  processandoId !==
+                                  null
+                                }
+                                onClick={() =>
+                                  alterarStatus(
+                                    restaurante,
+                                    "rejeitado"
+                                  )
+                                }
+                                className="
+                                  rounded-xl
+                                  border
+                                  border-red-500/30
+                                  bg-red-500/10
+                                  px-5
+                                  py-4
+                                  text-[10px]
+                                  font-black
+                                  uppercase
+                                  text-red-400
+                                  disabled:opacity-40
+                                "
+                              >
+                                REJEITAR
+                              </button>
+                            </div>
+                          )}
+
+                          {/* APROVADO */}
+
+                          {restaurante.status ===
+                            "aprovado" && (
+                            <div className="mt-5">
+                              <button
+                                type="button"
+                                disabled={
+                                  processandoId !==
+                                    null ||
                                   carregandoPublicos
                                 }
                                 onClick={() => {
-                                  if (formularioAberto) {
+                                  if (
+                                    formularioAberto
+                                  ) {
                                     setPublicacaoAberta(
                                       null
                                     );
@@ -1658,55 +2098,53 @@ useEffect(() => {
                                     );
                                   }
                                 }}
-                                className="mt-5 w-full rounded-xl bg-[#19352b] px-5 py-4 text-sm font-black text-white disabled:opacity-50"
+                                className="
+                                  w-full
+                                  rounded-xl
+                                  bg-[#ffd429]
+                                  px-5
+                                  py-4
+                                  text-[10px]
+                                  font-black
+                                  uppercase
+                                  text-black
+                                  disabled:opacity-40
+                                "
                               >
                                 {formularioAberto
-                                  ? "▲ Fechar publicação"
+                                  ? "FECHAR PUBLICAÇÃO"
                                   : estaPublicado
-                                    ? "✏️ Editar publicação"
-                                    : "🌐 Preparar publicação"}
+                                  ? "EDITAR PUBLICAÇÃO"
+                                  : "PUBLICAR NO CATÁLOGO"}
                               </button>
 
                               {/* FORMULÁRIO */}
 
                               {formularioAberto && (
-                                <div className="mt-5 rounded-2xl border border-green-200 bg-white p-5">
-
-                                  <h5 className="text-lg font-black">
-                                    🌐 Dados comerciais públicos
-                                  </h5>
-
-                                  <p className="mt-2 text-sm leading-6 text-gray-600">
-                                    Confira os dados que
-                                    poderão aparecer
-                                    para os hóspedes.
-                                    Informações privadas,
-                                    como CPF/CNPJ,
-                                    responsável e comissão,
-                                    não serão publicadas.
+                                <div
+                                  className="
+                                    mt-4
+                                    rounded-[20px]
+                                    border
+                                    border-[#ffd429]/20
+                                    bg-[#0d0d0d]
+                                    p-5
+                                  "
+                                >
+                                  <p className="text-[8px] font-black uppercase tracking-[0.16em] text-[#ffd429]">
+                                    DADOS PÚBLICOS
                                   </p>
 
-                                  {/* NOME */}
+                                  <h3 className="mt-2 text-lg font-black uppercase text-white">
+                                    {restaurante.nomeEmpresa}
+                                  </h3>
 
                                   <div className="mt-5">
-                                    <label className="text-sm font-bold">
-                                      Nome comercial
-                                    </label>
-
-                                    <div className="mt-2 rounded-xl bg-[#f8f6ef] p-4 text-sm font-bold">
-                                      {restaurante.nomeEmpresa}
-                                    </div>
-                                  </div>
-
-                                  {/* CATEGORIA */}
-
-                                  <div className="mt-5">
-
                                     <label
                                       htmlFor={`categoria-${restaurante.id}`}
-                                      className="text-sm font-bold"
+                                      className="text-[9px] font-black uppercase text-white/55"
                                     >
-                                      Categoria *
+                                      CATEGORIA
                                     </label>
 
                                     <select
@@ -1714,85 +2152,90 @@ useEffect(() => {
                                       value={
                                         formulario.categoria
                                       }
-                                      onChange={(event) =>
+                                      onChange={(
+                                        event
+                                      ) =>
                                         setFormulario(
-                                          (anterior) => ({
+                                          (
+                                            anterior
+                                          ) => ({
                                             ...anterior,
-
                                             categoria:
                                               event.target.value as
-                                                CategoriaPublica | "",
+                                                | CategoriaPublica
+                                                | "",
                                           })
                                         )
                                       }
-                                      className={classeInput}
+                                      className={
+                                        classeInput
+                                      }
                                     >
-
                                       <option value="">
-                                        Selecione a categoria
+                                        Selecione
                                       </option>
 
                                       {CATEGORIAS.map(
-                                        (categoria) => (
+                                        (
+                                          categoria
+                                        ) => (
                                           <option
-                                            key={categoria}
-                                            value={categoria}
+                                            key={
+                                              categoria
+                                            }
+                                            value={
+                                              categoria
+                                            }
                                           >
                                             {categoria}
                                           </option>
                                         )
                                       )}
-
                                     </select>
-
                                   </div>
 
-                                  {/* DESCRIÇÃO */}
-
-                                  <div className="mt-5">
-
+                                  <div className="mt-4">
                                     <label
                                       htmlFor={`descricao-${restaurante.id}`}
-                                      className="text-sm font-bold"
+                                      className="text-[9px] font-black uppercase text-white/55"
                                     >
-                                      Descrição comercial
+                                      DESCRIÇÃO
                                     </label>
 
                                     <textarea
                                       id={`descricao-${restaurante.id}`}
-                                      rows={5}
-                                      maxLength={1000}
+                                      rows={4}
+                                      maxLength={
+                                        1000
+                                      }
                                       value={
                                         formulario.descricao
                                       }
-                                      onChange={(event) =>
+                                      onChange={(
+                                        event
+                                      ) =>
                                         setFormulario(
-                                          (anterior) => ({
+                                          (
+                                            anterior
+                                          ) => ({
                                             ...anterior,
-
                                             descricao:
                                               event.target.value,
                                           })
                                         )
                                       }
-                                      className={classeInput}
+                                      className={
+                                        classeInput
+                                      }
                                     />
-
-                                    <p className="mt-2 text-xs text-gray-500">
-                                      {formulario.descricao.length}/1000 caracteres
-                                    </p>
-
                                   </div>
 
-                                  {/* ENTREGA */}
-
-                                  <div className="mt-5">
-
+                                  <div className="mt-4">
                                     <label
                                       htmlFor={`modalidade-${restaurante.id}`}
-                                      className="text-sm font-bold"
+                                      className="text-[9px] font-black uppercase text-white/55"
                                     >
-                                      Modalidade de atendimento *
+                                      ATENDIMENTO
                                     </label>
 
                                     <select
@@ -1800,54 +2243,45 @@ useEffect(() => {
                                       value={
                                         formulario.modalidadeEntrega
                                       }
-                                      onChange={(event) =>
+                                      onChange={(
+                                        event
+                                      ) =>
                                         setFormulario(
-                                          (anterior) => ({
+                                          (
+                                            anterior
+                                          ) => ({
                                             ...anterior,
-
                                             modalidadeEntrega:
                                               event.target.value as
-                                                ModalidadePublica | "",
+                                                | ModalidadePublica
+                                                | "",
                                           })
                                         )
                                       }
-                                      className={classeInput}
+                                      className={
+                                        classeInput
+                                      }
                                     >
-
                                       <option value="">
-                                        Selecione a modalidade
+                                        Selecione
                                       </option>
 
                                       <option value="entrega_propria">
-                                        🚚 Entrega própria
+                                        Entrega própria
                                       </option>
 
                                       <option value="retirada_anfitriao">
-                                        🛍️ Retirada sob consulta
+                                        Retirada sob consulta
                                       </option>
-
                                     </select>
-
-                                    <p className="mt-2 text-xs leading-5 text-amber-800">
-                                      Modalidade original:
-                                      {" "}
-                                      {formatarModalidade(
-                                        restaurante.modalidadeEntrega
-                                      )}.
-                                      Confira antes de selecionar.
-                                    </p>
-
                                   </div>
 
-                                  {/* WHATSAPP */}
-
-                                  <div className="mt-5">
-
+                                  <div className="mt-4">
                                     <label
                                       htmlFor={`whatsapp-${restaurante.id}`}
-                                      className="text-sm font-bold"
+                                      className="text-[9px] font-black uppercase text-white/55"
                                     >
-                                      WhatsApp comercial *
+                                      WHATSAPP
                                     </label>
 
                                     <input
@@ -1855,36 +2289,32 @@ useEffect(() => {
                                       value={
                                         formulario.whatsapp
                                       }
-                                      onChange={(event) =>
+                                      onChange={(
+                                        event
+                                      ) =>
                                         setFormulario(
-                                          (anterior) => ({
+                                          (
+                                            anterior
+                                          ) => ({
                                             ...anterior,
-
                                             whatsapp:
                                               event.target.value,
                                           })
                                         )
                                       }
                                       placeholder="5562999999999"
-                                      className={classeInput}
+                                      className={
+                                        classeInput
+                                      }
                                     />
-
-                                    <p className="mt-2 text-xs text-gray-500">
-                                      Utilize o contato comercial
-                                      autorizado pelo estabelecimento.
-                                    </p>
-
                                   </div>
 
-                                  {/* HORÁRIO */}
-
-                                  <div className="mt-5">
-
+                                  <div className="mt-4">
                                     <label
                                       htmlFor={`horario-${restaurante.id}`}
-                                      className="text-sm font-bold"
+                                      className="text-[9px] font-black uppercase text-white/55"
                                     >
-                                      Horário de funcionamento
+                                      HORÁRIO
                                     </label>
 
                                     <input
@@ -1892,92 +2322,113 @@ useEffect(() => {
                                       value={
                                         formulario.horarioFuncionamento
                                       }
-                                      onChange={(event) =>
+                                      onChange={(
+                                        event
+                                      ) =>
                                         setFormulario(
-                                          (anterior) => ({
+                                          (
+                                            anterior
+                                          ) => ({
                                             ...anterior,
-
                                             horarioFuncionamento:
                                               event.target.value,
                                           })
                                         )
                                       }
-                                      placeholder="Ex.: Das 11h às 22h"
-                                      className={classeInput}
+                                      placeholder="Ex.: 11h às 22h"
+                                      className={
+                                        classeInput
+                                      }
                                     />
-
-                                    <p className="mt-2 text-xs text-gray-500">
-                                      Informe apenas um horário
-                                      confirmado pelo restaurante.
-                                    </p>
-
                                   </div>
 
-                                  {/* LOGO */}
-
-                                  <div className="mt-5">
-
-                                    <p className="text-sm font-bold">
-                                      Logomarca
-                                    </p>
-
-                                    {restaurante.logoUrl ? (
-                                      <img
-                                        src={
-                                          restaurante.logoUrl
-                                        }
-                                        alt={`Logo de ${restaurante.nomeEmpresa}`}
-                                        className="mt-3 h-28 w-28 rounded-2xl border bg-white object-contain p-2"
-                                      />
-                                    ) : (
-                                      <p className="mt-2 text-xs text-amber-800">
-                                        Nenhuma logo cadastrada.
-                                      </p>
-                                    )}
-
-                                  </div>
+                                  {restaurante.logoUrl && (
+                                    <img
+                                      src={
+                                        restaurante.logoUrl
+                                      }
+                                      alt={
+                                        restaurante.nomeEmpresa
+                                      }
+                                      className="
+                                        mt-5
+                                        h-24
+                                        w-24
+                                        rounded-xl
+                                        border
+                                        border-white/10
+                                        bg-black
+                                        object-contain
+                                        p-2
+                                      "
+                                    />
+                                  )}
 
                                   <button
                                     type="button"
                                     disabled={
-                                      processandoId !== null
+                                      processandoId !==
+                                      null
                                     }
                                     onClick={() =>
                                       publicarRestaurante(
                                         restaurante
                                       )
                                     }
-                                    className="mt-6 w-full rounded-xl bg-[#9af000] px-5 py-4 text-sm font-black uppercase text-[#19352b] disabled:opacity-50"
+                                    className="
+                                      mt-5
+                                      w-full
+                                      rounded-xl
+                                      bg-emerald-400
+                                      px-5
+                                      py-4
+                                      text-[10px]
+                                      font-black
+                                      uppercase
+                                      text-black
+                                      disabled:opacity-40
+                                    "
                                   >
                                     {processando
-                                      ? "⏳ Salvando..."
+                                      ? "SALVANDO..."
                                       : estaPublicado
-                                        ? "💾 Salvar alterações públicas"
-                                        : "🌐 Publicar restaurante"}
+                                      ? "SALVAR PUBLICAÇÃO"
+                                      : "PUBLICAR RESTAURANTE"}
                                   </button>
-
                                 </div>
                               )}
-
-                              {/* RETIRAR PUBLICAÇÃO */}
 
                               {estaPublicado && (
                                 <button
                                   type="button"
                                   disabled={
-                                    processandoId !== null
+                                    processandoId !==
+                                    null
                                   }
                                   onClick={() =>
                                     retirarPublicacao(
                                       restaurante
                                     )
                                   }
-                                  className="mt-4 w-full rounded-xl border border-red-200 bg-white px-5 py-4 text-sm font-black text-red-700 disabled:opacity-50"
+                                  className="
+                                    mt-3
+                                    w-full
+                                    rounded-xl
+                                    border
+                                    border-red-500/25
+                                    bg-red-500/[0.06]
+                                    px-5
+                                    py-3
+                                    text-[9px]
+                                    font-black
+                                    uppercase
+                                    text-red-400
+                                    disabled:opacity-40
+                                  "
                                 >
-                                  🗑️ Retirar restaurante do catálogo
+                                  RETIRAR DO CATÁLOGO
                                 </button>
                               )}
-
                             </div>
                           )}
 
@@ -1985,35 +2436,37 @@ useEffect(() => {
 
                           {restaurante.status ===
                             "rejeitado" && (
-                            <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 p-5">
-
-                              <p className="font-black text-red-800">
-                                ❌ Solicitação rejeitada
+                            <div className="mt-5 rounded-xl border border-red-500/20 bg-red-500/[0.05] p-4">
+                              <p className="text-[9px] font-black uppercase text-red-400">
+                                SOLICITAÇÃO REJEITADA
                               </p>
-
-                              <p className="mt-2 text-sm text-red-700">
-                                O cadastro permanece no
-                                Firestore para consulta
-                                administrativa.
-                              </p>
-
                             </div>
                           )}
-
                         </div>
-
                       </article>
                     );
                   }
                 )}
-
               </div>
             )}
-
         </section>
 
-      </div>
+        {/* =================================================
+            RODAPÉ
+        ================================================= */}
 
+        <footer className="mt-12 border-t border-white/10 py-10 text-center">
+          <img
+            src="/coroa.png"
+            alt=""
+            className="mx-auto h-9 w-9 object-contain opacity-40"
+          />
+
+          <p className="mt-3 text-[7px] font-black uppercase tracking-[0.18em] text-white/15">
+            IMPÉRIO CHALÉS • CENTRAL ADMINISTRATIVA
+          </p>
+        </footer>
+      </div>
     </main>
   );
 }

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -12,6 +11,12 @@ import {
 
 import { auth, db } from "../firebase/config";
 import { TreinamentoParceiro } from "./TreinamentoParceiro";
+
+import parceiroIcon from "../components/catalogo/parceiro-icone.png";
+import estabelecimentoIcon from "../components/catalogo/estabelecimento.png";
+import entregaIcon from "../components/catalogo/entrega.png";
+import restauranteIcon from "../components/catalogo/restaurante-emoji.png";
+import gastroIcon from "../components/catalogo/gastro.png";
 
 // =====================================================
 // TIPOS
@@ -119,13 +124,25 @@ function ImagemProduto({
       <div
         role="img"
         aria-label={`Foto de ${nome} não cadastrada`}
-        className="flex h-20 w-20 shrink-0 flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white text-center"
+        className="
+          flex
+          h-20
+          w-20
+          shrink-0
+          items-center
+          justify-center
+          overflow-hidden
+          rounded-2xl
+          border
+          border-white/10
+          bg-black/70
+        "
       >
-        <span className="text-2xl">📷</span>
-
-        <span className="mt-1 text-[10px] text-gray-500">
-          Sem foto
-        </span>
+        <img
+          src={restauranteIcon}
+          alt=""
+          className="h-14 w-14 object-contain opacity-80"
+        />
       </div>
     );
   }
@@ -136,7 +153,16 @@ function ImagemProduto({
       alt={nome}
       loading="lazy"
       onError={() => setFalhou(true)}
-      className="h-20 w-20 shrink-0 rounded-xl border border-gray-200 bg-white object-cover"
+      className="
+        h-20
+        w-20
+        shrink-0
+        rounded-2xl
+        border
+        border-white/10
+        bg-black
+        object-cover
+      "
     />
   );
 }
@@ -148,14 +174,33 @@ function LogoRestaurante({
   nome: string;
   logoUrl: string;
 }) {
-  const [imagemFalhou, setImagemFalhou] = useState(false);
+  const [imagemFalhou, setImagemFalhou] =
+    useState(false);
 
   useEffect(() => {
     setImagemFalhou(false);
   }, [logoUrl]);
 
   return (
-    <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/20 bg-white p-2 shadow-lg sm:h-28 sm:w-28">
+    <div
+      className="
+        flex
+        h-24
+        w-24
+        shrink-0
+        items-center
+        justify-center
+        overflow-hidden
+        rounded-[22px]
+        border
+        border-white/10
+        bg-black/70
+        p-2
+        shadow-[0_15px_35px_rgba(0,0,0,.55)]
+        sm:h-28
+        sm:w-28
+      "
+    >
       {logoUrl && !imagemFalhou ? (
         <img
           src={logoUrl}
@@ -164,15 +209,58 @@ function LogoRestaurante({
           className="h-full w-full object-contain"
         />
       ) : (
-        <div className="text-center text-[#19352b]">
-          <span className="text-4xl">🏪</span>
-
-          <p className="mt-1 text-[10px] font-bold">
-            Sua empresa
-          </p>
-        </div>
+        <img
+          src={estabelecimentoIcon}
+          alt=""
+          className="h-20 w-20 object-contain"
+        />
       )}
     </div>
+  );
+}
+
+function PainelNumero({
+  titulo,
+  valor,
+  destaque,
+}: {
+  titulo: string;
+  valor: number;
+  destaque: "vermelho" | "dourado" | "verde";
+}) {
+  const classes =
+    destaque === "vermelho"
+      ? "text-[#ff3030]"
+      : destaque === "verde"
+      ? "text-[#16f06d]"
+      : "text-[#f3c82f]";
+
+  return (
+    <article
+      className="
+        rounded-[22px]
+        border
+        border-white/10
+        bg-white/[0.035]
+        p-5
+        text-center
+        shadow-[0_15px_35px_rgba(0,0,0,.35)]
+      "
+    >
+      <p
+        className={`
+          text-3xl
+          font-black
+          ${classes}
+        `}
+      >
+        {valor}
+      </p>
+
+      <p className="mt-2 text-[10px] font-black uppercase tracking-[0.12em] text-white/45">
+        {titulo}
+      </p>
+    </article>
   );
 }
 
@@ -182,10 +270,6 @@ function LogoRestaurante({
 
 export function ParceiroDashboard() {
   const navigate = useNavigate();
-
-  // ===================================================
-  // DADOS DO ESTABELECIMENTO
-  // ===================================================
 
   const [restaurante, setRestaurante] =
     useState<RestauranteParceiro | null>(null);
@@ -198,17 +282,8 @@ export function ParceiroDashboard() {
   const [uidParceiro, setUidParceiro] =
     useState<string | null>(null);
 
-  // ===================================================
-  // SAIR DA CONTA
-  // ===================================================
-
   const [saindo, setSaindo] = useState(false);
-
   const [erroSaida, setErroSaida] = useState("");
-
-  // ===================================================
-  // TREINAMENTO
-  // ===================================================
 
   const [treinamentoAberto, setTreinamentoAberto] =
     useState(false);
@@ -226,10 +301,6 @@ export function ParceiroDashboard() {
     setPreferenciasCarregadas,
   ] = useState(false);
 
-  // ===================================================
-  // PEDIDOS DEMONSTRATIVOS
-  // ===================================================
-
   const [pedidos, setPedidos] =
     useState<Pedido[]>(pedidosIniciais);
 
@@ -244,9 +315,7 @@ export function ParceiroDashboard() {
   ] = useState<string | null>(null);
 
   const [minutos, setMinutos] = useState("30");
-
   const [entregador, setEntregador] = useState("");
-
   const [motivoRecusa, setMotivoRecusa] = useState("");
 
   const [
@@ -261,14 +330,10 @@ export function ParceiroDashboard() {
 
   const [agora, setAgora] = useState(Date.now());
 
-  // ===================================================
-  // PEDIDOS REAIS AINDA NÃO INTEGRADOS
-  // ===================================================
-
   const pedidosReaisIntegrados = false;
 
   // ===================================================
-  // CONSULTAR RESTAURANTE AUTENTICADO
+  // RESTAURANTE AUTENTICADO
   // ===================================================
 
   useEffect(() => {
@@ -280,7 +345,6 @@ export function ParceiroDashboard() {
       auth,
       (usuario) => {
         cancelarConsulta?.();
-
         cancelarConsulta = undefined;
 
         if (!usuario) {
@@ -387,7 +451,7 @@ export function ParceiroDashboard() {
   }, [navigate]);
 
   // ===================================================
-  // PREFERÊNCIAS DO TREINAMENTO POR USUÁRIO
+  // TREINAMENTO
   // ===================================================
 
   const chaveTreinamento = uidParceiro
@@ -434,10 +498,6 @@ export function ParceiroDashboard() {
     chaveOcultarCard,
   ]);
 
-  // ===================================================
-  // RELÓGIO
-  // ===================================================
-
   useEffect(() => {
     const intervalo = window.setInterval(() => {
       setAgora(Date.now());
@@ -449,7 +509,7 @@ export function ParceiroDashboard() {
   }, []);
 
   // ===================================================
-  // INDICADORES DEMONSTRATIVOS
+  // INDICADORES
   // ===================================================
 
   const novos = pedidos.filter(
@@ -475,7 +535,7 @@ export function ParceiroDashboard() {
   );
 
   // ===================================================
-  // SAIR DA CONTA
+  // SAIR
   // ===================================================
 
   async function sairDaConta() {
@@ -526,7 +586,7 @@ export function ParceiroDashboard() {
           ) === "sim";
       }
     } catch {
-      // Mantém a conclusão nesta sessão.
+      // mantém nesta sessão
     }
 
     setTreinamentoConcluido(true);
@@ -547,14 +607,14 @@ export function ParceiroDashboard() {
         );
       }
     } catch {
-      // Oculta o card nesta sessão.
+      // mantém nesta sessão
     }
 
     setMostrarCardTreinamento(false);
   }
 
   // ===================================================
-  // FORMULÁRIOS DOS PEDIDOS FICTÍCIOS
+  // PEDIDOS DEMONSTRATIVOS
   // ===================================================
 
   function alternarConfirmacao(id: string) {
@@ -578,10 +638,6 @@ export function ParceiroDashboard() {
 
     setMotivoRecusa("");
   }
-
-  // ===================================================
-  // CONFIRMAR PEDIDO DEMONSTRATIVO
-  // ===================================================
 
   function confirmarPedido(id: string) {
     const pedidoAtual = pedidos.find(
@@ -643,10 +699,6 @@ export function ParceiroDashboard() {
     setEntregador("");
   }
 
-  // ===================================================
-  // RECUSAR SOMENTE ANTES DO ACEITE
-  // ===================================================
-
   function recusarPedido(id: string) {
     const motivo = motivoRecusa.trim();
 
@@ -696,10 +748,6 @@ export function ParceiroDashboard() {
     setMotivoRecusa("");
   }
 
-  // ===================================================
-  // MARCAR PEDIDO DEMONSTRATIVO COMO PRONTO
-  // ===================================================
-
   function marcarPronto(id: string) {
     const momento = Date.now();
 
@@ -717,10 +765,6 @@ export function ParceiroDashboard() {
     );
   }
 
-  // ===================================================
-  // INTERVENÇÃO ADMINISTRATIVA
-  // ===================================================
-
   function solicitarIntervencao(id: string) {
     alert(
       `Pedido ${id}: a solicitação de intervenção ainda não está conectada. Nenhuma mensagem foi enviada.`
@@ -732,11 +776,40 @@ export function ParceiroDashboard() {
   // ===================================================
 
   return (
-    <main className="min-h-screen bg-[#f8f6ef] text-[#19352b]">
+    <main className="relative min-h-screen overflow-hidden bg-black text-white">
+      {/* FUNDO */}
 
-      {/* ============================================= */}
-      {/* TREINAMENTO                                  */}
-      {/* ============================================= */}
+      <div
+        aria-hidden="true"
+        className="
+          pointer-events-none
+          absolute
+          -left-52
+          top-20
+          h-[520px]
+          w-[520px]
+          rounded-full
+          bg-red-600/[0.05]
+          blur-[180px]
+        "
+      />
+
+      <div
+        aria-hidden="true"
+        className="
+          pointer-events-none
+          absolute
+          -right-40
+          top-[760px]
+          h-[520px]
+          w-[520px]
+          rounded-full
+          bg-[#d4af37]/[0.04]
+          blur-[190px]
+        "
+      />
+
+      {/* TREINAMENTO */}
 
       {preferenciasCarregadas &&
         restaurante?.status === "aprovado" && (
@@ -746,537 +819,510 @@ export function ParceiroDashboard() {
           />
         )}
 
-      {/* ============================================= */}
-      {/* CABEÇALHO                                    */}
-      {/* ============================================= */}
+      {/* CABEÇALHO */}
 
-      <header className="bg-[#101813] px-4 py-5 text-white">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-5">
-
+      <header
+        className="
+          sticky
+          top-0
+          z-50
+          border-b
+          border-white/10
+          bg-black/90
+          px-4
+          py-4
+          backdrop-blur-xl
+        "
+      >
+        <div
+          className="
+            mx-auto
+            flex
+            max-w-7xl
+            flex-wrap
+            items-center
+            justify-between
+            gap-4
+          "
+        >
           <div className="flex items-center gap-3">
-
             <img
-              src="/logo-imperio.png"
+              src="/coroa.png"
               alt="Império Chalés"
-              className="h-12 w-12 rounded-full object-contain"
+              className="h-11 w-11 object-contain"
             />
 
             <div>
-              <h1 className="text-lg font-black">
+              <p className="text-sm font-black uppercase text-white">
                 Portal do Parceiro
-              </h1>
+              </p>
 
-              <p className="text-xs font-bold tracking-widest text-amber-300">
-                SABORES DA CHAPADA
+              <p className="mt-0.5 text-[9px] font-black uppercase tracking-[0.18em] text-[#ff3030]">
+                Sabores da Chapada
               </p>
             </div>
-
           </div>
 
-          <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto">
-
+          <div className="flex flex-1 flex-wrap justify-end gap-2 sm:flex-none">
             <Link
               to="/parceiro/pedidos"
-              className="group inline-flex flex-1 items-center justify-center rounded-2xl border-b-[6px] border-amber-700 bg-gradient-to-b from-yellow-200 via-amber-400 to-yellow-500 px-5 py-3 text-center text-sm font-black uppercase tracking-wide text-black shadow-[0_7px_25px_rgba(251,191,36,0.45)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_10px_35px_rgba(251,191,36,0.7)] active:translate-y-1 active:border-b-0 motion-safe:animate-bounce motion-reduce:animate-none sm:flex-none"
+              className="
+                inline-flex
+                min-h-[44px]
+                items-center
+                justify-center
+                rounded-xl
+                bg-[#ff3030]
+                px-4
+                text-[11px]
+                font-black
+                uppercase
+                text-white
+                shadow-[0_8px_24px_rgba(255,48,48,.16)]
+                transition
+                hover:-translate-y-0.5
+              "
             >
-              📋 IR PARA MEUS PEDIDOS
-
-              <span className="ml-2 transition-transform group-hover:translate-x-1">
-                →
-              </span>
+              Meus pedidos →
             </Link>
-
-            <span className="rounded-full border border-amber-400/40 px-4 py-2 text-xs font-bold text-amber-300">
-              AMBIENTE DEMONSTRATIVO
-            </span>
 
             <button
               type="button"
               onClick={sairDaConta}
               disabled={saindo}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-red-800 bg-red-600 px-6 py-3 text-sm font-black uppercase tracking-wide text-white shadow-[0_5px_0_#991b1b] transition-all duration-200 hover:-translate-y-0.5 hover:bg-red-700 hover:shadow-[0_7px_0_#7f1d1d] active:translate-y-1 active:shadow-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 disabled:cursor-wait disabled:opacity-60"
+              className="
+                inline-flex
+                min-h-[44px]
+                items-center
+                justify-center
+                rounded-xl
+                border
+                border-white/10
+                bg-white/[0.04]
+                px-4
+                text-[11px]
+                font-black
+                uppercase
+                text-white
+                transition
+                hover:bg-white/[0.08]
+                disabled:opacity-50
+              "
             >
               {saindo
-                ? "⏳ SAINDO..."
-                : "🚪 SAIR DA CONTA"}
+                ? "Saindo..."
+                : "Sair"}
             </button>
-
-            {erroSaida && (
-              <p
-                role="alert"
-                className="w-full text-sm font-semibold text-red-300"
-              >
-                ⚠️ {erroSaida}
-              </p>
-            )}
-
           </div>
 
+          {erroSaida && (
+            <p
+              role="alert"
+              className="w-full text-right text-xs font-bold text-red-400"
+            >
+              {erroSaida}
+            </p>
+          )}
         </div>
       </header>
 
-      {/* ============================================= */}
-      {/* CONTEÚDO                                     */}
-      {/* ============================================= */}
+      {/* CONTEÚDO */}
 
-      <div className="mx-auto max-w-6xl px-4 py-8">
-
+      <div className="relative z-10 mx-auto max-w-7xl px-4 py-7 sm:px-6 lg:px-8">
         {/* APRESENTAÇÃO */}
 
-        <section className="mb-6">
+        <section className="mb-7">
+          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-[#ff3030]">
+            Painel do estabelecimento
+          </p>
 
-          <span className="text-xs font-bold uppercase tracking-[0.3em] text-amber-700">
-            PAINEL DO ESTABELECIMENTO
-          </span>
+          <h1
+            className="
+              mt-3
+              text-3xl
+              font-black
+              uppercase
+              tracking-[-0.035em]
+              text-white
+              sm:text-4xl
+              lg:text-5xl
+            "
+            style={{
+              fontFamily:
+                "'Arial Black', 'Montserrat', sans-serif",
+            }}
+          >
+            Minha central
+            <span className="text-[#ff3030]">
+              {" "}
+              de pedidos
+            </span>
+          </h1>
 
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-4">
-
-            <div>
-              <h2 className="text-3xl font-bold md:text-4xl">
-                Minha cozinha 🍽️
-              </h2>
-
-              <p className="mt-3 text-sm text-gray-500">
-                Receba solicitações, confirme o preparo
-                e acompanhe os pedidos.
-              </p>
-            </div>
-
-            {treinamentoConcluido && (
-              <span className="rounded-full bg-green-100 px-4 py-2 text-xs font-bold text-green-800">
-                🎓 Treinamento concluído
-              </span>
-            )}
-
-          </div>
-
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-white/40">
+            Acompanhe seu estabelecimento, seus pratos e o fluxo de atendimento em um só lugar.
+          </p>
         </section>
 
-        {/* ============================================= */}
-        {/* ERRO DE CONSULTA                              */}
-        {/* ============================================= */}
+        {/* ERROS */}
 
         {erroEmpresa && (
           <div
             role="alert"
-            className="mb-6 rounded-2xl border border-red-300 bg-red-50 p-5 text-sm font-semibold text-red-800"
+            className="
+              mb-6
+              rounded-[20px]
+              border
+              border-red-500/30
+              bg-red-500/[0.07]
+              p-4
+              text-sm
+              font-semibold
+              text-red-300
+            "
           >
-            ⚠️ {erroEmpresa}
+            {erroEmpresa}
           </div>
         )}
 
-        {/* ============================================= */}
-        {/* HERO PRINCIPAL                                */}
-        {/* ============================================= */}
+        {/* HERO ESTABELECIMENTO */}
 
-        <section className="relative mb-8 overflow-hidden rounded-[32px] bg-gradient-to-r from-[#10251d] via-[#123528] to-[#0c271f] p-6 text-white shadow-xl md:p-8">
+        <section
+          className="
+            relative
+            mb-7
+            overflow-hidden
+            rounded-[30px]
+            border
+            border-white/10
+            bg-gradient-to-br
+            from-[#1b1b1b]
+            via-[#0c0c0c]
+            to-black
+            p-6
+            shadow-[0_25px_80px_rgba(0,0,0,.65)]
+            sm:p-8
+          "
+        >
+          <div
+            aria-hidden="true"
+            className="
+              pointer-events-none
+              absolute
+              -right-20
+              -top-24
+              h-72
+              w-72
+              rounded-full
+              bg-red-500/[0.10]
+              blur-[100px]
+            "
+          />
 
-          <div className="pointer-events-none absolute -right-20 -top-10 h-64 w-64 rounded-full bg-blue-500/10 blur-3xl" />
+          {carregandoEmpresa ? (
+            <div className="flex items-center gap-4">
+              <div className="h-24 w-24 animate-pulse rounded-[22px] bg-white/[0.06]" />
 
-          <div className="pointer-events-none absolute -left-10 bottom-0 h-56 w-56 rounded-full bg-amber-400/10 blur-3xl" />
+              <div className="flex-1">
+                <div className="h-4 w-44 animate-pulse rounded bg-white/[0.07]" />
+                <div className="mt-3 h-7 max-w-sm animate-pulse rounded bg-white/[0.07]" />
+              </div>
+            </div>
+          ) : restaurante ? (
+            <div className="relative z-10 grid gap-7 lg:grid-cols-[1fr_auto] lg:items-center">
+              <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+                <LogoRestaurante
+                  nome={restaurante.nomeEmpresa}
+                  logoUrl={restaurante.logoUrl}
+                />
 
-          <div className="relative z-10">
+                <div className="min-w-0">
+                  <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#16f06d]">
+                    Estabelecimento aprovado
+                  </p>
 
-            {/* ======================================= */}
-            {/* IDENTIFICAÇÃO REAL DO RESTAURANTE       */}
-            {/* ======================================= */}
+                  <h2
+                    className="
+                      mt-2
+                      break-words
+                      text-2xl
+                      font-black
+                      uppercase
+                      text-white
+                      sm:text-3xl
+                    "
+                    style={{
+                      fontFamily:
+                        "'Arial Black', 'Montserrat', sans-serif",
+                    }}
+                  >
+                    {restaurante.nomeEmpresa}
+                  </h2>
 
-            <div className="mb-8 rounded-[26px] border border-amber-300/30 bg-white/10 p-4 backdrop-blur-sm md:p-6">
-
-              {carregandoEmpresa ? (
-                <div
-                  role="status"
-                  className="flex items-center gap-4"
-                >
-                  <div className="h-24 w-24 animate-pulse rounded-2xl bg-white/20" />
-
-                  <div className="flex-1">
-                    <p className="text-sm font-bold text-amber-300">
-                      🏪 IDENTIFICANDO SUA EMPRESA
+                  <div className="mt-4 grid gap-2 text-xs text-white/45 sm:grid-cols-2">
+                    <p className="break-all">
+                      {restaurante.email}
                     </p>
 
-                    <p className="mt-2 text-sm text-gray-200">
-                      Consultando os dados do seu estabelecimento no Firebase...
-                    </p>
-                  </div>
-                </div>
-              ) : restaurante ? (
-                <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-
-                  <LogoRestaurante
-                    nome={restaurante.nomeEmpresa}
-                    logoUrl={restaurante.logoUrl}
-                  />
-
-                  <div className="min-w-0 flex-1">
-
-                    <span className="inline-flex rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-1 text-xs font-black uppercase tracking-wider text-amber-300">
-                      🏪 MEU ESTABELECIMENTO
-                    </span>
-
-                    <h3 className="mt-3 break-words text-2xl font-black leading-tight text-white md:text-3xl">
-                      {restaurante.nomeEmpresa}
-                    </h3>
-
-                    <p className="mt-3 break-all text-sm font-medium text-gray-200">
-                      ✉️ {restaurante.email}
-                    </p>
+                    {restaurante.telefone && (
+                      <p>
+                        {restaurante.telefone}
+                      </p>
+                    )}
 
                     {restaurante.nomeResponsavel && (
-                      <p className="mt-2 text-sm text-gray-200">
-                        👤 Responsável:{" "}
-                        <strong>
+                      <p className="sm:col-span-2">
+                        Responsável:{" "}
+                        <strong className="text-white/70">
                           {restaurante.nomeResponsavel}
                         </strong>
                       </p>
                     )}
-
-                    <div className="mt-4 flex flex-wrap items-center gap-2">
-
-                      <span className="rounded-full bg-green-500 px-4 py-2 text-xs font-black text-white shadow-lg">
-                        ✅ CADASTRO APROVADO
-                      </span>
-
-                      <span className="rounded-full border border-blue-300/30 bg-blue-500/20 px-4 py-2 text-xs font-bold text-blue-100">
-                        🧪 PEDIDOS EM DEMONSTRAÇÃO
-                      </span>
-
-                    </div>
-
                   </div>
-
                 </div>
-              ) : (
-                <div className="rounded-xl border border-red-300/30 bg-red-500/10 p-4">
-
-                  <h3 className="font-black text-white">
-                    ⚠️ Não foi possível identificar sua empresa
-                  </h3>
-
-                  <p className="mt-2 text-sm text-gray-200">
-                    Os dados do estabelecimento precisam ser carregados antes de liberar a identificação do painel.
-                  </p>
-
-                  <Link
-                    to="/parceiro/solicitacao"
-                    className="mt-4 inline-flex rounded-xl bg-white px-4 py-3 text-sm font-black text-[#19352b]"
-                  >
-                    Consultar minha solicitação →
-                  </Link>
-
-                </div>
-              )}
-
-            </div>
-            {/* ======================================= */}
-            {/* GERENCIAMENTO DE PRATOS                 */}
-            {/* ======================================= */}
-
-            {restaurante?.status === "aprovado" && (
-              <div className="mb-8">
-                <Link
-                  to="/parceiro/pratos"
-                  className="group flex w-full flex-col items-center justify-center gap-3 rounded-[24px] border-b-[6px] border-lime-700 bg-[#A3FF12] px-5 py-5 text-center text-[#10251d] shadow-[0_8px_30px_rgba(163,255,18,0.35)] transition-all duration-200 hover:-translate-y-1 hover:bg-[#B9FF47] hover:shadow-[0_12px_40px_rgba(163,255,18,0.5)] active:translate-y-1 active:border-b-0 sm:flex-row sm:justify-between sm:px-8"
-                >
-                  <div className="flex flex-col items-center gap-3 sm:flex-row sm:text-left">
-                    <span
-                      aria-hidden="true"
-                      className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#10251d] text-3xl shadow-md"
-                    >
-                      🍽️
-                    </span>
-
-                    <div>
-                      <p className="text-lg font-black uppercase tracking-wide sm:text-xl">
-                        GERENCIAR MEUS PRATOS
-                      </p>
-
-                      <p className="mt-1 text-xs font-bold text-[#19352b] sm:text-sm">
-                        Cadastre pratos, preços e descrições
-                        do seu estabelecimento.
-                      </p>
-                    </div>
-                  </div>
-
-                  <span
-                    aria-hidden="true"
-                    className="text-3xl font-black transition-transform group-hover:translate-x-2"
-                  >
-                    →
-                  </span>
-                </Link>
-
-                <p className="mt-3 text-center text-xs leading-5 text-gray-300">
-                  🧪 O cadastro de pratos está em fase
-                  demonstrativa. As informações ainda
-                  não são salvas no Firebase.
-                </p>
               </div>
-            )}
-            
-            {/* ======================================= */}
-            {/* CENTRAL DE PEDIDOS                      */}
-            {/* ======================================= */}
 
-            <div className="flex flex-wrap items-center justify-between gap-3">
-
-              <span className="rounded-full border border-amber-400/40 bg-amber-400/10 px-4 py-2 text-xs font-bold tracking-wider text-amber-300">
-                🏪 SUA CENTRAL DE PEDIDOS
-              </span>
-
-              <span className="rounded-full bg-blue-500/20 px-4 py-2 text-xs font-bold text-blue-100">
-                AGUARDANDO INTEGRAÇÃO
-              </span>
-
+              <img
+                src={parceiroIcon}
+                alt=""
+                className="
+                  hidden
+                  h-36
+                  w-36
+                  object-contain
+                  drop-shadow-[0_18px_35px_rgba(255,48,48,.18)]
+                  lg:block
+                "
+              />
             </div>
-
-            <div className="mt-8 max-w-4xl">
-
-              <h3 className="text-4xl font-black uppercase leading-tight md:text-6xl">
-                CONFIRME SEUS
-
-                <span className="block text-amber-400">
-                  PEDIDOS AQUI!
-                </span>
-              </h3>
-
-              <p className="mt-6 text-lg font-semibold text-gray-100 md:text-2xl">
-                Prepare-se para atender seu primeiro cliente
-                dentro do Império Chalés!
+          ) : (
+            <div>
+              <p className="font-black uppercase text-red-300">
+                Não foi possível identificar sua empresa
               </p>
 
-              <p className="mt-4 max-w-3xl text-sm leading-7 text-gray-200 md:text-base">
-                Quando ativarmos a integração, os pedidos
-                reais aparecerão nesta central, com número,
-                chalé de origem, produtos, horário,
-                tempo de preparo e informações de entrega.
-              </p>
-
+              <Link
+                to="/parceiro/solicitacao"
+                className="mt-4 inline-flex rounded-xl bg-white px-4 py-3 text-sm font-black text-black"
+              >
+                Consultar solicitação →
+              </Link>
             </div>
+          )}
+        </section>
 
-            {!pedidosReaisIntegrados && (
-              <div className="mt-8 rounded-2xl border border-white/10 bg-white/10 p-5 backdrop-blur-sm">
+        {/* AÇÕES PRINCIPAIS */}
 
-                <div className="flex items-start gap-4">
-
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-500/20 text-2xl">
-                    🔔
-                  </div>
-
-                  <div>
-
-                    <h4 className="text-xl font-extrabold">
-                      Seus primeiros pedidos aparecerão aqui
-                    </h4>
-
-                    <p className="mt-2 text-sm text-gray-200">
-                      Nenhum pedido real está sendo consultado
-                      nesta versão demonstrativa.
-                    </p>
-
-                  </div>
-
-                </div>
-
-              </div>
-            )}
-
+        {restaurante?.status === "aprovado" && (
+          <section className="mb-7 grid gap-4 md:grid-cols-3">
             <Link
               to="/parceiro/pedidos"
-              className="mt-8 inline-flex w-full items-center justify-center rounded-2xl border border-blue-300 bg-blue-600 px-6 py-4 text-center text-sm font-extrabold text-white shadow-[0_0_30px_rgba(59,130,246,0.35)] transition hover:bg-blue-700 sm:w-auto"
+              className="
+                group
+                rounded-[26px]
+                border
+                border-red-500/25
+                bg-gradient-to-br
+                from-red-500/[0.10]
+                via-[#111]
+                to-black
+                p-5
+                transition
+                hover:-translate-y-1
+                hover:border-red-500/45
+              "
             >
-              📋 VER TODOS OS PEDIDOS →
-            </Link>
+              <img
+                src={entregaIcon}
+                alt=""
+                className="h-20 w-20 object-contain transition-transform group-hover:scale-110"
+              />
 
-            <p className="mt-3 text-xs leading-5 text-blue-100">
-              🧪 A página de pedidos está disponível
-              para visualização, mas ainda não recebe
-              pedidos reais.
-            </p>
-
-          </div>
-
-        </section>
-
-        {/* ============================================= */}
-        {/* CARDS INFORMATIVOS                            */}
-        {/* ============================================= */}
-
-        <section className="mb-8 grid gap-4 md:grid-cols-3">
-
-          <article className="rounded-[26px] border border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-100 p-6 shadow-sm">
-
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600 text-3xl shadow-lg">
-              📋
-            </div>
-
-            <h3 className="mt-5 text-xl font-black text-blue-950">
-              Pedidos organizados
-            </h3>
-
-            <p className="mt-3 text-sm leading-7 text-blue-900">
-              Acompanhe cada solicitação, o chalé de origem
-              e o andamento do preparo em uma única central.
-            </p>
-
-            <div className="mt-5 h-1.5 rounded-full bg-blue-600" />
-
-          </article>
-
-          <article className="rounded-[26px] border border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-100 p-6 shadow-sm">
-
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-400 text-3xl shadow-lg">
-              ⏱️
-            </div>
-
-            <h3 className="mt-5 text-xl font-black text-amber-950">
-              Controle do preparo
-            </h3>
-
-            <p className="mt-3 text-sm leading-7 text-amber-900">
-              Informe o prazo e acompanhe os horários
-              para manter os pedidos organizados.
-            </p>
-
-            <div className="mt-5 h-1.5 rounded-full bg-amber-500" />
-
-          </article>
-
-          <article className="rounded-[26px] border border-green-200 bg-gradient-to-br from-green-50 to-emerald-100 p-6 shadow-sm">
-
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-green-700 text-3xl shadow-lg">
-              ✅
-            </div>
-
-            <h3 className="mt-5 text-xl font-black text-green-950">
-              Atendimento completo
-            </h3>
-
-            <p className="mt-3 text-sm leading-7 text-green-900">
-              Confirme quando o pedido estiver pronto.
-              A entrega ou retirada será registrada separadamente.
-            </p>
-
-            <div className="mt-5 h-1.5 rounded-full bg-green-700" />
-
-          </article>
-
-        </section>
-
-        {/* ============================================= */}
-        {/* AVISOS                                        */}
-        {/* ============================================= */}
-
-        <section className="mb-8 space-y-3">
-
-          <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
-
-            <p className="font-bold">
-              ⚠️ Atenção às confirmações
-            </p>
-
-            <p className="mt-1">
-              Após aceitar um pedido, o estabelecimento
-              assume o compromisso de prepará-lo.
-              O cancelamento não fica disponível
-              diretamente no painel.
-
-              Em caso de imprevisto, solicite
-              intervenção da administração.
-            </p>
-
-          </div>
-
-          <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm leading-6 text-blue-900">
-
-            🧪 <strong>Modo demonstrativo:</strong>{" "}
-            os pedidos desta página são fictícios.
-            Nenhuma ação é salva no Firebase
-            ou enviada aos hóspedes.
-
-          </div>
-
-        </section>
-
-        {/* ============================================= */}
-        {/* CARD DO TREINAMENTO                           */}
-        {/* ============================================= */}
-
-        {treinamentoConcluido &&
-          mostrarCardTreinamento && (
-            <section className="mb-8 rounded-3xl border border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 p-5 shadow-sm md:p-6">
-
-              <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-
-                <div className="flex items-start gap-4">
-
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-green-700 text-3xl shadow-md">
-                    🎓
-                  </div>
-
-                  <div>
-
-                    <span className="inline-flex rounded-full bg-green-100 px-3 py-1 text-xs font-extrabold text-green-800">
-                      ✅ CONCLUÍDO
-                    </span>
-
-                    <h3 className="mt-2 text-xl font-black text-[#19352b]">
-                      Seu treinamento
-                    </h3>
-
-                    <p className="mt-2 max-w-xl text-sm leading-6 text-gray-600">
-                      Você já concluiu a apresentação
-                      do Portal do Parceiro.
-                      Se quiser, poderá praticar novamente.
-                    </p>
-
-                  </div>
-
-                </div>
-
-                <div className="flex flex-col gap-2 sm:flex-row">
-
-                  <button
-                    type="button"
-                    onClick={refazerTreinamento}
-                    className="rounded-xl border border-green-300 bg-white px-5 py-3 text-sm font-bold text-green-800 transition hover:bg-green-100"
-                  >
-                    🔄 Refazer treinamento
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={ocultarCardTreinamento}
-                    className="rounded-xl px-5 py-3 text-sm font-semibold text-gray-500 transition hover:bg-white/70 hover:text-gray-800"
-                  >
-                    Não mostrar novamente
-                  </button>
-
-                </div>
-
-              </div>
-
-            </section>
-          )}
-
-        {/* ============================================= */}
-        {/* ATENDIMENTO                                   */}
-        {/* ============================================= */}
-
-        <section className="mb-8 rounded-3xl border border-gray-100 bg-white p-5 shadow-sm md:p-6">
-
-          <div className="flex flex-wrap items-center justify-between gap-4">
-
-            <div>
-
-              <h3 className="text-xl font-bold">
-                Atendimento do restaurante
-              </h3>
-
-              <p className="mt-2 text-sm text-gray-500">
-                Controle demonstrativo de disponibilidade.
+              <p className="mt-4 text-[9px] font-black uppercase tracking-[0.18em] text-[#ff3030]">
+                Atendimento
               </p>
 
+              <h3 className="mt-2 text-xl font-black uppercase text-white">
+                Meus pedidos
+              </h3>
+
+              <p className="mt-2 text-xs leading-5 text-white/35">
+                Consulte e acompanhe os pedidos do estabelecimento.
+              </p>
+            </Link>
+
+            <Link
+              to="/parceiro/pratos"
+              className="
+                group
+                rounded-[26px]
+                border
+                border-[#d4af37]/25
+                bg-gradient-to-br
+                from-[#d4af37]/[0.08]
+                via-[#111]
+                to-black
+                p-5
+                transition
+                hover:-translate-y-1
+                hover:border-[#d4af37]/45
+              "
+            >
+              <img
+                src={gastroIcon}
+                alt=""
+                className="h-20 w-20 object-contain transition-transform group-hover:scale-110"
+              />
+
+              <p className="mt-4 text-[9px] font-black uppercase tracking-[0.18em] text-[#f3c82f]">
+                Cardápio
+              </p>
+
+              <h3 className="mt-2 text-xl font-black uppercase text-white">
+                Meus pratos
+              </h3>
+
+              <p className="mt-2 text-xs leading-5 text-white/35">
+                Cadastre pratos, preços e descrições.
+              </p>
+            </Link>
+
+            <Link
+              to="/cardapio"
+              className="
+                group
+                rounded-[26px]
+                border
+                border-[#16f06d]/25
+                bg-gradient-to-br
+                from-[#16f06d]/[0.07]
+                via-[#111]
+                to-black
+                p-5
+                transition
+                hover:-translate-y-1
+                hover:border-[#16f06d]/45
+              "
+            >
+              <img
+                src={restauranteIcon}
+                alt=""
+                className="h-20 w-20 object-contain transition-transform group-hover:scale-110"
+              />
+
+              <p className="mt-4 text-[9px] font-black uppercase tracking-[0.18em] text-[#16f06d]">
+                Visualização
+              </p>
+
+              <h3 className="mt-2 text-xl font-black uppercase text-white">
+                Ver cardápio
+              </h3>
+
+              <p className="mt-2 text-xs leading-5 text-white/35">
+                Veja como seu estabelecimento aparece para os hóspedes.
+              </p>
+            </Link>
+          </section>
+        )}
+
+        {/* CENTRAL */}
+
+        <section
+          className="
+            mb-7
+            rounded-[30px]
+            border
+            border-white/10
+            bg-[#090909]
+            p-6
+            shadow-[0_20px_60px_rgba(0,0,0,.45)]
+            sm:p-8
+          "
+        >
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.20em] text-[#ff3030]">
+                Central operacional
+              </p>
+
+              <h2
+                className="
+                  mt-3
+                  text-3xl
+                  font-black
+                  uppercase
+                  leading-[0.98]
+                  text-white
+                  sm:text-4xl
+                "
+                style={{
+                  fontFamily:
+                    "'Arial Black', 'Montserrat', sans-serif",
+                }}
+              >
+                Gerencie seus
+                <span className="block text-[#ff3030]">
+                  atendimentos
+                </span>
+              </h2>
+            </div>
+
+            <span className="inline-flex w-fit rounded-full border border-[#d4af37]/25 bg-[#d4af37]/[0.06] px-4 py-2 text-[9px] font-black uppercase tracking-[0.14em] text-[#f3c82f]">
+              Ambiente demonstrativo
+            </span>
+          </div>
+
+          <div className="mt-7 grid gap-3 sm:grid-cols-3">
+            <PainelNumero
+              titulo="Novos"
+              valor={novos}
+              destaque="vermelho"
+            />
+
+            <PainelNumero
+              titulo="Em preparo"
+              valor={emPreparo}
+              destaque="dourado"
+            />
+
+            <PainelNumero
+              titulo="Prontos"
+              valor={prontos}
+              destaque="verde"
+            />
+          </div>
+
+          {!pedidosReaisIntegrados && (
+            <div className="mt-6 rounded-[20px] border border-white/10 bg-white/[0.03] p-4">
+              <p className="text-xs leading-6 text-white/40">
+                Esta tela ainda usa pedidos demonstrativos para treinamento. Nenhuma ação abaixo é enviada aos hóspedes.
+              </p>
+            </div>
+          )}
+        </section>
+
+        {/* ATENDIMENTO */}
+
+        <section
+          className="
+            mb-7
+            rounded-[28px]
+            border
+            border-white/10
+            bg-[#090909]
+            p-5
+            sm:p-6
+          "
+        >
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#16f06d]">
+                Disponibilidade
+              </p>
+
+              <h3 className="mt-2 text-xl font-black uppercase text-white">
+                Atendimento do restaurante
+              </h3>
             </div>
 
             <button
@@ -1285,142 +1331,168 @@ export function ParceiroDashboard() {
                 setAceitandoPedidos((atual) => !atual)
               }
               aria-pressed={aceitandoPedidos}
-              className={`rounded-xl px-5 py-3 text-sm font-bold text-white transition ${
-                aceitandoPedidos
-                  ? "bg-green-700 hover:bg-green-800"
-                  : "bg-red-600 hover:bg-red-700"
-              }`}
+              className={`
+                rounded-[16px]
+                px-5
+                py-3
+                text-xs
+                font-black
+                uppercase
+                transition
+                ${
+                  aceitandoPedidos
+                    ? "bg-[#16f06d] text-black"
+                    : "bg-[#ff3030] text-white"
+                }
+              `}
             >
               {aceitandoPedidos
-                ? "🟢 Aceitando novos pedidos"
-                : "🔴 Novos pedidos pausados"}
+                ? "Aceitando pedidos"
+                : "Pedidos pausados"}
             </button>
-
           </div>
 
           <div
-            className={`mt-5 rounded-xl p-4 text-sm ${
-              aceitandoPedidos
-                ? "bg-green-50 text-green-800"
-                : "bg-red-50 text-red-700"
-            }`}
+            className={`
+              mt-5
+              rounded-[18px]
+              border
+              p-4
+              text-xs
+              leading-6
+              ${
+                aceitandoPedidos
+                  ? "border-[#16f06d]/20 bg-[#16f06d]/[0.05] text-[#9ff7c0]"
+                  : "border-red-500/20 bg-red-500/[0.05] text-red-300"
+              }
+            `}
           >
             {aceitandoPedidos
-              ? "✅ Atendimento demonstrativo aberto."
-              : "⛔ Novas solicitações pausadas. Pedidos recebidos anteriormente continuam disponíveis."}
+              ? "Atendimento demonstrativo aberto."
+              : "Novas solicitações estão pausadas. Pedidos já recebidos continuam disponíveis."}
           </div>
-
-          <p className="mt-4 text-xs leading-5 text-gray-500">
-            Na versão conectada, o sistema também
-            consultará os horários de funcionamento.
-          </p>
-
         </section>
 
-        {/* ============================================= */}
-        {/* INDICADORES DEMONSTRATIVOS                    */}
-        {/* ============================================= */}
+        {/* TREINAMENTO CONCLUÍDO */}
 
-        <section className="mb-10">
+        {treinamentoConcluido &&
+          mostrarCardTreinamento && (
+            <section
+              className="
+                mb-7
+                rounded-[28px]
+                border
+                border-[#16f06d]/20
+                bg-[#16f06d]/[0.035]
+                p-5
+                sm:p-6
+              "
+            >
+              <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+                <div className="flex items-center gap-4">
+                  <img
+                    src={parceiroIcon}
+                    alt=""
+                    className="h-16 w-16 object-contain"
+                  />
 
-          <div className="mb-4">
+                  <div>
+                    <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#16f06d]">
+                      Treinamento concluído
+                    </p>
 
-            <h3 className="text-2xl font-bold">
-              Simulação de atendimento
-            </h3>
+                    <h3 className="mt-2 text-xl font-black uppercase text-white">
+                      Seu treinamento
+                    </h3>
 
-            <p className="mt-1 text-sm text-gray-500">
-              Os números abaixo são exclusivamente
-              do pedido fictício DEMO-001.
-            </p>
+                    <p className="mt-2 text-xs leading-6 text-white/35">
+                      Você pode refazer o fluxo sempre que quiser.
+                    </p>
+                  </div>
+                </div>
 
-          </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={refazerTreinamento}
+                    className="rounded-xl border border-white/10 bg-white/[0.05] px-4 py-3 text-xs font-black uppercase text-white"
+                  >
+                    Refazer
+                  </button>
 
-          <div className="grid grid-cols-3 gap-2 md:gap-4">
+                  <button
+                    type="button"
+                    onClick={ocultarCardTreinamento}
+                    className="rounded-xl px-4 py-3 text-xs font-black uppercase text-white/40"
+                  >
+                    Ocultar
+                  </button>
+                </div>
+              </div>
+            </section>
+          )}
 
-            {[
-              {
-                titulo: "Novos",
-                valor: novos,
-                icone: "❗",
-                cor: "text-red-600",
-              },
-              {
-                titulo: "Em preparo",
-                valor: emPreparo,
-                icone: "⏳",
-                cor: "text-amber-600",
-              },
-              {
-                titulo: "Prontos",
-                valor: prontos,
-                icone: "✅",
-                cor: "text-green-700",
-              },
-            ].map((item) => (
-              <article
-                key={item.titulo}
-                className="rounded-2xl border border-gray-100 bg-white p-3 text-center shadow-sm md:p-6"
-              >
-
-                <span className="text-2xl">
-                  {item.icone}
-                </span>
-
-                <p className="mt-2 text-xs text-gray-500 md:text-sm">
-                  {item.titulo}
-                </p>
-
-                <p
-                  className={`mt-2 text-2xl font-bold ${item.cor}`}
-                >
-                  {item.valor}
-                </p>
-
-              </article>
-            ))}
-
-          </div>
-
-        </section>
-
-        {/* ============================================= */}
-        {/* LABORATÓRIO DE TREINAMENTO                    */}
-        {/* ============================================= */}
+        {/* LABORATÓRIO */}
 
         <section
           id="pedidos-demonstrativos"
-          className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#10251d] via-[#143627] to-[#0e2019] p-6 text-white shadow-xl md:p-8"
+          className="
+            relative
+            overflow-hidden
+            rounded-[30px]
+            border
+            border-white/10
+            bg-gradient-to-br
+            from-[#151515]
+            via-[#090909]
+            to-black
+            p-6
+            shadow-[0_25px_80px_rgba(0,0,0,.60)]
+            sm:p-8
+          "
         >
-
-          <div className="pointer-events-none absolute -right-20 bottom-0 h-72 w-72 rounded-full bg-blue-500/10 blur-3xl" />
-
-          <div className="pointer-events-none absolute -left-10 top-0 h-72 w-72 rounded-full bg-amber-400/10 blur-3xl" />
+          <div
+            aria-hidden="true"
+            className="
+              pointer-events-none
+              absolute
+              -right-24
+              -top-20
+              h-72
+              w-72
+              rounded-full
+              bg-[#d4af37]/[0.06]
+              blur-[110px]
+            "
+          />
 
           <div className="relative z-10">
-
-            <div className="flex flex-wrap items-end justify-between gap-4">
-
-              <div className="max-w-3xl">
-
-                <span className="rounded-full border border-amber-400/40 bg-amber-400/10 px-4 py-2 text-xs font-bold tracking-wider text-amber-300">
-                  🧪 LABORATÓRIO DE TREINAMENTO
-                </span>
-
-                <h3 className="mt-5 text-3xl font-black uppercase leading-tight md:text-5xl">
-                  PRATIQUE COM UM
-
-                  <span className="block text-amber-400">
-                    PEDIDO DEMONSTRATIVO
-                  </span>
-                </h3>
-
-                <p className="mt-4 text-sm leading-7 text-gray-200 md:text-base">
-                  Treine o fluxo completo: analisar,
-                  aceitar, definir tempo, informar entrega,
-                  preparar e concluir o pedido.
+            <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.20em] text-[#f3c82f]">
+                  Laboratório de treinamento
                 </p>
 
+                <h2
+                  className="
+                    mt-3
+                    text-3xl
+                    font-black
+                    uppercase
+                    leading-[0.96]
+                    text-white
+                    sm:text-4xl
+                  "
+                  style={{
+                    fontFamily:
+                      "'Arial Black', 'Montserrat', sans-serif",
+                  }}
+                >
+                  Pratique com
+                  <span className="block text-[#f3c82f]">
+                    pedidos teste
+                  </span>
+                </h2>
               </div>
 
               <button
@@ -1428,544 +1500,543 @@ export function ParceiroDashboard() {
                 onClick={() =>
                   setMostrarRecusados((atual) => !atual)
                 }
-                className={`rounded-xl border px-4 py-3 text-sm font-semibold transition ${
-                  mostrarRecusados
-                    ? "border-red-300 bg-red-100 text-red-700"
-                    : "border-white/20 bg-white/10 text-white hover:bg-white/15"
-                }`}
+                className="
+                  rounded-xl
+                  border
+                  border-white/10
+                  bg-white/[0.04]
+                  px-4
+                  py-3
+                  text-xs
+                  font-black
+                  uppercase
+                  text-white
+                "
               >
                 {mostrarRecusados
-                  ? "← Voltar aos pedidos"
+                  ? "Voltar aos pedidos"
                   : `Recusados (${recusados})`}
               </button>
-
             </div>
 
-            <div className="mt-8 rounded-2xl border border-white/10 bg-white/10 p-4 text-sm leading-6 text-gray-100">
-              💡 <strong>Dica:</strong> use este pedido
-              fictício para treinar sua equipe.
-              Ele não envia nada ao hóspede
-              e não altera o sistema real.
-            </div>
-
-            <div
-              className={`mt-8 grid gap-5 ${
-                pedidosVisiveis.length > 1
-                  ? "lg:grid-cols-2"
-                  : "mx-auto max-w-3xl"
-              }`}
-            >
-
+            <div className="mt-7">
               {pedidosVisiveis.length === 0 && (
-                <div className="rounded-2xl border border-dashed border-white/20 bg-white/10 p-8 text-center text-sm text-gray-200 lg:col-span-2">
+                <div className="rounded-[22px] border border-dashed border-white/10 p-8 text-center text-sm text-white/35">
                   Nenhum pedido nesta categoria.
                 </div>
               )}
 
-              {pedidosVisiveis.map((pedido) => {
-                const selecionado =
-                  pedidoSelecionado === pedido.id;
+              <div
+                className={`grid gap-5 ${
+                  pedidosVisiveis.length > 1
+                    ? "lg:grid-cols-2"
+                    : "mx-auto max-w-3xl"
+                }`}
+              >
+                {pedidosVisiveis.map((pedido) => {
+                  const selecionado =
+                    pedidoSelecionado === pedido.id;
 
-                const recusando =
-                  pedidoParaRecusar === pedido.id;
+                  const recusando =
+                    pedidoParaRecusar === pedido.id;
 
-                const prazoFinal =
-                  pedido.confirmadoEm !== null &&
-                  pedido.minutosPreparo !== null
-                    ? pedido.confirmadoEm +
-                      pedido.minutosPreparo * 60_000
-                    : null;
+                  const prazoFinal =
+                    pedido.confirmadoEm !== null &&
+                    pedido.minutosPreparo !== null
+                      ? pedido.confirmadoEm +
+                        pedido.minutosPreparo * 60_000
+                      : null;
 
-                const restantes =
-                  prazoFinal !== null
-                    ? Math.ceil(
-                        (prazoFinal - agora) / 60_000
-                      )
-                    : null;
+                  const restantes =
+                    prazoFinal !== null
+                      ? Math.ceil(
+                          (prazoFinal - agora) / 60_000
+                        )
+                      : null;
 
-                const quasePronto =
-                  pedido.status === "preparacao" &&
-                  restantes !== null &&
-                  restantes > 0 &&
-                  restantes <= 15;
+                  const quasePronto =
+                    pedido.status === "preparacao" &&
+                    restantes !== null &&
+                    restantes > 0 &&
+                    restantes <= 15;
 
-                const atrasado =
-                  pedido.status === "preparacao" &&
-                  restantes !== null &&
-                  restantes <= 0;
+                  const atrasado =
+                    pedido.status === "preparacao" &&
+                    restantes !== null &&
+                    restantes <= 0;
 
-                const borda =
-                  pedido.status === "novo" || atrasado
-                    ? "border-red-500"
-                    : quasePronto
-                    ? "border-amber-500"
-                    : pedido.status === "pronto"
-                    ? "border-green-500"
-                    : pedido.status === "recusado"
-                    ? "border-gray-300"
-                    : "border-blue-200";
+                  return (
+                    <article
+                      key={pedido.id}
+                      className="
+                        overflow-hidden
+                        rounded-[26px]
+                        border
+                        border-white/10
+                        bg-[#0b0b0b]
+                        shadow-[0_20px_55px_rgba(0,0,0,.45)]
+                      "
+                    >
+                      <div className="border-b border-white/10 bg-white/[0.035] p-5">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <span className="text-[10px] font-black uppercase tracking-[0.14em] text-white/30">
+                            {pedido.id}
+                          </span>
 
-                return (
-                  <article
-                    key={pedido.id}
-                    className={`rounded-3xl border-2 bg-white p-5 text-[#19352b] shadow-md md:p-6 ${borda}`}
-                  >
-
-                    {/* IDENTIFICAÇÃO */}
-
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-
-                      <span className="text-xs font-bold text-gray-500">
-                        {pedido.id}
-                      </span>
-
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-bold ${
-                          pedido.status === "novo"
-                            ? "bg-red-100 text-red-700"
-                            : pedido.status === "preparacao"
-                            ? "bg-amber-100 text-amber-800"
-                            : pedido.status === "pronto"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-gray-100 text-gray-700"
-                        }`}
-                      >
-                        {pedido.status === "novo"
-                          ? "❗ Novo pedido"
-                          : pedido.status === "preparacao"
-                          ? "⏳ Em preparação"
-                          : pedido.status === "pronto"
-                          ? "✅ Pronto"
-                          : "🚫 Recusado"}
-                      </span>
-
-                    </div>
-
-                    <h4 className="mt-5 text-2xl font-bold">
-                      🏡 Chalé {pedido.chale}
-                    </h4>
-
-                    <p className="mt-2 text-sm text-gray-500">
-                      Solicitação demonstrativa:{" "}
-                      {pedido.horario}
-                    </p>
-
-                    {/* PRODUTOS COM FOTOS */}
-
-                    <div className="mt-5 rounded-2xl bg-[#f8f6ef] p-4">
-
-                      <h5 className="mb-4 text-sm font-bold">
-                        🍽️ Itens solicitados
-                      </h5>
-
-                      <div className="space-y-3">
-
-                        {pedido.itens.map((item) => (
-                          <div
-                            key={item.produtoId}
-                            className="flex items-center gap-3 rounded-xl border border-gray-100 bg-white p-3"
+                          <span
+                            className={`
+                              rounded-full
+                              px-3
+                              py-1
+                              text-[9px]
+                              font-black
+                              uppercase
+                              ${
+                                pedido.status === "novo"
+                                  ? "bg-red-500/10 text-red-300"
+                                  : pedido.status === "preparacao"
+                                  ? "bg-[#d4af37]/10 text-[#f3c82f]"
+                                  : pedido.status === "pronto"
+                                  ? "bg-[#16f06d]/10 text-[#16f06d]"
+                                  : "bg-white/[0.06] text-white/45"
+                              }
+                            `}
                           >
-
-                            <ImagemProduto
-                              nome={item.nome}
-                              imagemUrl={item.imagemUrl}
-                            />
-
-                            <div className="min-w-0 flex-1">
-
-                              <p className="break-words text-sm font-bold">
-                                {item.nome}
-                              </p>
-
-                              <p className="mt-1 text-sm text-gray-500">
-                                Quantidade:{" "}
-                                {item.quantidade}
-                              </p>
-
-                            </div>
-
-                            <span className="rounded-lg bg-[#f8f6ef] px-2 py-1 text-xs font-bold">
-                              {item.quantidade}×
-                            </span>
-
-                          </div>
-                        ))}
-
-                      </div>
-
-                    </div>
-
-                    {/* PEDIDO NOVO */}
-
-                    {pedido.status === "novo" && (
-                      <div className="mt-5 space-y-3">
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            alternarConfirmacao(pedido.id)
-                          }
-                          className="w-full rounded-xl bg-green-700 p-4 font-bold text-white transition hover:bg-green-800"
-                        >
-                          {selecionado
-                            ? "Fechar opções"
-                            : "✓ Aceitar pedido"}
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            alternarRecusa(pedido.id)
-                          }
-                          className="w-full rounded-xl border border-red-200 bg-white p-3 text-sm font-bold text-red-700 transition hover:bg-red-50"
-                        >
-                          {recusando
-                            ? "Fechar recusa"
-                            : "Recusar solicitação"}
-                        </button>
-
-                        {/* FORMULÁRIO DE ACEITAÇÃO */}
-
-                        {selecionado && (
-                          <div className="space-y-5 rounded-2xl border border-green-200 bg-green-50 p-4">
-
-                            <div>
-
-                              <label
-                                htmlFor={`tempo-${pedido.id}`}
-                                className="mb-2 block text-sm font-bold"
-                              >
-                                ⏱️ Tempo de preparo
-                              </label>
-
-                              <select
-                                id={`tempo-${pedido.id}`}
-                                value={minutos}
-                                onChange={(event) =>
-                                  setMinutos(
-                                    event.target.value
-                                  )
-                                }
-                                className="w-full rounded-xl border border-gray-300 bg-white p-3"
-                              >
-                                <option value="15">
-                                  15 minutos
-                                </option>
-
-                                <option value="30">
-                                  30 minutos
-                                </option>
-
-                                <option value="45">
-                                  45 minutos
-                                </option>
-
-                                <option value="60">
-                                  1 hora
-                                </option>
-                              </select>
-
-                            </div>
-
-                            <div>
-
-                              <p className="mb-2 text-sm font-bold">
-                                🛵 Possui entregador disponível?
-                              </p>
-
-                              <div className="grid grid-cols-2 gap-2">
-
-                                <button
-                                  type="button"
-                                  aria-pressed={
-                                    entregador === "sim"
-                                  }
-                                  onClick={() =>
-                                    setEntregador("sim")
-                                  }
-                                  className={`rounded-xl border p-3 text-sm font-bold ${
-                                    entregador === "sim"
-                                      ? "border-green-700 bg-green-700 text-white"
-                                      : "border-gray-300 bg-white"
-                                  }`}
-                                >
-                                  Sim
-                                </button>
-
-                                <button
-                                  type="button"
-                                  aria-pressed={
-                                    entregador === "nao"
-                                  }
-                                  onClick={() =>
-                                    setEntregador("nao")
-                                  }
-                                  className={`rounded-xl border p-3 text-sm font-bold ${
-                                    entregador === "nao"
-                                      ? "border-red-600 bg-red-600 text-white"
-                                      : "border-gray-300 bg-white"
-                                  }`}
-                                >
-                                  Não
-                                </button>
-
-                              </div>
-
-                            </div>
-
-                            {entregador === "nao" && (
-                              <p className="rounded-xl bg-amber-100 p-3 text-xs leading-5 text-amber-900">
-                                ⚠️ A retirada dependerá
-                                de confirmação da administração.
-                                Não prometa entrega antes disso.
-                              </p>
-                            )}
-
-                            <button
-                              type="button"
-                              disabled={!entregador}
-                              onClick={() =>
-                                confirmarPedido(pedido.id)
-                              }
-                              className="w-full rounded-xl bg-[#19352b] p-4 font-bold text-white disabled:cursor-not-allowed disabled:bg-gray-300"
-                            >
-                              ✓ Confirmar e iniciar preparo
-                            </button>
-
-                          </div>
-                        )}
-
-                        {/* FORMULÁRIO DE RECUSA */}
-
-                        {recusando && (
-                          <div className="rounded-2xl border border-red-200 bg-red-50 p-4">
-
-                            <label
-                              htmlFor={`recusa-${pedido.id}`}
-                              className="block text-sm font-bold text-red-800"
-                            >
-                              Motivo da recusa
-                            </label>
-
-                            <textarea
-                              id={`recusa-${pedido.id}`}
-                              value={motivoRecusa}
-                              onChange={(event) =>
-                                setMotivoRecusa(
-                                  event.target.value
-                                )
-                              }
-                              rows={3}
-                              placeholder="Explique o motivo..."
-                              className="mt-3 w-full rounded-xl border border-red-200 bg-white p-3"
-                            />
-
-                            <button
-                              type="button"
-                              disabled={
-                                motivoRecusa.trim().length < 5
-                              }
-                              onClick={() =>
-                                recusarPedido(pedido.id)
-                              }
-                              className="mt-3 w-full rounded-xl bg-red-600 p-3 font-bold text-white disabled:cursor-not-allowed disabled:bg-gray-300"
-                            >
-                              Confirmar recusa
-                            </button>
-
-                          </div>
-                        )}
-
-                      </div>
-                    )}
-
-                    {/* EM PREPARAÇÃO */}
-
-                    {pedido.status === "preparacao" && (
-                      <div className="mt-5 space-y-4">
-
-                        <div className="rounded-xl bg-blue-50 p-4 text-sm text-blue-900">
-
-                          <p className="font-bold">
-                            ✅ Pedido aceito
-                          </p>
-
-                          <p className="mt-2">
-                            Preparo:{" "}
-                            {pedido.minutosPreparo} minutos
-                          </p>
-
-                          <p className="mt-1">
-                            Aceito às:{" "}
-                            {pedido.confirmadoEm !== null
-                              ? formatarHora(
-                                  pedido.confirmadoEm
-                                )
-                              : "Não registrado"}
-                          </p>
-
-                          <p className="mt-1">
-                            Previsão:{" "}
-                            {prazoFinal !== null
-                              ? formatarHora(prazoFinal)
-                              : "Não informada"}
-                          </p>
-
-                          <p className="mt-1">
-                            {pedido.entregadorDisponivel
-                              ? "🛵 Entregador disponível"
-                              : "📦 Retirada necessária"}
-                          </p>
-
+                            {pedido.status === "novo"
+                              ? "Novo"
+                              : pedido.status === "preparacao"
+                              ? "Em preparação"
+                              : pedido.status === "pronto"
+                              ? "Pronto"
+                              : "Recusado"}
+                          </span>
                         </div>
 
-                        {quasePronto && (
-                          <p className="animate-pulse rounded-xl bg-amber-100 p-4 text-sm font-bold text-amber-900 motion-reduce:animate-none">
-                            ⚠️ Faltam aproximadamente{" "}
-                            {restantes} minutos!
-                          </p>
-                        )}
+                        <div className="mt-4 flex items-center gap-4">
+                          <img
+                            src={entregaIcon}
+                            alt=""
+                            className="h-16 w-16 object-contain"
+                          />
 
-                        {atrasado && (
-                          <p className="rounded-xl bg-red-50 p-4 text-sm font-bold text-red-700">
-                            🚨 O prazo previsto terminou.
-                            Verifique o andamento do pedido.
-                          </p>
-                        )}
+                          <div>
+                            <h3 className="text-xl font-black uppercase text-white">
+                              Chalé {pedido.chale}
+                            </h3>
 
-                        <button
-                          type="button"
-                          onClick={() =>
-                            marcarPronto(pedido.id)
-                          }
-                          className="w-full rounded-xl bg-blue-700 p-4 font-bold text-white transition hover:bg-blue-800"
-                        >
-                          ✓ Marcar pedido como pronto
-                        </button>
-
+                            <p className="mt-1 text-xs text-white/35">
+                              Solicitação: {pedido.horario}
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                    )}
 
-                    {/* PRONTO */}
-
-                    {pedido.status === "pronto" && (
-                      <div className="mt-5 rounded-xl bg-green-50 p-4 text-sm text-green-800">
-
-                        <p className="font-bold">
-                          ✅ Pedido pronto!
+                      <div className="p-5">
+                        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#f3c82f]">
+                          Itens solicitados
                         </p>
 
-                        <p className="mt-2">
-                          Horário:{" "}
-                          {pedido.prontoEm !== null
-                            ? formatarHora(pedido.prontoEm)
-                            : "Não registrado"}
-                        </p>
+                        <div className="mt-4 space-y-3">
+                          {pedido.itens.map((item) => (
+                            <div
+                              key={item.produtoId}
+                              className="
+                                flex
+                                items-center
+                                gap-3
+                                rounded-[18px]
+                                border
+                                border-white/10
+                                bg-white/[0.03]
+                                p-3
+                              "
+                            >
+                              <ImagemProduto
+                                nome={item.nome}
+                                imagemUrl={item.imagemUrl}
+                              />
 
-                        <p className="mt-2">
-                          A entrega ou retirada
-                          ainda precisa ser confirmada
-                          separadamente.
-                        </p>
+                              <div className="min-w-0 flex-1">
+                                <p className="break-words text-sm font-black text-white">
+                                  {item.nome}
+                                </p>
 
-                      </div>
-                    )}
+                                <p className="mt-1 text-xs text-white/30">
+                                  Quantidade: {item.quantidade}
+                                </p>
+                              </div>
 
-                    {/* RECUSADO */}
+                              <span className="rounded-lg bg-white/[0.05] px-2 py-1 text-xs font-black text-white/60">
+                                {item.quantidade}×
+                              </span>
+                            </div>
+                          ))}
+                        </div>
 
-                    {pedido.status === "recusado" && (
-                      <div className="mt-5 rounded-xl bg-gray-100 p-4 text-sm text-gray-700">
+                        {pedido.status === "novo" && (
+                          <div className="mt-5 space-y-3">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                alternarConfirmacao(pedido.id)
+                              }
+                              className="
+                                w-full
+                                rounded-[16px]
+                                bg-[#16f06d]
+                                p-4
+                                text-sm
+                                font-black
+                                uppercase
+                                text-black
+                              "
+                            >
+                              {selecionado
+                                ? "Fechar opções"
+                                : "Aceitar pedido"}
+                            </button>
 
-                        <p className="font-bold">
-                          🚫 Solicitação recusada
-                        </p>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                alternarRecusa(pedido.id)
+                              }
+                              className="
+                                w-full
+                                rounded-[16px]
+                                border
+                                border-red-500/25
+                                bg-red-500/[0.05]
+                                p-3
+                                text-xs
+                                font-black
+                                uppercase
+                                text-red-300
+                              "
+                            >
+                              {recusando
+                                ? "Fechar recusa"
+                                : "Recusar solicitação"}
+                            </button>
 
-                        <p className="mt-2">
-                          <strong>Motivo:</strong>{" "}
-                          {pedido.motivoRecusa}
-                        </p>
+                            {selecionado && (
+                              <div className="space-y-4 rounded-[18px] border border-[#16f06d]/20 bg-[#16f06d]/[0.04] p-4">
+                                <div>
+                                  <label
+                                    htmlFor={`tempo-${pedido.id}`}
+                                    className="mb-2 block text-xs font-black uppercase text-white"
+                                  >
+                                    Tempo de preparo
+                                  </label>
 
-                        {pedido.recusadoEm !== null && (
-                          <p className="mt-2">
-                            <strong>Horário:</strong>{" "}
-                            {formatarHora(
-                              pedido.recusadoEm
+                                  <select
+                                    id={`tempo-${pedido.id}`}
+                                    value={minutos}
+                                    onChange={(event) =>
+                                      setMinutos(
+                                        event.target.value
+                                      )
+                                    }
+                                    className="w-full rounded-xl border border-white/10 bg-[#111] p-3 text-sm text-white outline-none"
+                                  >
+                                    <option value="15">
+                                      15 minutos
+                                    </option>
+
+                                    <option value="30">
+                                      30 minutos
+                                    </option>
+
+                                    <option value="45">
+                                      45 minutos
+                                    </option>
+
+                                    <option value="60">
+                                      1 hora
+                                    </option>
+                                  </select>
+                                </div>
+
+                                <div>
+                                  <p className="mb-2 text-xs font-black uppercase text-white">
+                                    Possui entregador?
+                                  </p>
+
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <button
+                                      type="button"
+                                      aria-pressed={
+                                        entregador === "sim"
+                                      }
+                                      onClick={() =>
+                                        setEntregador("sim")
+                                      }
+                                      className={`
+                                        rounded-xl
+                                        border
+                                        p-3
+                                        text-xs
+                                        font-black
+                                        uppercase
+                                        ${
+                                          entregador === "sim"
+                                            ? "border-[#16f06d] bg-[#16f06d] text-black"
+                                            : "border-white/10 bg-white/[0.03] text-white"
+                                        }
+                                      `}
+                                    >
+                                      Sim
+                                    </button>
+
+                                    <button
+                                      type="button"
+                                      aria-pressed={
+                                        entregador === "nao"
+                                      }
+                                      onClick={() =>
+                                        setEntregador("nao")
+                                      }
+                                      className={`
+                                        rounded-xl
+                                        border
+                                        p-3
+                                        text-xs
+                                        font-black
+                                        uppercase
+                                        ${
+                                          entregador === "nao"
+                                            ? "border-[#ff3030] bg-[#ff3030] text-white"
+                                            : "border-white/10 bg-white/[0.03] text-white"
+                                        }
+                                      `}
+                                    >
+                                      Não
+                                    </button>
+                                  </div>
+                                </div>
+
+                                {entregador === "nao" && (
+                                  <p className="rounded-xl border border-[#d4af37]/20 bg-[#d4af37]/[0.05] p-3 text-xs leading-5 text-[#f3c82f]">
+                                    A retirada dependerá de confirmação da administração.
+                                  </p>
+                                )}
+
+                                <button
+                                  type="button"
+                                  disabled={!entregador}
+                                  onClick={() =>
+                                    confirmarPedido(pedido.id)
+                                  }
+                                  className="
+                                    w-full
+                                    rounded-xl
+                                    bg-white
+                                    p-4
+                                    text-xs
+                                    font-black
+                                    uppercase
+                                    text-black
+                                    disabled:opacity-30
+                                  "
+                                >
+                                  Confirmar e iniciar preparo
+                                </button>
+                              </div>
                             )}
-                          </p>
+
+                            {recusando && (
+                              <div className="rounded-[18px] border border-red-500/20 bg-red-500/[0.04] p-4">
+                                <label
+                                  htmlFor={`recusa-${pedido.id}`}
+                                  className="block text-xs font-black uppercase text-red-300"
+                                >
+                                  Motivo da recusa
+                                </label>
+
+                                <textarea
+                                  id={`recusa-${pedido.id}`}
+                                  value={motivoRecusa}
+                                  onChange={(event) =>
+                                    setMotivoRecusa(
+                                      event.target.value
+                                    )
+                                  }
+                                  rows={3}
+                                  placeholder="Explique o motivo..."
+                                  className="mt-3 w-full rounded-xl border border-white/10 bg-[#111] p-3 text-sm text-white outline-none"
+                                />
+
+                                <button
+                                  type="button"
+                                  disabled={
+                                    motivoRecusa.trim().length < 5
+                                  }
+                                  onClick={() =>
+                                    recusarPedido(pedido.id)
+                                  }
+                                  className="mt-3 w-full rounded-xl bg-[#ff3030] p-3 text-xs font-black uppercase text-white disabled:opacity-30"
+                                >
+                                  Confirmar recusa
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         )}
 
+                        {pedido.status === "preparacao" && (
+                          <div className="mt-5 space-y-4">
+                            <div className="rounded-[18px] border border-[#d4af37]/20 bg-[#d4af37]/[0.04] p-4 text-xs leading-6 text-white/55">
+                              <p>
+                                Preparo:{" "}
+                                <strong className="text-white">
+                                  {pedido.minutosPreparo} minutos
+                                </strong>
+                              </p>
+
+                              <p>
+                                Aceito às:{" "}
+                                <strong className="text-white">
+                                  {pedido.confirmadoEm !== null
+                                    ? formatarHora(
+                                        pedido.confirmadoEm
+                                      )
+                                    : "Não registrado"}
+                                </strong>
+                              </p>
+
+                              <p>
+                                Previsão:{" "}
+                                <strong className="text-white">
+                                  {prazoFinal !== null
+                                    ? formatarHora(
+                                        prazoFinal
+                                      )
+                                    : "Não informada"}
+                                </strong>
+                              </p>
+
+                              <p className="mt-1">
+                                {pedido.entregadorDisponivel
+                                  ? "Entrega disponível"
+                                  : "Retirada necessária"}
+                              </p>
+                            </div>
+
+                            {quasePronto && (
+                              <p className="rounded-xl bg-[#d4af37]/10 p-4 text-xs font-black uppercase text-[#f3c82f]">
+                                Faltam aproximadamente{" "}
+                                {restantes} minutos.
+                              </p>
+                            )}
+
+                            {atrasado && (
+                              <p className="rounded-xl bg-red-500/[0.07] p-4 text-xs font-black uppercase text-red-300">
+                                O prazo previsto terminou.
+                              </p>
+                            )}
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                marcarPronto(pedido.id)
+                              }
+                              className="w-full rounded-xl bg-[#16f06d] p-4 text-xs font-black uppercase text-black"
+                            >
+                              Marcar como pronto
+                            </button>
+                          </div>
+                        )}
+
+                        {pedido.status === "pronto" && (
+                          <div className="mt-5 rounded-[18px] border border-[#16f06d]/20 bg-[#16f06d]/[0.04] p-4 text-xs leading-6 text-[#a5f7c2]">
+                            <p className="font-black uppercase">
+                              Pedido pronto
+                            </p>
+
+                            <p className="mt-2">
+                              Horário:{" "}
+                              {pedido.prontoEm !== null
+                                ? formatarHora(
+                                    pedido.prontoEm
+                                  )
+                                : "Não registrado"}
+                            </p>
+                          </div>
+                        )}
+
+                        {pedido.status === "recusado" && (
+                          <div className="mt-5 rounded-[18px] border border-white/10 bg-white/[0.03] p-4 text-xs leading-6 text-white/45">
+                            <p className="font-black uppercase text-white">
+                              Solicitação recusada
+                            </p>
+
+                            <p className="mt-2">
+                              <strong>Motivo:</strong>{" "}
+                              {pedido.motivoRecusa}
+                            </p>
+
+                            {pedido.recusadoEm !== null && (
+                              <p className="mt-2">
+                                <strong>Horário:</strong>{" "}
+                                {formatarHora(
+                                  pedido.recusadoEm
+                                )}
+                              </p>
+                            )}
+                          </div>
+                        )}
+
+                        {(pedido.status === "preparacao" ||
+                          pedido.status === "pronto") && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              solicitarIntervencao(pedido.id)
+                            }
+                            className="mt-5 w-full rounded-xl border border-[#d4af37]/20 bg-[#d4af37]/[0.04] p-3 text-xs font-black uppercase text-[#f3c82f]"
+                          >
+                            Solicitar intervenção administrativa
+                          </button>
+                        )}
                       </div>
-                    )}
-
-                    {/* INTERVENÇÃO ADMINISTRATIVA */}
-
-                    {(pedido.status === "preparacao" ||
-                      pedido.status === "pronto") && (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          solicitarIntervencao(pedido.id)
-                        }
-                        className="mt-5 w-full rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-900 transition hover:bg-amber-100"
-                      >
-                        ⚠️ Solicitar intervenção administrativa
-                      </button>
-                    )}
-
-                  </article>
-                );
-              })}
-
-            </div>
-
-            {/* BLOCO FINAL */}
-
-            <div className="mt-8 rounded-3xl border border-white/10 bg-white/10 p-5 backdrop-blur-sm md:p-6">
-
-              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-
-                <div className="max-w-3xl">
-
-                  <h4 className="text-2xl font-black uppercase text-white">
-                    Treine agora e prepare sua equipe
-                  </h4>
-
-                  <p className="mt-3 text-sm leading-7 text-gray-200 md:text-base">
-                    Esta área foi criada para que o parceiro
-                    pratique sem medo. Aqui você aprende
-                    o fluxo completo antes da entrada
-                    dos pedidos reais.
-                  </p>
-
-                </div>
-
-                <div className="rounded-2xl bg-amber-400 px-5 py-4 text-center text-[#19352b] shadow-lg">
-
-                  <p className="text-sm font-bold uppercase">
-                    Objetivo do treino
-                  </p>
-
-                  <p className="mt-1 text-lg font-black">
-                    Ganhar agilidade no primeiro atendimento
-                  </p>
-
-                </div>
-
+                    </article>
+                  );
+                })}
               </div>
-
             </div>
 
-          </div>
+            <div className="mt-7 rounded-[22px] border border-white/10 bg-white/[0.03] p-5">
+              <p className="text-[9px] font-black uppercase tracking-[0.18em] text-white/30">
+                Treinamento
+              </p>
 
+              <h3 className="mt-2 text-lg font-black uppercase text-white">
+                Prepare sua equipe antes dos pedidos reais
+              </h3>
+
+              <p className="mt-2 max-w-3xl text-xs leading-6 text-white/35">
+                Use este pedido demonstrativo para praticar aceite, preparo, recusa e conclusão.
+              </p>
+            </div>
+          </div>
         </section>
 
+        {/* RODAPÉ */}
+
+        <footer className="mt-10 border-t border-white/10 py-8 text-center">
+          <img
+            src="/coroa.png"
+            alt=""
+            className="mx-auto h-10 w-10 object-contain opacity-65"
+          />
+
+          <p className="mt-4 text-[10px] font-black uppercase tracking-[0.14em] text-white/20">
+            Império Chalés • Portal do Parceiro
+          </p>
+        </footer>
       </div>
 
-      {/* ============================================= */}
-      {/* BOTÃO AZUL FLUTUANTE                          */}
-      {/* Celular: bolinha azul com ícone.               */}
-      {/* Computador: botão com texto completo.          */}
-      {/* ============================================= */}
+      {/* BOTÃO FLUTUANTE */}
 
       {treinamentoConcluido && (
         <div className="pointer-events-none fixed bottom-5 right-5 z-50">
@@ -1973,22 +2044,34 @@ export function ParceiroDashboard() {
             to="/parceiro/pedidos"
             aria-label="Ver todos os pedidos"
             title="Ver todos os pedidos"
-            className="pointer-events-auto inline-flex h-14 w-14 items-center justify-center rounded-full border-2 border-white bg-blue-500 text-2xl font-black text-white shadow-[0_0_30px_rgba(37,99,235,0.7)] transition hover:bg-blue-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 motion-safe:animate-pulse motion-reduce:animate-none sm:h-auto sm:w-auto sm:px-6 sm:py-4 sm:text-sm"
+            className="
+              pointer-events-auto
+              inline-flex
+              h-14
+              w-14
+              items-center
+              justify-center
+              rounded-full
+              border
+              border-red-500/35
+              bg-[#ff3030]
+              text-xl
+              font-black
+              text-white
+              shadow-[0_0_28px_rgba(255,48,48,.40)]
+              transition
+              hover:scale-105
+              sm:h-auto
+              sm:w-auto
+              sm:px-5
+              sm:py-4
+              sm:text-xs
+              sm:uppercase
+            "
           >
-            {/* Ícone exibido somente no celular */}
-            <span
-              className="sm:hidden"
-              aria-hidden="true"
-            >
-              📋
-            </span>
-
-            {/* Texto exibido em telas maiores */}
-            <span
-              className="hidden sm:inline"
-              aria-hidden="true"
-            >
-              📋 Ver todos os pedidos →
+            <span className="sm:hidden">📋</span>
+            <span className="hidden sm:inline">
+              Ver pedidos →
             </span>
           </Link>
         </div>

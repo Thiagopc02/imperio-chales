@@ -20,9 +20,13 @@ import {
 
 import { auth, db } from "../firebase/config";
 
-// =====================================================
-// TIPOS
-// =====================================================
+import estabelecimentoIcon from "../components/catalogo/estabelecimento.png";
+import parceiroIcon from "../components/catalogo/parceiro-icone.png";
+import entregaIcon from "../components/catalogo/entrega.png";
+
+/* =========================================================
+   TIPOS
+========================================================= */
 
 type ModalidadeEntrega =
   | ""
@@ -55,9 +59,9 @@ interface DadosCadastro {
   aceitouTermos: boolean;
 }
 
-// =====================================================
-// ESTADO INICIAL
-// =====================================================
+/* =========================================================
+   ESTADO INICIAL
+========================================================= */
 
 const dadosIniciais: DadosCadastro = {
   nomeEmpresa: "",
@@ -78,9 +82,9 @@ const dadosIniciais: DadosCadastro = {
   aceitouTermos: false,
 };
 
-// =====================================================
-// FUNÇÕES AUXILIARES
-// =====================================================
+/* =========================================================
+   FUNÇÕES AUXILIARES
+========================================================= */
 
 function somenteNumeros(valor: string): string {
   return valor.replace(/\D/g, "");
@@ -161,15 +165,55 @@ function mensagemErroFirebase(erro: unknown): string {
   }
 }
 
-// =====================================================
-// COMPONENTE PRINCIPAL
-// =====================================================
+/* =========================================================
+   PEÇAS VISUAIS
+========================================================= */
+
+function TituloSecao({
+  etiqueta,
+  titulo,
+  descricao,
+}: {
+  etiqueta: string;
+  titulo: string;
+  descricao: string;
+}) {
+  return (
+    <div className="border-b border-white/10 px-5 py-5 sm:px-7">
+      <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[#ff3030]">
+        {etiqueta}
+      </p>
+
+      <h3
+        className="
+          mt-2
+          text-xl
+          font-black
+          uppercase
+          tracking-[-0.025em]
+          text-white
+          sm:text-2xl
+        "
+        style={{
+          fontFamily: "'Arial Black', 'Montserrat', sans-serif",
+          textShadow: "0 2px 0 #000",
+        }}
+      >
+        {titulo}
+      </h3>
+
+      <p className="mt-2 max-w-2xl text-xs leading-6 text-white/40 sm:text-sm">
+        {descricao}
+      </p>
+    </div>
+  );
+}
+
+/* =========================================================
+   COMPONENTE PRINCIPAL
+========================================================= */
 
 export function ParceiroCadastro() {
-  // ===================================================
-  // ESTADOS DO FORMULÁRIO
-  // ===================================================
-
   const [dados, setDados] =
     useState<DadosCadastro>(dadosIniciais);
 
@@ -199,9 +243,9 @@ export function ParceiroCadastro() {
   const [uidCriado, setUidCriado] =
     useState("");
 
-  // ===================================================
-  // LIMPEZA DA PRÉVIA DA LOGOMARCA
-  // ===================================================
+  /* =======================================================
+     LIMPEZA DA PRÉVIA
+  ======================================================= */
 
   useEffect(() => {
     return () => {
@@ -211,9 +255,9 @@ export function ParceiroCadastro() {
     };
   }, [logoPreview]);
 
-  // ===================================================
-  // ATUALIZAR CAMPOS
-  // ===================================================
+  /* =======================================================
+     ATUALIZAR CAMPOS
+  ======================================================= */
 
   function atualizarCampo(
     campo: keyof DadosCadastro,
@@ -227,9 +271,9 @@ export function ParceiroCadastro() {
     setErro("");
   }
 
-  // ===================================================
-  // SELECIONAR LOGOMARCA
-  // ===================================================
+  /* =======================================================
+     LOGOMARCA
+  ======================================================= */
 
   function selecionarLogo(
     event: ChangeEvent<HTMLInputElement>
@@ -262,12 +306,20 @@ export function ParceiroCadastro() {
       return;
     }
 
+    if (logoPreview) {
+      URL.revokeObjectURL(logoPreview);
+    }
+
     setLogoArquivo(arquivo);
     setLogoPreview(URL.createObjectURL(arquivo));
     setErro("");
   }
 
   function removerLogo() {
+    if (logoPreview) {
+      URL.revokeObjectURL(logoPreview);
+    }
+
     setLogoArquivo(null);
     setLogoPreview(null);
 
@@ -280,9 +332,9 @@ export function ParceiroCadastro() {
     }
   }
 
-  // ===================================================
-  // VALIDAÇÃO
-  // ===================================================
+  /* =======================================================
+     VALIDAÇÃO
+  ======================================================= */
 
   function validarDados(): string | null {
     if (dados.nomeEmpresa.trim().length < 3) {
@@ -318,7 +370,9 @@ export function ParceiroCadastro() {
       return "O CPF deve ter 11 números ou o CNPJ deve ter 14 números.";
     }
 
-    if (somenteNumeros(dados.cep).length !== 8) {
+    if (
+      somenteNumeros(dados.cep).length !== 8
+    ) {
       return "Informe um CEP com 8 números.";
     }
 
@@ -350,9 +404,9 @@ export function ParceiroCadastro() {
     return null;
   }
 
-  // ===================================================
-  // GRAVAR EMPRESA NO FIRESTORE
-  // ===================================================
+  /* =======================================================
+     GRAVAR EMPRESA
+  ======================================================= */
 
   async function salvarEmpresa(usuario: User) {
     const restauranteRef = doc(
@@ -361,59 +415,32 @@ export function ParceiroCadastro() {
       usuario.uid
     );
 
-    /*
-      O documento utiliza o UID do responsável.
-
-      O status inicial é sempre "pendente".
-
-      A senha não é armazenada no Firestore.
-
-      O envio da logomarca para o Storage
-      será implementado separadamente.
-    */
-
     await setDoc(restauranteRef, {
       uid: usuario.uid,
-
       nomeEmpresa: dados.nomeEmpresa.trim(),
-
       nomeResponsavel: dados.nomeResponsavel.trim(),
-
       email:
         usuario.email ??
         dados.email.trim().toLowerCase(),
-
       telefone: dados.telefone.trim(),
-
       documento: somenteNumeros(dados.documento),
-
       cep: somenteNumeros(dados.cep),
-
       endereco: dados.endereco.trim(),
-
       numero: dados.numero.trim(),
-
       bairro: dados.bairro.trim(),
-
       cidade: dados.cidade.trim(),
-
       complemento: dados.complemento.trim(),
-
       modalidadeEntrega: dados.modalidadeEntrega,
-
       descricao: dados.descricao.trim(),
-
       logoUrl: "",
-
       status: "pendente",
-
       criadoEm: serverTimestamp(),
     });
   }
 
-  // ===================================================
-  // CRIAR CONTA E ENVIAR CADASTRO
-  // ===================================================
+  /* =======================================================
+     CADASTRAR
+  ======================================================= */
 
   async function cadastrarEmpresa(
     event: FormEvent<HTMLFormElement>
@@ -443,11 +470,6 @@ export function ParceiroCadastro() {
       return;
     }
 
-    /*
-      Não criamos outra conta enquanto
-      existe uma sessão ativa no Firebase.
-    */
-
     if (auth.currentUser) {
       setErro(
         "Já existe uma conta conectada neste navegador. Para cadastrar outra empresa, saia da conta atual ou utilize uma janela anônima sem nenhuma sessão aberta."
@@ -466,8 +488,6 @@ export function ParceiroCadastro() {
     let contaCriada: User | null = null;
 
     try {
-      // 1. CRIAR USUÁRIO NO AUTHENTICATION
-
       const credencial =
         await createUserWithEmailAndPassword(
           auth,
@@ -479,11 +499,7 @@ export function ParceiroCadastro() {
 
       setUidCriado(contaCriada.uid);
 
-      // 2. GRAVAR EMPRESA NO FIRESTORE
-
       await salvarEmpresa(contaCriada);
-
-      // 3. GUARDAR DADOS PARA A TELA DE CONFIRMAÇÃO
 
       setEmpresaCadastrada(
         dados.nomeEmpresa.trim()
@@ -491,18 +507,14 @@ export function ParceiroCadastro() {
 
       setEmailCadastrado(
         contaCriada.email ??
-        dados.email.trim().toLowerCase()
+          dados.email.trim().toLowerCase()
       );
-
-      // 4. LIMPAR A SENHA DO ESTADO
 
       setDados((anterior) => ({
         ...anterior,
         senha: "",
         confirmarSenha: "",
       }));
-
-      // 5. EXIBIR CONFIRMAÇÃO
 
       setEstadoEnvio("sucesso");
 
@@ -511,19 +523,14 @@ export function ParceiroCadastro() {
         behavior: "smooth",
       });
     } catch (erroFirebase) {
-      /*
-        Se o Authentication criar o usuário,
-        mas a gravação no Firestore falhar,
-        não tentaremos criar a mesma conta
-        novamente automaticamente.
-      */
-
       if (contaCriada) {
-        setEstadoEnvio("conta_sem_cadastro");
+        setEstadoEnvio(
+          "conta_sem_cadastro"
+        );
 
         setEmailCadastrado(
           contaCriada.email ??
-          dados.email.trim().toLowerCase()
+            dados.email.trim().toLowerCase()
         );
 
         setErro(
@@ -534,7 +541,9 @@ export function ParceiroCadastro() {
         setEstadoEnvio("formulario");
 
         setErro(
-          mensagemErroFirebase(erroFirebase)
+          mensagemErroFirebase(
+            erroFirebase
+          )
         );
       }
 
@@ -545,409 +554,593 @@ export function ParceiroCadastro() {
     }
   }
 
-  // ===================================================
-  // ESTILOS
-  // ===================================================
+  /* =======================================================
+     ESTILOS
+  ======================================================= */
 
-  const classeInput =
-    "mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-sm text-[#19352b] outline-none transition focus:border-green-600 focus:ring-2 focus:ring-green-100 disabled:cursor-not-allowed disabled:bg-gray-100";
+  const classeInput = `
+    mt-2
+    w-full
+    rounded-[16px]
+    border
+    border-white/10
+    bg-white/[0.055]
+    px-4
+    py-4
+    text-sm
+    font-semibold
+    text-white
+    outline-none
+    transition-all
+    duration-300
+    placeholder:text-white/25
+    focus:border-[#ff3030]/70
+    focus:bg-white/[0.075]
+    focus:ring-4
+    focus:ring-[#ff3030]/[0.06]
+    disabled:cursor-not-allowed
+    disabled:opacity-50
+  `;
 
-  const classeLabel =
-    "block text-sm font-bold text-[#19352b]";
+  const classeLabel = `
+    block
+    text-[11px]
+    font-black
+    uppercase
+    tracking-[0.08em]
+    text-white
+    sm:text-xs
+  `;
 
   const enviando =
     estadoEnvio === "enviando";
 
-  // ===================================================
-  // INTERFACE PRINCIPAL
-  // ===================================================
+  /* =======================================================
+     INTERFACE
+  ======================================================= */
 
   return (
-    <main className="min-h-screen bg-[#f8f6ef] text-[#19352b]">
+    <main className="relative min-h-screen overflow-hidden bg-black text-white">
+      {/* LUZES DE FUNDO */}
 
-      {/* ============================================= */}
-      {/* CABEÇALHO                                     */}
-      {/* ============================================= */}
+      <div
+        aria-hidden="true"
+        className="
+          pointer-events-none
+          absolute
+          -left-40
+          top-28
+          h-[460px]
+          w-[460px]
+          rounded-full
+          bg-red-600/[0.055]
+          blur-[160px]
+        "
+      />
 
-      <header className="bg-[#101813] px-4 py-5 text-white">
+      <div
+        aria-hidden="true"
+        className="
+          pointer-events-none
+          absolute
+          -right-44
+          top-[900px]
+          h-[520px]
+          w-[520px]
+          rounded-full
+          bg-[#d4af37]/[0.035]
+          blur-[180px]
+        "
+      />
 
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4">
+      {/* ===================================================
+          CABEÇALHO
+      =================================================== */}
 
-          {/* IDENTIDADE DO PORTAL */}
-
-          <div className="flex items-center gap-3">
-
+      <header
+        className="
+          sticky
+          top-0
+          z-50
+          border-b
+          border-white/10
+          bg-black/90
+          px-4
+          py-4
+          backdrop-blur-xl
+        "
+      >
+        <div
+          className="
+            mx-auto
+            flex
+            max-w-6xl
+            flex-wrap
+            items-center
+            justify-between
+            gap-3
+          "
+        >
+          <Link
+            to="/cardapio"
+            className="flex items-center gap-3"
+          >
             <img
-              src="/logo-imperio.png"
+              src="/coroa.png"
               alt="Império Chalés"
-              className="h-12 w-12 rounded-full object-contain"
+              className="
+                h-11
+                w-11
+                object-contain
+                drop-shadow-[0_0_12px_rgba(255,255,255,.15)]
+              "
             />
 
             <div>
-
-              <h1 className="text-lg font-black">
+              <p
+                className="
+                  text-sm
+                  font-black
+                  uppercase
+                  tracking-[0.04em]
+                  text-white
+                "
+              >
                 Portal do Parceiro
-              </h1>
-
-              <p className="text-xs font-bold tracking-widest text-amber-300">
-                SABORES DA CHAPADA
               </p>
 
+              <p
+                className="
+                  mt-0.5
+                  text-[9px]
+                  font-black
+                  uppercase
+                  tracking-[0.18em]
+                  text-[#ff3030]
+                "
+              >
+                Sabores da Chapada
+              </p>
             </div>
+          </Link>
 
-          </div>
-
-          {/* ========================================= */}
-          {/* BOTÕES DO CABEÇALHO                       */}
-          {/* ========================================= */}
-
-          <nav
-            aria-label="Navegação do parceiro"
-            className="flex w-full flex-wrap items-center gap-3 sm:w-auto"
-          >
-
-            {/* FAZER LOGIN */}
-
+          <nav className="flex flex-1 justify-end gap-2 sm:flex-none">
             <Link
               to="/parceiro/login"
-              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border-b-4 border-amber-700 bg-gradient-to-b from-yellow-200 via-amber-400 to-yellow-500 px-5 py-3 text-center text-sm font-black uppercase text-black shadow-[0_5px_15px_rgba(251,191,36,0.25)] transition hover:-translate-y-0.5 hover:brightness-105 sm:flex-none"
+              className="
+                inline-flex
+                min-h-[46px]
+                items-center
+                justify-center
+                rounded-xl
+                border
+                border-red-500/35
+                bg-red-500/[0.09]
+                px-4
+                text-[11px]
+                font-black
+                uppercase
+                tracking-[0.04em]
+                text-red-300
+                transition
+                hover:bg-red-500/15
+              "
             >
-              🔐 FAZER LOGIN →
+              Fazer login →
             </Link>
-
-            {/* VOLTAR AO CARDÁPIO */}
 
             <Link
               to="/cardapio"
-              className="inline-flex flex-1 items-center justify-center rounded-xl border border-white/20 px-5 py-3 text-center text-sm font-bold text-white transition hover:bg-white/10 sm:flex-none"
+              className="
+                hidden
+                min-h-[46px]
+                items-center
+                justify-center
+                rounded-xl
+                border
+                border-white/10
+                px-4
+                text-[11px]
+                font-black
+                uppercase
+                text-white
+                transition
+                hover:bg-white/[0.06]
+                sm:inline-flex
+              "
             >
-              ← Voltar ao cardápio
+              ← Cardápio
             </Link>
-
           </nav>
-
         </div>
-
       </header>
 
-      {/* ============================================= */}
-      {/* CONTEÚDO                                      */}
-      {/* ============================================= */}
+      {/* ===================================================
+          CONTEÚDO
+      =================================================== */}
 
-      <div className="mx-auto max-w-5xl px-4 py-8 md:py-12">
+      <div className="relative z-10 mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+        {/* =================================================
+            HERO
+        ================================================= */}
 
-        {/* =========================================== */}
-        {/* APRESENTAÇÃO                                */}
-        {/* =========================================== */}
+        <section
+          className="
+            relative
+            mb-8
+            overflow-hidden
+            rounded-[30px]
+            border
+            border-white/10
+            bg-gradient-to-br
+            from-[#1d1d1d]
+            via-[#0d0d0d]
+            to-black
+            p-6
+            shadow-[0_25px_80px_rgba(0,0,0,.65)]
+            sm:p-8
+            lg:p-10
+          "
+        >
+          <div
+            aria-hidden="true"
+            className="
+              pointer-events-none
+              absolute
+              -right-16
+              -top-20
+              h-72
+              w-72
+              rounded-full
+              bg-red-500/[0.10]
+              blur-[100px]
+            "
+          />
 
-        <section className="relative mb-8 overflow-hidden rounded-[32px] bg-gradient-to-br from-[#10251d] via-[#143627] to-[#0e2019] p-6 text-white shadow-xl md:p-10">
+          <div className="relative z-10 grid items-center gap-8 lg:grid-cols-[1fr_320px]">
+            <div>
+              <div
+                className="
+                  inline-flex
+                  rounded-full
+                  border
+                  border-red-500/30
+                  bg-red-500/[0.07]
+                  px-4
+                  py-2
+                  text-[9px]
+                  font-black
+                  uppercase
+                  tracking-[0.20em]
+                  text-[#ff3030]
+                "
+              >
+                Cadastro de parceiro
+              </div>
 
-          <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-amber-400/10 blur-3xl" />
-
-          <div className="relative">
-
-            <span className="inline-flex rounded-full border border-amber-400/40 bg-amber-400/10 px-4 py-2 text-xs font-extrabold tracking-wider text-amber-300">
-              🏪 SEJA UM PARCEIRO
-            </span>
-
-            <h2 className="mt-6 text-3xl font-black uppercase leading-tight md:text-5xl">
-              CADASTRE SUA
-
-              <span className="block text-amber-400">
-                EMPRESA AQUI!
-              </span>
-            </h2>
-
-            <p className="mt-5 max-w-2xl text-sm leading-7 text-gray-200 md:text-base">
-              Faça parte do Sabores da Chapada.
-              Preencha os dados do seu estabelecimento
-              para solicitar uma parceria com o
-              Império Chalés.
-            </p>
-
-            <div className="mt-7 grid gap-3 sm:grid-cols-3">
-
-              {[
-                {
-                  icone: "📝",
-                  titulo: "Cadastro",
-                },
-                {
-                  icone: "🔎",
-                  titulo: "Análise",
-                },
-                {
-                  icone: "✅",
-                  titulo: "Aprovação",
-                },
-              ].map((item, indice) => (
-
-                <div
-                  key={item.titulo}
-                  className="rounded-2xl border border-white/10 bg-white/10 p-4"
+              <h1
+                className="
+                  mt-5
+                  max-w-3xl
+                  text-[38px]
+                  font-black
+                  uppercase
+                  leading-[0.92]
+                  tracking-[-0.045em]
+                  text-white
+                  sm:text-[52px]
+                  lg:text-[64px]
+                "
+                style={{
+                  fontFamily:
+                    "'Arial Black', 'Montserrat', sans-serif",
+                  textShadow:
+                    "0 3px 0 #000, 0 10px 30px rgba(0,0,0,.55)",
+                }}
+              >
+                Cadastre seu
+                <span
+                  className="
+                    block
+                    text-[#ff3030]
+                    drop-shadow-[0_0_16px_rgba(255,48,48,.28)]
+                  "
                 >
+                  estabelecimento
+                </span>
+              </h1>
 
-                  <span className="text-2xl">
-                    {item.icone}
-                  </span>
-
-                  <p className="mt-3 text-xs font-bold text-amber-300">
-                    PASSO {indice + 1}
-                  </p>
-
-                  <p className="mt-1 font-extrabold">
-                    {item.titulo}
-                  </p>
-
-                </div>
-
-              ))}
-
+              <p className="mt-5 max-w-2xl text-sm leading-7 text-white/45 sm:text-base">
+                Preencha os dados abaixo para solicitar sua parceria com o Império Chalés.
+              </p>
             </div>
 
+            <div className="flex items-center justify-center">
+              <img
+                src={estabelecimentoIcon}
+                alt=""
+                aria-hidden="true"
+                draggable={false}
+                className="
+                  h-[210px]
+                  w-[210px]
+                  object-contain
+                  drop-shadow-[0_18px_35px_rgba(255,0,0,.20)]
+                  sm:h-[240px]
+                  sm:w-[240px]
+                "
+              />
+            </div>
           </div>
 
+          {/* PASSOS */}
+
+          <div className="relative z-10 mt-8 grid gap-3 sm:grid-cols-3">
+            {[
+              {
+                numero: "01",
+                titulo: "CADASTRO",
+                texto: "Envie seus dados.",
+              },
+              {
+                numero: "02",
+                titulo: "ANÁLISE",
+                texto: "Nossa equipe confere.",
+              },
+              {
+                numero: "03",
+                titulo: "APROVAÇÃO",
+                texto: "Acesso liberado.",
+              },
+            ].map((passo) => (
+              <div
+                key={passo.numero}
+                className="
+                  rounded-[20px]
+                  border
+                  border-white/10
+                  bg-white/[0.04]
+                  p-4
+                "
+              >
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#ff3030]">
+                  Passo {passo.numero}
+                </p>
+
+                <p className="mt-2 text-sm font-black uppercase text-white">
+                  {passo.titulo}
+                </p>
+
+                <p className="mt-1 text-xs text-white/35">
+                  {passo.texto}
+                </p>
+              </div>
+            ))}
+          </div>
         </section>
 
-        {/* =========================================== */}
-        {/* CADASTRO CONCLUÍDO                          */}
-        {/* =========================================== */}
+        {/* =================================================
+            SUCESSO
+        ================================================= */}
 
         {estadoEnvio === "sucesso" && (
-
           <section
             role="status"
-            className="overflow-hidden rounded-[28px] border border-green-300 bg-white shadow-lg"
+            className="
+              overflow-hidden
+              rounded-[30px]
+              border
+              border-[#16f06d]/25
+              bg-[#080808]
+              shadow-[0_25px_80px_rgba(0,0,0,.65)]
+            "
           >
+            <div className="p-6 sm:p-8">
+              <div className="flex justify-center">
+                <img
+                  src={parceiroIcon}
+                  alt=""
+                  className="h-24 w-24 object-contain"
+                />
+              </div>
 
-            <div className="bg-gradient-to-r from-[#10251d] to-[#19352b] p-6 text-white md:p-8">
-
-              <span className="inline-flex rounded-full border border-amber-400/40 bg-amber-400/10 px-4 py-2 text-xs font-black text-amber-300">
-                ✅ CADASTRO RECEBIDO
-              </span>
-
-              <h3 className="mt-5 text-3xl font-black md:text-4xl">
-                Sua empresa já está cadastrada!
-              </h3>
-
-              <p className="mt-3 text-sm leading-7 text-gray-200">
-                Agora precisamos analisar as informações
-                antes de liberar o acesso ao estabelecimento.
+              <p className="mt-5 text-center text-[10px] font-black uppercase tracking-[0.20em] text-[#16f06d]">
+                Cadastro recebido
               </p>
 
-            </div>
-
-            <div className="p-6 md:p-8">
-
-              {/* STATUS */}
-
-              <div className="rounded-3xl border-2 border-amber-300 bg-amber-50 p-6 text-center md:p-8">
-
-                <span className="text-5xl">
-                  ⏳
+              <h2
+                className="
+                  mt-3
+                  text-center
+                  text-3xl
+                  font-black
+                  uppercase
+                  text-white
+                  sm:text-4xl
+                "
+                style={{
+                  fontFamily:
+                    "'Arial Black', 'Montserrat', sans-serif",
+                }}
+              >
+                Solicitação
+                <span className="block text-[#16f06d]">
+                  enviada!
                 </span>
+              </h2>
 
-                <p className="mt-4 text-xs font-black uppercase tracking-[0.2em] text-amber-700">
-                  SITUAÇÃO DA EMPRESA
-                </p>
+              <p className="mx-auto mt-4 max-w-2xl text-center text-sm leading-7 text-white/45">
+                Sua empresa foi registrada e agora aguarda análise administrativa.
+              </p>
 
-                <h4 className="mt-3 text-3xl font-black uppercase text-amber-800 md:text-4xl">
-                  SOLICITAÇÃO PENDENTE!
-                </h4>
+              <div className="mx-auto mt-7 max-w-2xl rounded-[22px] border border-white/10 bg-white/[0.04] p-5">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-xl bg-black/40 p-4">
+                    <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white/30">
+                      Empresa
+                    </p>
+                    <p className="mt-2 break-words text-sm font-black uppercase text-white">
+                      {empresaCadastrada}
+                    </p>
+                  </div>
 
-                <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-amber-900">
-                  O Império Chalés recebeu sua solicitação.
-                  Aguarde a análise e a aprovação da
-                  administração antes de começar a
-                  atender pedidos.
-                </p>
-
+                  <div className="rounded-xl bg-black/40 p-4">
+                    <p className="text-[9px] font-black uppercase tracking-[0.14em] text-white/30">
+                      E-mail
+                    </p>
+                    <p className="mt-2 break-all text-sm font-black text-white">
+                      {emailCadastrado}
+                    </p>
+                  </div>
+                </div>
               </div>
-
-              {/* DADOS DA EMPRESA */}
-
-              <div className="mt-6 space-y-3 rounded-2xl bg-[#f8f6ef] p-5">
-
-                <p className="text-sm">
-                  <strong>🏪 Empresa:</strong>{" "}
-                  {empresaCadastrada}
-                </p>
-
-                <p className="break-all text-sm">
-                  <strong>📧 E-mail de acesso:</strong>{" "}
-                  {emailCadastrado}
-                </p>
-
-                <p className="text-sm">
-                  <strong>📋 Situação:</strong>{" "}
-
-                  <span className="font-black text-amber-700">
-                    Pendente de aprovação
-                  </span>
-                </p>
-
-              </div>
-
-              {/* PRÓXIMOS PASSOS */}
-
-              <div className="mt-6 rounded-2xl border border-blue-200 bg-blue-50 p-5">
-
-                <h4 className="text-lg font-black text-blue-900">
-                  🔎 O que acontece agora?
-                </h4>
-
-                <p className="mt-3 text-sm leading-7 text-blue-900">
-                  Nossa administração irá conferir os
-                  dados do estabelecimento.
-
-                  Você poderá acompanhar a situação
-                  em uma página exclusiva.
-
-                  Se a aprovação ocorrer enquanto
-                  sua conta estiver conectada,
-                  o portal poderá identificar
-                  a alteração automaticamente.
-                </p>
-
-                <p className="mt-3 text-sm font-semibold leading-6 text-blue-900">
-                  Não é necessário realizar outro cadastro.
-                </p>
-
-              </div>
-
-              {/* ACOMPANHAMENTO */}
 
               <Link
                 to="/parceiro/solicitacao"
-                className="mt-7 flex w-full items-center justify-center rounded-2xl border-b-[5px] border-amber-700 bg-gradient-to-b from-yellow-200 via-amber-400 to-yellow-500 px-6 py-5 text-center text-sm font-black uppercase text-black shadow-lg transition hover:-translate-y-0.5 hover:brightness-105 md:text-base"
+                className="
+                  mx-auto
+                  mt-7
+                  flex
+                  min-h-[62px]
+                  max-w-2xl
+                  items-center
+                  justify-center
+                  rounded-[18px]
+                  bg-[#16f06d]
+                  px-5
+                  text-center
+                  text-sm
+                  font-black
+                  uppercase
+                  text-black
+                  shadow-[0_12px_30px_rgba(22,240,109,.18)]
+                  transition
+                  hover:-translate-y-1
+                "
               >
-                ⏳ ACOMPANHAR MINHA SOLICITAÇÃO →
+                Acompanhar minha solicitação →
               </Link>
-
-              <p className="mt-4 text-center text-xs leading-5 text-gray-500">
-                🔒 O acesso aos pedidos só será liberado
-                após a aprovação administrativa.
-              </p>
-
             </div>
-
           </section>
-
         )}
 
-        {/* =========================================== */}
-        {/* CONTA CRIADA, MAS CADASTRO NÃO CONFIRMADO   */}
-        {/* =========================================== */}
+        {/* =================================================
+            CONTA CRIADA, FIRESTORE NÃO CONFIRMADO
+        ================================================= */}
 
         {estadoEnvio === "conta_sem_cadastro" && (
-
           <section
             role="alert"
-            className="rounded-[28px] border border-red-300 bg-red-50 p-6 md:p-8"
+            className="
+              rounded-[28px]
+              border
+              border-red-500/30
+              bg-red-500/[0.06]
+              p-6
+              sm:p-8
+            "
           >
-
-            <h3 className="text-2xl font-black text-red-800">
-              ⚠️ Precisamos verificar seu cadastro
-            </h3>
-
-            <p className="mt-4 text-sm leading-7 text-red-900">
-              Sua conta de acesso foi criada, mas
-              o registro da empresa não foi confirmado
-              no banco de dados.
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-red-400">
+              Atenção
             </p>
 
-            <p className="mt-3 text-sm leading-7 text-red-900">
-              Não tente realizar outro cadastro com
-              o mesmo e-mail.
+            <h2 className="mt-3 text-2xl font-black uppercase text-white">
+              Precisamos verificar seu cadastro
+            </h2>
 
-              Informe a situação à administração
-              para que ela possa conferir o registro.
+            <p className="mt-4 text-sm leading-7 text-white/55">
+              Sua conta de acesso foi criada, mas o registro da empresa não foi confirmado no banco de dados.
             </p>
 
-            <div className="mt-5 rounded-xl bg-white p-4 text-sm">
+            <p className="mt-3 text-sm leading-7 text-white/55">
+              Não tente realizar outro cadastro com o mesmo e-mail.
+            </p>
 
+            <div className="mt-5 rounded-xl border border-white/10 bg-black/30 p-4 text-sm">
               <p className="break-all">
                 <strong>E-mail:</strong>{" "}
                 {emailCadastrado}
               </p>
 
               {uidCriado && (
-                <p className="mt-2 break-all">
-                  <strong>Identificador da conta:</strong>{" "}
+                <p className="mt-2 break-all text-white/55">
+                  <strong>Identificador:</strong>{" "}
                   {uidCriado}
                 </p>
               )}
-
             </div>
 
             {erro && (
-              <p className="mt-4 text-sm leading-6 text-red-800">
+              <p className="mt-4 text-sm leading-6 text-red-300">
                 {erro}
               </p>
             )}
 
             <Link
               to="/cardapio"
-              className="mt-6 inline-flex rounded-xl bg-[#19352b] px-5 py-3 text-sm font-bold text-white"
+              className="
+                mt-6
+                inline-flex
+                rounded-xl
+                border
+                border-white/15
+                px-5
+                py-3
+                text-sm
+                font-black
+                uppercase
+                text-white
+              "
             >
               ← Voltar ao cardápio
             </Link>
-
           </section>
-
         )}
 
-        {/* =========================================== */}
-        {/* FORMULÁRIO DE CADASTRO                      */}
-        {/* =========================================== */}
+        {/* =================================================
+            FORMULÁRIO
+        ================================================= */}
 
         {(estadoEnvio === "formulario" ||
           estadoEnvio === "enviando") && (
-
           <>
-
-            {/* ERROS */}
-
             {erro && (
-
               <div
                 role="alert"
-                className="mb-8 rounded-2xl border border-red-300 bg-red-50 p-4 text-sm font-semibold text-red-800"
+                className="
+                  mb-6
+                  rounded-[20px]
+                  border
+                  border-red-500/30
+                  bg-red-500/[0.07]
+                  p-4
+                  text-sm
+                  font-bold
+                  leading-6
+                  text-red-300
+                "
               >
                 ⚠️ {erro}
               </div>
-
             )}
 
             <form
               onSubmit={cadastrarEmpresa}
-              className="space-y-7"
+              className="space-y-6"
             >
+              {/* ===========================================
+                  DADOS DO ESTABELECIMENTO
+              =========================================== */}
 
-              {/* ===================================== */}
-              {/* DADOS DO ESTABELECIMENTO              */}
-              {/* ===================================== */}
+              <section className="overflow-hidden rounded-[28px] border border-white/10 bg-[#090909] shadow-[0_20px_60px_rgba(0,0,0,.50)]">
+                <TituloSecao
+                  etiqueta="Dados principais"
+                  titulo="Dados do estabelecimento"
+                  descricao="Informe os dados utilizados para identificar e analisar sua empresa."
+                />
 
-              <section className="overflow-hidden rounded-[28px] border border-gray-100 bg-white shadow-sm">
-
-                <div className="bg-[#19352b] px-6 py-5 text-white md:px-8">
-
-                  <h3 className="text-xl font-black">
-                    🏪 Dados do estabelecimento
-                  </h3>
-
-                  <p className="mt-2 text-sm text-gray-200">
-                    Informe os dados principais da empresa.
-                  </p>
-
-                </div>
-
-                <div className="grid gap-5 p-6 md:grid-cols-2 md:p-8">
-
-                  {/* NOME DA EMPRESA */}
-
+                <div className="grid gap-5 p-5 sm:p-7 md:grid-cols-2">
                   <div className="md:col-span-2">
-
                     <label
                       htmlFor="nomeEmpresa"
                       className={classeLabel}
@@ -970,13 +1163,9 @@ export function ParceiroCadastro() {
                       placeholder="Ex.: Restaurante da Chapada"
                       className={classeInput}
                     />
-
                   </div>
 
-                  {/* RESPONSÁVEL */}
-
                   <div>
-
                     <label
                       htmlFor="nomeResponsavel"
                       className={classeLabel}
@@ -999,13 +1188,9 @@ export function ParceiroCadastro() {
                       placeholder="Nome completo"
                       className={classeInput}
                     />
-
                   </div>
 
-                  {/* WHATSAPP */}
-
                   <div>
-
                     <label
                       htmlFor="telefone"
                       className={classeLabel}
@@ -1031,13 +1216,9 @@ export function ParceiroCadastro() {
                       placeholder="(62) 99999-9999"
                       className={classeInput}
                     />
-
                   </div>
 
-                  {/* E-MAIL */}
-
                   <div>
-
                     <label
                       htmlFor="email"
                       className={classeLabel}
@@ -1062,13 +1243,9 @@ export function ParceiroCadastro() {
                       placeholder="contato@restaurante.com.br"
                       className={classeInput}
                     />
-
                   </div>
 
-                  {/* DOCUMENTO */}
-
                   <div>
-
                     <label
                       htmlFor="documento"
                       className={classeLabel}
@@ -1093,58 +1270,84 @@ export function ParceiroCadastro() {
                       className={classeInput}
                     />
 
-                    <p className="mt-2 text-xs text-gray-400">
-                      O documento será conferido durante
-                      a análise.
+                    <p className="mt-2 text-xs text-white/25">
+                      O documento será conferido durante a análise.
                     </p>
-
                   </div>
 
                   {/* LOGOMARCA */}
 
                   <div className="md:col-span-2">
-
                     <label className={classeLabel}>
                       Logomarca da empresa
                     </label>
 
-                    <div className="mt-3 flex flex-col gap-5 rounded-2xl border-2 border-dashed border-gray-200 bg-[#f8f6ef] p-5 sm:flex-row sm:items-center">
-
-                      <div className="flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white shadow-sm">
-
+                    <div
+                      className="
+                        mt-3
+                        flex
+                        flex-col
+                        gap-5
+                        rounded-[20px]
+                        border
+                        border-dashed
+                        border-white/10
+                        bg-white/[0.025]
+                        p-5
+                        sm:flex-row
+                        sm:items-center
+                      "
+                    >
+                      <div
+                        className="
+                          flex
+                          h-28
+                          w-28
+                          shrink-0
+                          items-center
+                          justify-center
+                          overflow-hidden
+                          rounded-[20px]
+                          border
+                          border-white/10
+                          bg-black
+                        "
+                      >
                         {logoPreview ? (
-
                           <img
                             src={logoPreview}
                             alt="Prévia da logomarca"
                             className="h-full w-full object-contain p-2"
                           />
-
                         ) : (
-
-                          <div className="text-center">
-
-                            <span className="text-4xl">
-                              🖼️
-                            </span>
-
-                            <p className="mt-1 text-xs text-gray-400">
-                              Sem logo
-                            </p>
-
-                          </div>
-
+                          <img
+                            src={estabelecimentoIcon}
+                            alt=""
+                            aria-hidden="true"
+                            className="h-20 w-20 object-contain opacity-75"
+                          />
                         )}
-
                       </div>
 
                       <div className="flex-1">
-
                         <label
                           htmlFor="logo"
-                          className="inline-flex cursor-pointer rounded-xl bg-[#19352b] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#28533e]"
+                          className="
+                            inline-flex
+                            cursor-pointer
+                            rounded-xl
+                            bg-[#ff3030]
+                            px-5
+                            py-3
+                            text-xs
+                            font-black
+                            uppercase
+                            text-white
+                            transition
+                            hover:bg-red-500
+                          "
                         >
-                          📷 Selecionar logomarca
+                          Selecionar logomarca
                         </label>
 
                         <input
@@ -1156,73 +1359,49 @@ export function ParceiroCadastro() {
                           className="sr-only"
                         />
 
-                        <p className="mt-3 text-xs leading-5 text-gray-500">
+                        <p className="mt-3 text-xs leading-5 text-white/30">
                           JPG, PNG ou WEBP. Máximo de 2 MB.
                         </p>
 
-                        <p className="mt-2 text-xs leading-5 text-amber-700">
-                          ⚠️ A imagem será apenas visualizada
-                          nesta etapa.
-
-                          O envio da logomarca será ativado
-                          após configurarmos o Firebase Storage.
+                        <p className="mt-2 text-xs leading-5 text-[#d4af37]/70">
+                          A imagem será exibida apenas como prévia nesta etapa.
                         </p>
 
                         {logoArquivo && (
-
                           <div className="mt-3 flex flex-wrap items-center gap-3">
-
-                            <span className="break-all text-xs font-semibold text-green-700">
-                              ✅ {logoArquivo.name}
+                            <span className="break-all text-xs font-bold text-[#16f06d]">
+                              ✓ {logoArquivo.name}
                             </span>
 
                             <button
                               type="button"
                               disabled={enviando}
                               onClick={removerLogo}
-                              className="text-xs font-bold text-red-600 underline"
+                              className="text-xs font-black uppercase text-red-400 underline"
                             >
                               Remover
                             </button>
-
                           </div>
-
                         )}
-
                       </div>
-
                     </div>
-
                   </div>
-
                 </div>
-
               </section>
 
-              {/* ===================================== */}
-              {/* ENDEREÇO                              */}
-              {/* ===================================== */}
+              {/* ===========================================
+                  ENDEREÇO
+              =========================================== */}
 
-              <section className="overflow-hidden rounded-[28px] border border-gray-100 bg-white shadow-sm">
+              <section className="overflow-hidden rounded-[28px] border border-white/10 bg-[#090909] shadow-[0_20px_60px_rgba(0,0,0,.50)]">
+                <TituloSecao
+                  etiqueta="Localização"
+                  titulo="Endereço do estabelecimento"
+                  descricao="Preencha o endereço completo para identificarmos corretamente sua empresa."
+                />
 
-                <div className="bg-[#19352b] px-6 py-5 text-white md:px-8">
-
-                  <h3 className="text-xl font-black">
-                    📍 Endereço do estabelecimento
-                  </h3>
-
-                  <p className="mt-2 text-sm text-gray-200">
-                    Precisamos localizar corretamente sua empresa.
-                  </p>
-
-                </div>
-
-                <div className="grid gap-5 p-6 md:grid-cols-2 md:p-8">
-
-                  {/* CEP */}
-
+                <div className="grid gap-5 p-5 sm:p-7 md:grid-cols-2">
                   <div>
-
                     <label
                       htmlFor="cep"
                       className={classeLabel}
@@ -1239,24 +1418,17 @@ export function ParceiroCadastro() {
                       onChange={(event) =>
                         atualizarCampo(
                           "cep",
-                          formatarCep(event.target.value)
+                          formatarCep(
+                            event.target.value
+                          )
                         )
                       }
                       placeholder="00000-000"
                       className={classeInput}
                     />
-
-                    <p className="mt-2 text-xs text-gray-400">
-                      Digite o CEP manualmente.
-                      A consulta automática será adicionada posteriormente.
-                    </p>
-
                   </div>
 
-                  {/* CIDADE */}
-
                   <div>
-
                     <label
                       htmlFor="cidade"
                       className={classeLabel}
@@ -1279,13 +1451,9 @@ export function ParceiroCadastro() {
                       placeholder="Ex.: Alto Paraíso de Goiás"
                       className={classeInput}
                     />
-
                   </div>
 
-                  {/* RUA */}
-
                   <div>
-
                     <label
                       htmlFor="endereco"
                       className={classeLabel}
@@ -1308,13 +1476,9 @@ export function ParceiroCadastro() {
                       placeholder="Nome da rua"
                       className={classeInput}
                     />
-
                   </div>
 
-                  {/* NÚMERO */}
-
                   <div>
-
                     <label
                       htmlFor="numero"
                       className={classeLabel}
@@ -1337,13 +1501,9 @@ export function ParceiroCadastro() {
                       placeholder="Número ou S/N"
                       className={classeInput}
                     />
-
                   </div>
 
-                  {/* BAIRRO */}
-
                   <div>
-
                     <label
                       htmlFor="bairro"
                       className={classeLabel}
@@ -1366,13 +1526,9 @@ export function ParceiroCadastro() {
                       placeholder="Bairro"
                       className={classeInput}
                     />
-
                   </div>
 
-                  {/* COMPLEMENTO */}
-
                   <div>
-
                     <label
                       htmlFor="complemento"
                       className={classeLabel}
@@ -1394,73 +1550,64 @@ export function ParceiroCadastro() {
                       placeholder="Sala, loja, referência..."
                       className={classeInput}
                     />
-
                   </div>
-
                 </div>
-
               </section>
 
-              {/* ===================================== */}
-              {/* FUNCIONAMENTO E ENTREGAS              */}
-              {/* ===================================== */}
+              {/* ===========================================
+                  FUNCIONAMENTO E ENTREGAS
+              =========================================== */}
 
-              <section className="overflow-hidden rounded-[28px] border border-gray-100 bg-white shadow-sm">
+              <section className="overflow-hidden rounded-[28px] border border-white/10 bg-[#090909] shadow-[0_20px_60px_rgba(0,0,0,.50)]">
+                <TituloSecao
+                  etiqueta="Atendimento"
+                  titulo="Funcionamento e entregas"
+                  descricao="Escolha como o estabelecimento atende seus clientes."
+                />
 
-                <div className="bg-[#19352b] px-6 py-5 text-white md:px-8">
-
-                  <h3 className="text-xl font-black">
-                    🛵 Funcionamento e entregas
-                  </h3>
-
-                  <p className="mt-2 text-sm text-gray-200">
-                    Informe como você atende seus clientes.
-                  </p>
-
-                </div>
-
-                <div className="space-y-6 p-6 md:p-8">
-
-                  {/* MODALIDADE */}
-
+                <div className="space-y-6 p-5 sm:p-7">
                   <div>
-
                     <p className={classeLabel}>
                       Modalidade de atendimento *
                     </p>
 
                     <div className="mt-3 grid gap-3 md:grid-cols-3">
-
                       {[
                         {
-                          valor: "entrega_propria",
-                          titulo: "Entrega própria",
+                          valor:
+                            "entrega_propria",
+                          titulo:
+                            "Entrega própria",
                           descricao:
                             "Meu estabelecimento possui entregador.",
-                          icone: "🛵",
+                          imagem:
+                            entregaIcon,
                         },
                         {
-                          valor: "somente_retirada",
-                          titulo: "Somente retirada",
+                          valor:
+                            "somente_retirada",
+                          titulo:
+                            "Somente retirada",
                           descricao:
                             "Os pedidos precisam ser retirados.",
-                          icone: "📦",
+                          imagem:
+                            estabelecimentoIcon,
                         },
                         {
                           valor: "ambas",
-                          titulo: "Entrega e retirada",
+                          titulo:
+                            "Entrega e retirada",
                           descricao:
                             "Ofereço as duas modalidades.",
-                          icone: "✅",
+                          imagem:
+                            parceiroIcon,
                         },
                       ].map((opcao) => {
-
                         const selecionado =
                           dados.modalidadeEntrega ===
                           opcao.valor;
 
                         return (
-
                           <button
                             key={opcao.valor}
                             type="button"
@@ -1471,39 +1618,54 @@ export function ParceiroCadastro() {
                                 opcao.valor
                               )
                             }
-                            aria-pressed={selecionado}
-                            className={`rounded-2xl border-2 p-5 text-left transition disabled:cursor-not-allowed ${
+                            aria-pressed={
                               selecionado
-                                ? "border-green-700 bg-green-50 shadow-sm"
-                                : "border-gray-100 bg-[#f8f6ef] hover:border-green-300"
-                            }`}
+                            }
+                            className={`
+                              group
+                              rounded-[20px]
+                              border
+                              p-5
+                              text-left
+                              transition-all
+                              duration-300
+                              disabled:cursor-not-allowed
+
+                              ${
+                                selecionado
+                                  ? "border-[#ff3030]/70 bg-red-500/[0.08] shadow-[0_0_24px_rgba(255,48,48,.09)]"
+                                  : "border-white/10 bg-white/[0.035] hover:border-white/20"
+                              }
+                            `}
                           >
+                            <img
+                              src={opcao.imagem}
+                              alt=""
+                              aria-hidden="true"
+                              className="
+                                h-16
+                                w-16
+                                object-contain
+                                transition-transform
+                                duration-300
+                                group-hover:scale-110
+                              "
+                            />
 
-                            <span className="text-3xl">
-                              {opcao.icone}
-                            </span>
-
-                            <p className="mt-3 font-black">
+                            <p className="mt-3 text-sm font-black uppercase text-white">
                               {opcao.titulo}
                             </p>
 
-                            <p className="mt-2 text-xs leading-5 text-gray-500">
+                            <p className="mt-2 text-xs leading-5 text-white/35">
                               {opcao.descricao}
                             </p>
-
                           </button>
-
                         );
                       })}
-
                     </div>
-
                   </div>
 
-                  {/* DESCRIÇÃO */}
-
                   <div>
-
                     <label
                       htmlFor="descricao"
                       className={classeLabel}
@@ -1524,55 +1686,43 @@ export function ParceiroCadastro() {
                         )
                       }
                       placeholder="Conte um pouco sobre seus produtos e serviços..."
-                      className={classeInput}
+                      className={`${classeInput} resize-y`}
                     />
-
                   </div>
 
-                  {/* AVISO */}
-
-                  <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
-
-                    ⚠️ <strong>Importante:</strong>{" "}
-                    quando não houver entregador,
-                    a retirada pelo Império Chalés
-                    dependerá de consulta e confirmação.
-
-                    A taxa deverá ser informada
-                    ao cliente antecipadamente.
-
+                  <div
+                    className="
+                      rounded-[18px]
+                      border
+                      border-[#d4af37]/25
+                      bg-[#d4af37]/[0.05]
+                      p-4
+                      text-xs
+                      leading-6
+                      text-white/55
+                    "
+                  >
+                    <strong className="text-[#f1cf53]">
+                      Importante:
+                    </strong>{" "}
+                    quando não houver entregador, a retirada pelo Império Chalés dependerá de consulta e confirmação. A taxa deverá ser informada ao cliente antecipadamente.
                   </div>
-
                 </div>
-
               </section>
 
-              {/* ===================================== */}
-              {/* DADOS DE ACESSO                       */}
-              {/* ===================================== */}
+              {/* ===========================================
+                  DADOS DE ACESSO
+              =========================================== */}
 
-              <section className="overflow-hidden rounded-[28px] border border-gray-100 bg-white shadow-sm">
+              <section className="overflow-hidden rounded-[28px] border border-white/10 bg-[#090909] shadow-[0_20px_60px_rgba(0,0,0,.50)]">
+                <TituloSecao
+                  etiqueta="Segurança"
+                  titulo="Dados de acesso"
+                  descricao="Crie a senha que será utilizada no Portal do Parceiro após a aprovação."
+                />
 
-                <div className="bg-[#19352b] px-6 py-5 text-white md:px-8">
-
-                  <h3 className="text-xl font-black">
-                    🔐 Dados de acesso
-                  </h3>
-
-                  <p className="mt-2 text-sm text-gray-200">
-                    Crie uma senha para sua conta.
-                    O acesso operacional dependerá
-                    da aprovação administrativa.
-                  </p>
-
-                </div>
-
-                <div className="grid gap-5 p-6 md:grid-cols-2 md:p-8">
-
-                  {/* SENHA */}
-
+                <div className="grid gap-5 p-5 sm:p-7 md:grid-cols-2">
                   <div>
-
                     <label
                       htmlFor="senha"
                       className={classeLabel}
@@ -1581,7 +1731,6 @@ export function ParceiroCadastro() {
                     </label>
 
                     <div className="relative">
-
                       <input
                         id="senha"
                         required
@@ -1601,7 +1750,7 @@ export function ParceiroCadastro() {
                           )
                         }
                         placeholder="Mínimo de 8 caracteres"
-                        className={`${classeInput} pr-20`}
+                        className={`${classeInput} pr-24`}
                       />
 
                       <button
@@ -1612,21 +1761,28 @@ export function ParceiroCadastro() {
                             (atual) => !atual
                           )
                         }
-                        className="absolute right-3 top-1/2 -translate-y-[35%] text-xs font-bold text-green-800"
+                        className="
+                          absolute
+                          right-3
+                          top-[50%]
+                          -translate-y-[18%]
+                          rounded-lg
+                          px-2
+                          py-1
+                          text-[10px]
+                          font-black
+                          uppercase
+                          text-[#ff3030]
+                        "
                       >
                         {mostrarSenha
                           ? "Ocultar"
                           : "Mostrar"}
                       </button>
-
                     </div>
-
                   </div>
 
-                  {/* CONFIRMAR SENHA */}
-
                   <div>
-
                     <label
                       htmlFor="confirmarSenha"
                       className={classeLabel}
@@ -1635,7 +1791,6 @@ export function ParceiroCadastro() {
                     </label>
 
                     <div className="relative">
-
                       <input
                         id="confirmarSenha"
                         required
@@ -1647,7 +1802,9 @@ export function ParceiroCadastro() {
                         autoComplete="new-password"
                         minLength={8}
                         disabled={enviando}
-                        value={dados.confirmarSenha}
+                        value={
+                          dados.confirmarSenha
+                        }
                         onChange={(event) =>
                           atualizarCampo(
                             "confirmarSenha",
@@ -1655,7 +1812,7 @@ export function ParceiroCadastro() {
                           )
                         }
                         placeholder="Repita sua senha"
-                        className={`${classeInput} pr-20`}
+                        className={`${classeInput} pr-24`}
                       />
 
                       <button
@@ -1666,140 +1823,278 @@ export function ParceiroCadastro() {
                             (atual) => !atual
                           )
                         }
-                        className="absolute right-3 top-1/2 -translate-y-[35%] text-xs font-bold text-green-800"
+                        className="
+                          absolute
+                          right-3
+                          top-[50%]
+                          -translate-y-[18%]
+                          rounded-lg
+                          px-2
+                          py-1
+                          text-[10px]
+                          font-black
+                          uppercase
+                          text-[#ff3030]
+                        "
                       >
                         {mostrarConfirmacao
                           ? "Ocultar"
                           : "Mostrar"}
                       </button>
-
                     </div>
-
                   </div>
 
-                  {/* ACEITE */}
-
                   <div className="md:col-span-2">
-
-                    <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-gray-200 bg-[#f8f6ef] p-4">
-
+                    <label
+                      className="
+                        flex
+                        cursor-pointer
+                        items-start
+                        gap-3
+                        rounded-[18px]
+                        border
+                        border-white/10
+                        bg-white/[0.035]
+                        p-4
+                      "
+                    >
                       <input
                         type="checkbox"
                         required
                         disabled={enviando}
-                        checked={dados.aceitouTermos}
+                        checked={
+                          dados.aceitouTermos
+                        }
                         onChange={(event) =>
                           atualizarCampo(
                             "aceitouTermos",
                             event.target.checked
                           )
                         }
-                        className="mt-1 h-5 w-5 accent-green-700"
+                        className="
+                          mt-0.5
+                          h-5
+                          w-5
+                          shrink-0
+                          accent-[#ff3030]
+                        "
                       />
 
-                      <span className="text-sm leading-6 text-gray-700">
-
-                        Confirmo que os dados informados
-                        são verdadeiros e desejo solicitar
-                        o cadastro do meu estabelecimento.
-
-                        Estou ciente de que a parceria
-                        depende da aprovação do
-                        Império Chalés.
-
+                      <span className="text-xs leading-6 text-white/50 sm:text-sm">
+                        Confirmo que os dados informados são verdadeiros e desejo solicitar o cadastro do meu estabelecimento. Estou ciente de que a parceria depende da aprovação do Império Chalés.
                       </span>
-
                     </label>
-
                   </div>
-
                 </div>
-
               </section>
 
-              {/* ===================================== */}
-              {/* FINALIZAÇÃO                           */}
-              {/* ===================================== */}
+              {/* ===========================================
+                  ENVIO
+              =========================================== */}
 
-              <section className="rounded-[28px] bg-gradient-to-r from-[#10251d] to-[#19352b] p-6 text-white shadow-xl md:p-8">
+              <section
+                className="
+                  relative
+                  overflow-hidden
+                  rounded-[28px]
+                  border
+                  border-red-500/25
+                  bg-gradient-to-br
+                  from-[#1a0b0b]
+                  via-[#0c0808]
+                  to-black
+                  p-6
+                  sm:p-8
+                "
+              >
+                <div
+                  aria-hidden="true"
+                  className="
+                    pointer-events-none
+                    absolute
+                    -right-16
+                    -top-20
+                    h-56
+                    w-56
+                    rounded-full
+                    bg-red-500/[0.10]
+                    blur-[80px]
+                  "
+                />
 
-                <h3 className="text-2xl font-black">
-                  🚀 Pronto para começar?
-                </h3>
+                <div className="relative z-10">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#ff3030]">
+                    Finalizar cadastro
+                  </p>
 
-                <p className="mt-3 max-w-2xl text-sm leading-7 text-gray-200">
-                  Revise os dados e envie sua solicitação.
+                  <h2
+                    className="
+                      mt-3
+                      text-2xl
+                      font-black
+                      uppercase
+                      text-white
+                      sm:text-3xl
+                    "
+                    style={{
+                      fontFamily:
+                        "'Arial Black', 'Montserrat', sans-serif",
+                    }}
+                  >
+                    Pronto para começar?
+                  </h2>
 
-                  A empresa ficará com status pendente,
-                  aguardando análise administrativa.
-                </p>
+                  <p className="mt-3 max-w-2xl text-sm leading-7 text-white/45">
+                    Revise as informações e envie sua solicitação para análise.
+                  </p>
 
-                <button
-                  type="submit"
-                  disabled={enviando}
-                  className="mt-6 w-full rounded-2xl border-b-[5px] border-amber-700 bg-gradient-to-b from-yellow-200 via-amber-400 to-yellow-500 px-6 py-5 text-base font-black uppercase text-black shadow-[0_8px_25px_rgba(251,191,36,0.25)] transition hover:-translate-y-1 disabled:cursor-not-allowed disabled:opacity-60 md:w-auto md:px-10"
-                >
-                  {enviando
-                    ? "⏳ Criando conta e enviando cadastro..."
-                    : "✅ Enviar solicitação de parceria"}
-                </button>
+                  <button
+                    type="submit"
+                    disabled={enviando}
+                    className="
+                      mt-6
+                      flex
+                      min-h-[64px]
+                      w-full
+                      items-center
+                      justify-center
+                      gap-3
+                      rounded-[18px]
+                      bg-[#ff3030]
+                      px-6
+                      text-sm
+                      font-black
+                      uppercase
+                      text-white
+                      shadow-[0_12px_35px_rgba(255,48,48,.18)]
+                      transition-all
+                      duration-300
+                      hover:-translate-y-1
+                      hover:bg-red-500
+                      disabled:cursor-not-allowed
+                      disabled:opacity-50
+                      sm:w-auto
+                      sm:min-w-[360px]
+                    "
+                  >
+                    {enviando
+                      ? "Enviando solicitação..."
+                      : "Enviar solicitação de parceria →"}
+                  </button>
 
-                <p className="mt-4 text-xs leading-5 text-gray-300">
-                  A senha será tratada pelo Firebase
-                  Authentication e não será armazenada
-                  no documento da empresa.
-                </p>
-
+                  <p className="mt-4 text-[11px] leading-5 text-white/25">
+                    Sua senha é tratada pelo Firebase Authentication e não é armazenada no documento da empresa.
+                  </p>
+                </div>
               </section>
-
             </form>
 
-          </>
+            {/* =============================================
+                LOGIN EXISTENTE
+            ============================================= */}
 
+            <section
+              className="
+                mt-6
+                rounded-[28px]
+                border
+                border-white/10
+                bg-[#090909]
+                p-6
+                text-center
+                sm:p-8
+              "
+            >
+              <img
+                src={parceiroIcon}
+                alt=""
+                aria-hidden="true"
+                className="mx-auto h-20 w-20 object-contain"
+              />
+
+              <h2
+                className="
+                  mt-4
+                  text-xl
+                  font-black
+                  uppercase
+                  text-white
+                  sm:text-2xl
+                "
+                style={{
+                  fontFamily:
+                    "'Arial Black', 'Montserrat', sans-serif",
+                }}
+              >
+                Já cadastrou seu estabelecimento?
+              </h2>
+
+              <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-white/40">
+                Entre com seu e-mail e senha para acompanhar a análise ou acessar o Portal do Parceiro.
+              </p>
+
+              <Link
+                to="/parceiro/login"
+                className="
+                  mt-6
+                  inline-flex
+                  min-h-[56px]
+                  items-center
+                  justify-center
+                  rounded-[16px]
+                  border
+                  border-red-500/30
+                  bg-red-500/[0.08]
+                  px-6
+                  text-sm
+                  font-black
+                  uppercase
+                  text-red-300
+                  transition
+                  hover:-translate-y-1
+                  hover:bg-red-500/15
+                "
+              >
+                Entrar na minha conta →
+              </Link>
+
+              <div className="mt-7 border-t border-white/10 pt-6">
+                <Link
+                  to="/cardapio"
+                  className="
+                    text-xs
+                    font-black
+                    uppercase
+                    tracking-[0.05em]
+                    text-white
+                    transition
+                    hover:text-[#ff3030]
+                  "
+                >
+                  ← Voltar ao cardápio
+                </Link>
+              </div>
+            </section>
+          </>
         )}
 
-        {/* =========================================== */}
-        {/* RODAPÉ COM LOGIN                            */}
-        {/* =========================================== */}
+        {/* =================================================
+            RODAPÉ
+        ================================================= */}
 
-        <div className="mt-10 rounded-3xl border border-gray-200 bg-white p-6 text-center shadow-sm md:p-8">
+        <footer className="mt-10 border-t border-white/10 py-8 text-center">
+          <img
+            src="/coroa.png"
+            alt=""
+            aria-hidden="true"
+            className="mx-auto h-10 w-10 object-contain opacity-70"
+          />
 
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-3xl">
-            🔐
-          </div>
-
-          <h3 className="mt-4 text-xl font-black text-[#19352b]">
-            Já cadastrou seu estabelecimento?
-          </h3>
-
-          <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-gray-600">
-            Entre com seu e-mail e senha para acompanhar
-            a análise do cadastro ou acessar o Portal do
-            Parceiro, caso sua empresa já tenha sido aprovada.
+          <p className="mt-4 text-[10px] font-black uppercase tracking-[0.16em] text-white/25">
+            Império Chalés • Portal do Parceiro
           </p>
-
-          <Link
-            to="/parceiro/login"
-            className="mt-6 inline-flex w-full items-center justify-center rounded-2xl border-b-4 border-amber-700 bg-gradient-to-b from-yellow-200 via-amber-400 to-yellow-500 px-6 py-4 text-sm font-black uppercase text-black shadow-lg transition hover:-translate-y-0.5 hover:brightness-105 sm:w-auto"
-          >
-            🔐 ENTRAR NA MINHA CONTA →
-          </Link>
-
-          <div className="mt-6 border-t border-gray-100 pt-5">
-
-            <Link
-              to="/cardapio"
-              className="text-sm font-semibold text-gray-500 transition hover:text-[#19352b]"
-            >
-              ← Voltar ao cardápio
-            </Link>
-
-          </div>
-
-        </div>
-
+        </footer>
       </div>
-
     </main>
   );
 }

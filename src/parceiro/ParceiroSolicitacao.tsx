@@ -1,4 +1,7 @@
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
 
 import {
   Link,
@@ -16,12 +19,18 @@ import {
   onSnapshot,
 } from "firebase/firestore";
 
-import { auth, db } from "../firebase/config";
-import { isAdmin } from "../firebase/admin";
+import {
+  auth,
+  db,
+} from "../firebase/config";
 
-// ==========================================
-// TIPOS
-// ==========================================
+import {
+  isAdmin,
+} from "../firebase/admin";
+
+/* =========================================================
+   TIPOS
+========================================================= */
 
 type EstadoSolicitacao =
   | "carregando"
@@ -34,193 +43,374 @@ type EstadoSolicitacao =
 
 interface Empresa {
   nomeEmpresa: string;
+
   nomeResponsavel: string;
+
   email: string;
+
   status: string;
 }
 
-// ==========================================
-// PÁGINA DE ACOMPANHAMENTO
-// ==========================================
+/* =========================================================
+   COMPONENTE
+========================================================= */
 
 export function ParceiroSolicitacao() {
-  const navigate = useNavigate();
+  const navigate =
+    useNavigate();
 
-  const [estado, setEstado] =
-    useState<EstadoSolicitacao>("carregando");
+  const [
+    estado,
+    setEstado,
+  ] =
+    useState<EstadoSolicitacao>(
+      "carregando"
+    );
 
-  const [usuario, setUsuario] =
-    useState<User | null>(null);
+  const [
+    usuario,
+    setUsuario,
+  ] =
+    useState<User | null>(
+      null
+    );
 
-  const [empresa, setEmpresa] =
-    useState<Empresa | null>(null);
+  const [
+    empresa,
+    setEmpresa,
+  ] =
+    useState<Empresa | null>(
+      null
+    );
 
-  // ========================================
-  // CONSULTAR SITUAÇÃO EM TEMPO REAL
-  // ========================================
+  /* =======================================================
+     CONSULTAR SITUAÇÃO
+  ======================================================= */
 
   useEffect(() => {
-    let cancelarEmpresa: (() => void) | null =
-      null;
+    let cancelarEmpresa:
+      | (() => void)
+      | null = null;
 
     const cancelarAutenticacao =
       onAuthStateChanged(
         auth,
 
-        (usuarioAtual) => {
-          if (cancelarEmpresa) {
+        (
+          usuarioAtual
+        ) => {
+          if (
+            cancelarEmpresa
+          ) {
             cancelarEmpresa();
-            cancelarEmpresa = null;
+
+            cancelarEmpresa =
+              null;
           }
 
-          setUsuario(usuarioAtual);
-          setEmpresa(null);
-          setEstado("carregando");
-
-          if (!usuarioAtual) {
-            setEstado("sem_login");
-            return;
-          }
-
-          if (isAdmin(usuarioAtual.uid)) {
-            setEstado("sem_cadastro");
-            return;
-          }
-
-          const referencia = doc(
-            db,
-            "restaurantes",
-            usuarioAtual.uid
+          setUsuario(
+            usuarioAtual
           );
 
-          cancelarEmpresa = onSnapshot(
-            referencia,
+          setEmpresa(
+            null
+          );
 
-            (resultado) => {
-              if (!resultado.exists()) {
-                setEstado("sem_cadastro");
-                return;
-              }
+          setEstado(
+            "carregando"
+          );
 
-              const dados = resultado.data();
+          /* SEM LOGIN */
 
-              if (dados.uid !== usuarioAtual.uid) {
-                setEstado("erro");
-                return;
-              }
+          if (
+            !usuarioAtual
+          ) {
+            setEstado(
+              "sem_login"
+            );
 
-              setEmpresa({
-                nomeEmpresa:
-                  typeof dados.nomeEmpresa === "string"
-                    ? dados.nomeEmpresa
-                    : "Estabelecimento",
+            return;
+          }
 
-                nomeResponsavel:
-                  typeof dados.nomeResponsavel === "string"
-                    ? dados.nomeResponsavel
-                    : "",
+          /* ADMIN */
 
-                email:
-                  typeof dados.email === "string"
-                    ? dados.email
-                    : "",
+          if (
+            isAdmin(
+              usuarioAtual.uid
+            )
+          ) {
+            setEstado(
+              "sem_cadastro"
+            );
 
-                status:
-                  typeof dados.status === "string"
-                    ? dados.status
-                    : "",
-              });
+            return;
+          }
 
-              if (dados.status === "aprovado") {
-                setEstado("aprovado");
-                return;
-              }
+          /* DOCUMENTO */
 
-              if (dados.status === "rejeitado") {
-                setEstado("rejeitado");
-                return;
-              }
+          const referencia =
+            doc(
+              db,
 
-              if (dados.status === "pendente") {
-                setEstado("pendente");
-                return;
-              }
+              "restaurantes",
 
-              setEstado("erro");
-            },
+              usuarioAtual.uid
+            );
 
-            (erroFirebase) => {
-              console.error(
-                "Erro ao consultar solicitação:",
+          cancelarEmpresa =
+            onSnapshot(
+              referencia,
+
+              (
+                resultado
+              ) => {
+                if (
+                  !resultado.exists()
+                ) {
+                  setEstado(
+                    "sem_cadastro"
+                  );
+
+                  return;
+                }
+
+                const dados =
+                  resultado.data();
+
+                if (
+                  dados.uid !==
+                  usuarioAtual.uid
+                ) {
+                  setEstado(
+                    "erro"
+                  );
+
+                  return;
+                }
+
+                setEmpresa({
+                  nomeEmpresa:
+                    typeof dados.nomeEmpresa ===
+                    "string"
+                      ? dados.nomeEmpresa
+                      : "Estabelecimento",
+
+                  nomeResponsavel:
+                    typeof dados.nomeResponsavel ===
+                    "string"
+                      ? dados.nomeResponsavel
+                      : "",
+
+                  email:
+                    typeof dados.email ===
+                    "string"
+                      ? dados.email
+                      : "",
+
+                  status:
+                    typeof dados.status ===
+                    "string"
+                      ? dados.status
+                      : "",
+                });
+
+                if (
+                  dados.status ===
+                  "aprovado"
+                ) {
+                  setEstado(
+                    "aprovado"
+                  );
+
+                  return;
+                }
+
+                if (
+                  dados.status ===
+                  "rejeitado"
+                ) {
+                  setEstado(
+                    "rejeitado"
+                  );
+
+                  return;
+                }
+
+                if (
+                  dados.status ===
+                  "pendente"
+                ) {
+                  setEstado(
+                    "pendente"
+                  );
+
+                  return;
+                }
+
+                setEstado(
+                  "erro"
+                );
+              },
+
+              (
                 erroFirebase
-              );
+              ) => {
+                console.error(
+                  "Erro ao consultar solicitação:",
+                  erroFirebase
+                );
 
-              setEstado("erro");
-            }
-          );
+                setEstado(
+                  "erro"
+                );
+              }
+            );
         },
 
-        (erroFirebase) => {
+        (
+          erroFirebase
+        ) => {
           console.error(
             "Erro ao verificar autenticação:",
             erroFirebase
           );
 
-          setEstado("erro");
+          setEstado(
+            "erro"
+          );
         }
       );
 
     return () => {
       cancelarAutenticacao();
 
-      if (cancelarEmpresa) {
+      if (
+        cancelarEmpresa
+      ) {
         cancelarEmpresa();
       }
     };
   }, []);
 
-  // ========================================
-  // REDIRECIONAR APÓS APROVAÇÃO
-  // ========================================
+  /* =======================================================
+     REDIRECIONAR APÓS APROVAÇÃO
+  ======================================================= */
 
   useEffect(() => {
-    if (estado === "aprovado") {
+    if (
+      estado ===
+      "aprovado"
+    ) {
       navigate(
         "/parceiro/dashboard",
-        { replace: true }
+        {
+          replace:
+            true,
+        }
       );
     }
-  }, [estado, navigate]);
+  }, [
+    estado,
+    navigate,
+  ]);
 
-  // ========================================
-  // CARREGAMENTO
-  // ========================================
+  /* =======================================================
+     CARREGAMENTO
+  ======================================================= */
 
-  if (estado === "carregando" || estado === "aprovado") {
+  if (
+    estado ===
+      "carregando" ||
+    estado ===
+      "aprovado"
+  ) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#f8f6ef] px-4">
+      <main
+        className="
+          flex
+          min-h-screen
 
-        <div className="rounded-3xl bg-white p-10 text-center shadow-lg">
+          items-center
+          justify-center
 
-          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-gray-100 border-t-green-700" />
+          bg-black
 
-          <p className="mt-6 font-bold text-[#19352b]">
-            {estado === "aprovado"
-              ? "Cadastro aprovado! Abrindo seu painel..."
-              : "Consultando sua solicitação..."}
+          px-4
+
+          text-white
+        "
+      >
+        <div
+          className="
+            text-center
+          "
+        >
+          <img
+            src="/coroa.png"
+            alt="Império"
+            draggable={false}
+            className="
+              mx-auto
+
+              h-16
+              w-16
+
+              object-contain
+
+              opacity-80
+            "
+          />
+
+          <div
+            className="
+              mx-auto
+              mt-7
+
+              h-10
+              w-10
+
+              animate-spin
+
+              rounded-full
+
+              border-[3px]
+              border-white/10
+              border-t-red-500
+            "
+          />
+
+          <p
+            className="
+              mt-6
+
+              text-[10px]
+              font-black
+
+              uppercase
+
+              tracking-[0.20em]
+
+              text-white/45
+            "
+          >
+            {estado ===
+            "aprovado"
+              ? "ABRINDO SEU PAINEL..."
+              : "CONSULTANDO SOLICITAÇÃO..."}
           </p>
-
         </div>
-
       </main>
     );
   }
 
-  // ========================================
-  // SEM SESSÃO
-  // ========================================
+  /* =======================================================
+     SEM LOGIN
+  ======================================================= */
 
-  if (estado === "sem_login") {
+  if (
+    estado ===
+    "sem_login"
+  ) {
     return (
       <Navigate
         to="/parceiro/cadastro"
@@ -229,11 +419,16 @@ export function ParceiroSolicitacao() {
     );
   }
 
-  // ========================================
-  // USUÁRIO ADMINISTRADOR
-  // ========================================
+  /* =======================================================
+     ADMIN
+  ======================================================= */
 
-  if (usuario && isAdmin(usuario.uid)) {
+  if (
+    usuario &&
+    isAdmin(
+      usuario.uid
+    )
+  ) {
     return (
       <Navigate
         to="/admin/dashboard"
@@ -242,11 +437,14 @@ export function ParceiroSolicitacao() {
     );
   }
 
-  // ========================================
-  // SEM CADASTRO
-  // ========================================
+  /* =======================================================
+     SEM CADASTRO
+  ======================================================= */
 
-  if (estado === "sem_cadastro") {
+  if (
+    estado ===
+    "sem_cadastro"
+  ) {
     return (
       <Navigate
         to="/parceiro/cadastro"
@@ -255,355 +453,1002 @@ export function ParceiroSolicitacao() {
     );
   }
 
-  // ========================================
-  // ERRO
-  // ========================================
+  /* =======================================================
+     ERRO
+  ======================================================= */
 
-  if (estado === "erro") {
+  if (
+    estado ===
+    "erro"
+  ) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#f8f6ef] px-4">
+      <main
+        className="
+          flex
+          min-h-screen
 
-        <div
+          items-center
+          justify-center
+
+          bg-black
+
+          px-4
+
+          text-white
+        "
+      >
+        <section
           role="alert"
-          className="w-full max-w-xl rounded-3xl border border-red-200 bg-white p-8 text-center shadow-lg"
+          className="
+            w-full
+            max-w-md
+
+            rounded-[26px]
+
+            border
+            border-red-500/25
+
+            bg-[#0c0c0c]
+
+            p-7
+
+            text-center
+          "
         >
+          <div
+            className="
+              mx-auto
 
-          <span className="text-5xl">
+              flex
+              h-16
+              w-16
+
+              items-center
+              justify-center
+
+              rounded-2xl
+
+              border
+              border-red-500/30
+
+              bg-red-500/10
+
+              text-3xl
+            "
+          >
             ⚠️
-          </span>
+          </div>
 
-          <h1 className="mt-5 text-2xl font-black text-red-800">
-            Não foi possível consultar sua solicitação
+          <p
+            className="
+              mt-6
+
+              text-[9px]
+              font-black
+
+              uppercase
+
+              tracking-[0.20em]
+
+              text-red-500
+            "
+          >
+            ERRO DE CONEXÃO
+          </p>
+
+          <h1
+            className="
+              mt-2
+
+              text-2xl
+              font-black
+
+              uppercase
+            "
+          >
+            NÃO FOI POSSÍVEL
+            CONSULTAR
           </h1>
 
-          <p className="mt-4 text-sm leading-7 text-gray-600">
-            Tivemos uma dificuldade para consultar
-            os dados no Firebase.
-            Nenhum acesso operacional foi liberado.
+          <p
+            className="
+              mt-4
+
+              text-xs
+              leading-6
+
+              text-white/40
+            "
+          >
+            Não conseguimos
+            consultar sua
+            solicitação neste
+            momento.
           </p>
 
           <button
             type="button"
-            onClick={() => window.location.reload()}
-            className="mt-6 rounded-xl bg-[#19352b] px-6 py-3 text-sm font-bold text-white"
+            onClick={() =>
+              window.location.reload()
+            }
+            className="
+              mt-7
+
+              w-full
+
+              rounded-xl
+
+              bg-red-500
+
+              px-5
+              py-4
+
+              text-[10px]
+              font-black
+
+              uppercase
+
+              text-white
+
+              transition
+
+              hover:bg-red-600
+            "
           >
-            Tentar novamente
+            TENTAR NOVAMENTE
           </button>
-
-        </div>
-
+        </section>
       </main>
     );
   }
 
-  // ========================================
-  // SOLICITAÇÃO REJEITADA
-  // ========================================
+  /* =======================================================
+     STATUS
+  ======================================================= */
 
-  const rejeitado = estado === "rejeitado";
+  const rejeitado =
+    estado ===
+    "rejeitado";
+
+  /* =======================================================
+     INTERFACE
+  ======================================================= */
 
   return (
-    <main className="min-h-screen bg-[#f8f6ef] text-[#19352b]">
+    <main
+      className="
+        min-h-screen
 
-      {/* ==================================== */}
-      {/* CABEÇALHO                            */}
-      {/* ==================================== */}
+        bg-black
 
-      <header className="bg-[#101813] px-4 py-5 text-white">
+        text-white
+      "
+      style={{
+        fontFamily:
+          "'Arial Black', 'Montserrat', Arial, sans-serif",
+      }}
+    >
+      {/* =================================================
+          CABEÇALHO
+      ================================================= */}
 
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4">
+      <header
+        className="
+          border-b
+          border-white/10
 
-          <div className="flex items-center gap-3">
+          bg-black
 
+          px-4
+          py-4
+        "
+      >
+        <div
+          className="
+            mx-auto
+
+            flex
+            max-w-5xl
+
+            items-center
+            justify-between
+
+            gap-4
+          "
+        >
+          <div
+            className="
+              flex
+              items-center
+
+              gap-3
+            "
+          >
             <img
-              src="/logo-imperio.png"
-              alt="Império Chalés"
-              className="h-12 w-12 rounded-full object-contain"
+              src="/coroa.png"
+              alt="Império"
+              draggable={false}
+              className="
+                h-9
+                w-9
+
+                object-contain
+              "
             />
 
             <div>
+              <p
+                className="
+                  text-[10px]
+                  font-black
 
-              <h1 className="text-lg font-black">
+                  uppercase
+                "
+              >
                 Portal do Parceiro
-              </h1>
-
-              <p className="text-xs font-bold tracking-widest text-amber-300">
-                SABORES DA CHAPADA
               </p>
-
-            </div>
-
-          </div>
-
-          <span className="rounded-full border border-amber-400/40 px-4 py-2 text-xs font-black text-amber-300">
-            ACOMPANHAMENTO DO CADASTRO
-          </span>
-
-        </div>
-
-      </header>
-
-      {/* ==================================== */}
-      {/* CONTEÚDO                             */}
-      {/* ==================================== */}
-
-      <div className="mx-auto max-w-5xl px-4 py-8 md:py-12">
-
-        {/* ================================== */}
-        {/* CARD PRINCIPAL                     */}
-        {/* ================================== */}
-
-        <section className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#10251d] via-[#143627] to-[#0e2019] p-6 text-white shadow-xl md:p-10">
-
-          <div className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-amber-400/10 blur-3xl" />
-
-          <div className="relative">
-
-            <span
-              className={`inline-flex rounded-full border px-4 py-2 text-xs font-black tracking-wider ${
-                rejeitado
-                  ? "border-red-300/50 bg-red-500/20 text-red-200"
-                  : "border-amber-400/40 bg-amber-400/10 text-amber-300"
-              }`}
-            >
-              {rejeitado
-                ? "❌ SOLICITAÇÃO REJEITADA"
-                : "⏳ SOLICITAÇÃO EM ANÁLISE"}
-            </span>
-
-            <h2 className="mt-7 text-3xl font-black uppercase leading-tight md:text-5xl">
-
-              {rejeitado
-                ? "SUA SOLICITAÇÃO"
-                : "SUA SOLICITAÇÃO ESTÁ"}
-
-              <span
-                className={`mt-2 block ${
-                  rejeitado
-                    ? "text-red-300"
-                    : "text-amber-400"
-                }`}
-              >
-                {rejeitado
-                  ? "NÃO FOI APROVADA"
-                  : "PENDENTE!"}
-              </span>
-
-            </h2>
-
-            <p className="mt-6 max-w-3xl text-lg font-semibold leading-8 text-white md:text-xl">
-
-              {rejeitado
-                ? "O Império Chalés concluiu a análise e não aprovou esta solicitação."
-                : "Recebemos seu cadastro! Nossa administração precisa analisar os dados da empresa antes de liberar o acesso."}
-
-            </p>
-
-            <div className="mt-8 rounded-2xl border border-white/10 bg-white/10 p-5">
-
-              <p className="text-xs font-bold uppercase tracking-wider text-amber-300">
-                Estabelecimento
-              </p>
-
-              <h3 className="mt-2 break-words text-2xl font-black">
-                🏪 {empresa?.nomeEmpresa ?? "Estabelecimento"}
-              </h3>
-
-              {empresa?.email && (
-                <p className="mt-3 break-all text-sm text-gray-200">
-                  📧 {empresa.email}
-                </p>
-              )}
-
-            </div>
-
-            {/* ETAPAS */}
-
-            <div className="mt-8 grid gap-3 md:grid-cols-3">
-
-              <div className="rounded-2xl border border-green-400/30 bg-green-400/10 p-5">
-
-                <span className="text-3xl">
-                  ✅
-                </span>
-
-                <p className="mt-3 text-xs font-bold text-green-300">
-                  ETAPA 1
-                </p>
-
-                <h4 className="mt-1 font-black">
-                  Cadastro recebido
-                </h4>
-
-                <p className="mt-2 text-xs leading-5 text-gray-200">
-                  Seus dados foram registrados.
-                </p>
-
-              </div>
-
-              <div className="rounded-2xl border border-amber-400/30 bg-amber-400/10 p-5">
-
-                <span className="text-3xl">
-                  {rejeitado ? "📋" : "⏳"}
-                </span>
-
-                <p className="mt-3 text-xs font-bold text-amber-300">
-                  ETAPA 2
-                </p>
-
-                <h4 className="mt-1 font-black">
-                  Análise administrativa
-                </h4>
-
-                <p className="mt-2 text-xs leading-5 text-gray-200">
-                  {rejeitado
-                    ? "A análise foi concluída."
-                    : "Aguardando avaliação do Império Chalés."}
-                </p>
-
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/10 p-5">
-
-                <span className="text-3xl">
-                  🔒
-                </span>
-
-                <p className="mt-3 text-xs font-bold text-gray-300">
-                  ETAPA 3
-                </p>
-
-                <h4 className="mt-1 font-black">
-                  Acesso operacional
-                </h4>
-
-                <p className="mt-2 text-xs leading-5 text-gray-200">
-                  {rejeitado
-                    ? "Acesso não autorizado."
-                    : "Liberado após aprovação."}
-                </p>
-
-              </div>
-
-            </div>
-
-          </div>
-
-        </section>
-
-        {/* ================================== */}
-        {/* EXPLICAÇÃO DO BLOQUEIO             */}
-        {/* ================================== */}
-
-        <section
-          className={`mt-7 rounded-3xl border p-6 shadow-sm md:p-8 ${
-            rejeitado
-              ? "border-red-200 bg-red-50"
-              : "border-amber-200 bg-amber-50"
-          }`}
-        >
-
-          <div className="flex items-start gap-4">
-
-            <span className="text-4xl">
-              {rejeitado ? "🚫" : "⚠️"}
-            </span>
-
-            <div>
-
-              <h3
-                className={`text-xl font-black md:text-2xl ${
-                  rejeitado
-                    ? "text-red-900"
-                    : "text-amber-900"
-                }`}
-              >
-                {rejeitado
-                  ? "Seu acesso continua bloqueado"
-                  : "O que acontece agora?"}
-              </h3>
 
               <p
-                className={`mt-3 text-sm leading-7 ${
-                  rejeitado
-                    ? "text-red-800"
-                    : "text-amber-900"
-                }`}
+                className="
+                  mt-1
+
+                  text-[7px]
+                  font-black
+
+                  uppercase
+
+                  tracking-[0.20em]
+
+                  text-red-500
+                "
               >
-                {rejeitado
-                  ? "O estabelecimento não está autorizado a acessar o painel operacional ou gerenciar pedidos. Entre em contato com a administração caso precise esclarecer a decisão."
-                  : "Nossa equipe verificará os dados informados. Quando a empresa for aprovada, o sistema identificará a alteração no Firebase e abrirá sua Dashboard automaticamente, desde que esta conta continue conectada."}
+                Acompanhamento
               </p>
-
-              {!rejeitado && (
-                <p className="mt-3 text-sm leading-7 text-amber-900">
-                  Você pode permanecer nesta página
-                  para acompanhar a situação.
-                  Não é necessário enviar outro cadastro.
-                </p>
-              )}
-
             </div>
-
           </div>
-
-        </section>
-
-        {/* ================================== */}
-        {/* ACESSO A PEDIDOS                   */}
-        {/* ================================== */}
-
-        <section className="mt-7 rounded-3xl border border-gray-100 bg-white p-6 shadow-sm md:p-8">
-
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-
-            <div>
-
-              <h3 className="text-2xl font-black">
-                📋 Meus pedidos
-              </h3>
-
-              <p className="mt-3 max-w-xl text-sm leading-7 text-gray-500">
-                O gerenciamento de pedidos somente
-                ficará disponível após a aprovação
-                do estabelecimento.
-              </p>
-
-            </div>
-
-            <button
-              type="button"
-              disabled
-              className="cursor-not-allowed rounded-2xl bg-gray-200 px-6 py-4 text-sm font-black text-gray-500"
-            >
-              🔒 Acesso bloqueado
-            </button>
-
-          </div>
-
-        </section>
-
-        {/* ================================== */}
-        {/* RODAPÉ                             */}
-        {/* ================================== */}
-
-        <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
-
-          <p className="text-sm text-gray-500">
-            Situação consultada diretamente no Firebase.
-          </p>
 
           <Link
             to="/cardapio"
-            className="rounded-xl border border-gray-200 bg-white px-5 py-3 text-sm font-bold transition hover:border-green-600"
-          >
-            ← Voltar ao cardápio
-          </Link>
+            className="
+              rounded-xl
 
+              border
+              border-white/15
+
+              bg-[#111]
+
+              px-4
+              py-3
+
+              text-[9px]
+              font-black
+
+              uppercase
+
+              text-white
+
+              transition
+
+              hover:border-red-500/50
+            "
+          >
+            ← CARDÁPIO
+          </Link>
+        </div>
+      </header>
+
+      {/* =================================================
+          CONTEÚDO
+      ================================================= */}
+
+      <div
+        className="
+          mx-auto
+
+          max-w-5xl
+
+          px-4
+          py-12
+        "
+      >
+        {/* =================================================
+            TÍTULO
+        ================================================= */}
+
+        <div
+          className="
+            text-center
+          "
+        >
+          <p
+            className={`
+              text-[9px]
+              font-black
+
+              uppercase
+
+              tracking-[0.25em]
+
+              ${
+                rejeitado
+                  ? "text-red-500"
+                  : "text-[#ffd429]"
+              }
+            `}
+          >
+            STATUS DO CADASTRO
+          </p>
+
+          <h1
+            className="
+              mt-4
+
+              text-4xl
+              font-black
+
+              uppercase
+
+              leading-none
+
+              sm:text-5xl
+              md:text-6xl
+            "
+          >
+            SUA{" "}
+
+            <span
+              className={
+                rejeitado
+                  ? "text-red-500"
+                  : "text-[#ffd429]"
+              }
+            >
+              SOLICITAÇÃO
+            </span>
+          </h1>
         </div>
 
+        {/* =================================================
+            STATUS PRINCIPAL
+        ================================================= */}
+
+        <section
+          className={`
+            relative
+
+            mx-auto
+            mt-10
+
+            max-w-3xl
+
+            overflow-hidden
+
+            rounded-[28px]
+
+            border
+
+            bg-[#0c0c0c]
+
+            p-6
+
+            text-center
+
+            sm:p-10
+
+            ${
+              rejeitado
+                ? "border-red-500/25"
+                : "border-[#ffd429]/25"
+            }
+          `}
+        >
+          {/* LUZ */}
+
+          <div
+            aria-hidden="true"
+            className={`
+              pointer-events-none
+
+              absolute
+              left-1/2
+              top-0
+
+              h-32
+              w-64
+
+              -translate-x-1/2
+
+              rounded-full
+
+              blur-[80px]
+
+              ${
+                rejeitado
+                  ? "bg-red-500/10"
+                  : "bg-[#ffd429]/10"
+              }
+            `}
+          />
+
+          {/* ÍCONE */}
+
+          <div
+            className={`
+              relative
+              z-10
+
+              mx-auto
+
+              flex
+              h-20
+              w-20
+
+              items-center
+              justify-center
+
+              rounded-[22px]
+
+              border
+
+              text-4xl
+
+              ${
+                rejeitado
+                  ? "border-red-500/25 bg-red-500/10"
+                  : "border-[#ffd429]/25 bg-[#ffd429]/10"
+              }
+            `}
+          >
+            {rejeitado
+              ? "✕"
+              : "⏳"}
+          </div>
+
+          {/* STATUS */}
+
+          <p
+            className={`
+              relative
+              z-10
+
+              mt-6
+
+              text-[9px]
+              font-black
+
+              uppercase
+
+              tracking-[0.20em]
+
+              ${
+                rejeitado
+                  ? "text-red-500"
+                  : "text-[#ffd429]"
+              }
+            `}
+          >
+            {rejeitado
+              ? "SOLICITAÇÃO NÃO APROVADA"
+              : "SOLICITAÇÃO EM ANÁLISE"}
+          </p>
+
+          <h2
+            className="
+              relative
+              z-10
+
+              mt-3
+
+              text-2xl
+              font-black
+
+              uppercase
+
+              sm:text-3xl
+            "
+          >
+            {rejeitado
+              ? "CADASTRO NÃO APROVADO"
+              : "AGUARDANDO APROVAÇÃO"}
+          </h2>
+
+          <p
+            className="
+              relative
+              z-10
+
+              mx-auto
+              mt-4
+
+              max-w-xl
+
+              text-xs
+              leading-6
+
+              text-white/40
+
+              sm:text-sm
+            "
+          >
+            {rejeitado
+              ? "Sua solicitação foi analisada pela administração. O acesso ao painel do parceiro permanece bloqueado."
+              : "Seu cadastro foi recebido e está aguardando a análise da administração do Império Chalés."}
+          </p>
+
+          {/* =================================================
+              EMPRESA
+          ================================================= */}
+
+          <div
+            className="
+              relative
+              z-10
+
+              mt-8
+
+              rounded-2xl
+
+              border
+              border-white/10
+
+              bg-black
+
+              p-5
+
+              text-left
+            "
+          >
+            <p
+              className="
+                text-[8px]
+                font-black
+
+                uppercase
+
+                tracking-[0.16em]
+
+                text-white/30
+              "
+            >
+              ESTABELECIMENTO
+            </p>
+
+            <h3
+              className="
+                mt-2
+
+                break-words
+
+                text-xl
+                font-black
+
+                uppercase
+
+                text-white
+
+                sm:text-2xl
+              "
+            >
+              {empresa?.nomeEmpresa ??
+                "Estabelecimento"}
+            </h3>
+
+            {empresa?.nomeResponsavel && (
+              <p
+                className="
+                  mt-3
+
+                  text-xs
+
+                  text-white/40
+                "
+              >
+                Responsável:{" "}
+
+                <strong
+                  className="
+                    text-white/70
+                  "
+                >
+                  {
+                    empresa.nomeResponsavel
+                  }
+                </strong>
+              </p>
+            )}
+
+            {empresa?.email && (
+              <p
+                className="
+                  mt-2
+
+                  break-all
+
+                  text-xs
+
+                  text-white/35
+                "
+              >
+                {empresa.email}
+              </p>
+            )}
+          </div>
+        </section>
+
+        {/* =================================================
+            PROGRESSO MINIMALISTA
+        ================================================= */}
+
+        {!rejeitado && (
+          <section
+            className="
+              mx-auto
+              mt-6
+
+              max-w-3xl
+
+              rounded-2xl
+
+              border
+              border-white/10
+
+              bg-[#080808]
+
+              p-5
+            "
+          >
+            <div
+              className="
+                flex
+
+                items-center
+
+                gap-3
+              "
+            >
+              {/* CONCLUÍDO */}
+
+              <div
+                className="
+                  flex
+                  h-9
+                  w-9
+
+                  shrink-0
+
+                  items-center
+                  justify-center
+
+                  rounded-full
+
+                  bg-[#00ef78]
+
+                  text-xs
+                  font-black
+
+                  text-black
+                "
+              >
+                ✓
+              </div>
+
+              <div
+                className="
+                  h-[2px]
+                  flex-1
+
+                  bg-gradient-to-r
+
+                  from-[#00ef78]
+                  to-[#ffd429]
+                "
+              />
+
+              {/* ATUAL */}
+
+              <div
+                className="
+                  flex
+                  h-9
+                  w-9
+
+                  shrink-0
+
+                  animate-pulse
+
+                  items-center
+                  justify-center
+
+                  rounded-full
+
+                  border
+                  border-[#ffd429]
+
+                  bg-[#ffd429]/10
+
+                  text-xs
+                  font-black
+
+                  text-[#ffd429]
+
+                  motion-reduce:animate-none
+                "
+              >
+                2
+              </div>
+
+              <div
+                className="
+                  h-[2px]
+                  flex-1
+
+                  bg-white/10
+                "
+              />
+
+              {/* FUTURO */}
+
+              <div
+                className="
+                  flex
+                  h-9
+                  w-9
+
+                  shrink-0
+
+                  items-center
+                  justify-center
+
+                  rounded-full
+
+                  border
+                  border-white/10
+
+                  bg-[#111]
+
+                  text-xs
+                  font-black
+
+                  text-white/20
+                "
+              >
+                3
+              </div>
+            </div>
+
+            <div
+              className="
+                mt-4
+
+                grid
+                grid-cols-3
+
+                text-center
+
+                text-[7px]
+                font-black
+
+                uppercase
+
+                tracking-[0.12em]
+              "
+            >
+              <span
+                className="
+                  text-[#00ef78]
+                "
+              >
+                CADASTRO
+              </span>
+
+              <span
+                className="
+                  text-[#ffd429]
+                "
+              >
+                ANÁLISE
+              </span>
+
+              <span
+                className="
+                  text-white/20
+                "
+              >
+                LIBERAÇÃO
+              </span>
+            </div>
+          </section>
+        )}
+
+        {/* =================================================
+            REJEITADO
+        ================================================= */}
+
+        {rejeitado && (
+          <section
+            className="
+              mx-auto
+              mt-6
+
+              max-w-3xl
+
+              rounded-2xl
+
+              border
+              border-red-500/20
+
+              bg-red-500/[0.06]
+
+              p-5
+            "
+          >
+            <p
+              className="
+                text-[9px]
+                font-black
+
+                uppercase
+
+                tracking-[0.16em]
+
+                text-red-500
+              "
+            >
+              ACESSO BLOQUEADO
+            </p>
+
+            <p
+              className="
+                mt-3
+
+                text-xs
+                leading-6
+
+                text-white/40
+              "
+            >
+              Entre em contato
+              com a administração
+              caso precise de mais
+              informações sobre a
+              análise.
+            </p>
+          </section>
+        )}
+
+        {/* =================================================
+            INFORMAÇÃO
+        ================================================= */}
+
+        {!rejeitado && (
+          <p
+            className="
+              mx-auto
+              mt-6
+
+              max-w-2xl
+
+              text-center
+
+              text-xs
+              leading-6
+
+              text-white/30
+            "
+          >
+            Não é necessário
+            enviar outro cadastro.
+            Esta página acompanha
+            automaticamente a
+            situação registrada no
+            sistema.
+          </p>
+        )}
+
+        {/* =================================================
+            BOTÃO
+        ================================================= */}
+
+        <div
+          className="
+            mx-auto
+            mt-8
+
+            max-w-3xl
+
+            border-t
+            border-white/10
+
+            pt-6
+
+            text-center
+          "
+        >
+          <Link
+            to="/cardapio"
+            className="
+              inline-flex
+
+              items-center
+              justify-center
+
+              rounded-xl
+
+              border
+              border-white/15
+
+              bg-[#111]
+
+              px-6
+              py-4
+
+              text-[9px]
+              font-black
+
+              uppercase
+
+              text-white
+
+              transition
+
+              hover:border-red-500/40
+            "
+          >
+            ← VOLTAR AO CARDÁPIO
+          </Link>
+        </div>
       </div>
 
+      {/* =================================================
+          RODAPÉ
+      ================================================= */}
+
+      <footer
+        className="
+          mt-8
+
+          border-t
+          border-white/10
+
+          px-4
+          py-10
+
+          text-center
+        "
+      >
+        <img
+          src="/coroa.png"
+          alt=""
+          draggable={false}
+          className="
+            mx-auto
+
+            h-8
+            w-8
+
+            object-contain
+
+            opacity-30
+          "
+        />
+
+        <p
+          className="
+            mt-3
+
+            text-[7px]
+            font-black
+
+            uppercase
+
+            tracking-[0.18em]
+
+            text-white/15
+          "
+        >
+          IMPÉRIO CHALÉS • PORTAL DO PARCEIRO
+        </p>
+      </footer>
     </main>
   );
 }

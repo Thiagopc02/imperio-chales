@@ -265,7 +265,7 @@ export function AdminPratos() {
   const [etapaUpload, setEtapaUpload] =
     useState<EtapaUpload>("parado");
 
-  const [imagemCarregou, setImagemCarregou] =
+  const [, setImagemCarregou] =
     useState(false);
 
   const [imagemFalhou, setImagemFalhou] =
@@ -1408,10 +1408,10 @@ export function AdminPratos() {
   // ===================================================
 
   const classeInput =
-    "mt-2 w-full rounded-xl border border-gray-200 " +
-    "bg-white px-4 py-3 text-sm text-[#19352b] " +
-    "outline-none focus:border-green-600 " +
-    "focus:ring-2 focus:ring-green-100";
+    "mt-2 w-full rounded-xl border border-white/10 " +
+    "bg-[#111111] px-4 py-3 text-sm text-white " +
+    "outline-none placeholder:text-white/25 " +
+    "focus:border-[#ffd429]/60 focus:ring-2 focus:ring-[#ffd429]/10";
 
   // ===================================================
   // DADOS DO PRATO ABERTO
@@ -1431,546 +1431,565 @@ export function AdminPratos() {
   const pratoRejeitado =
     pratoSelecionado?.status === "rejeitado";
 
+  function classeStatusEscuro(
+    status: StatusPrato
+  ): string {
+    if (status === "aprovado") {
+      return "border-emerald-400/25 bg-emerald-400/10 text-emerald-300";
+    }
+
+    if (status === "rejeitado") {
+      return "border-red-500/25 bg-red-500/10 text-red-400";
+    }
+
+    return "border-[#ffd429]/25 bg-[#ffd429]/10 text-[#ffd429]";
+  }
+
   // ===================================================
   // INTERFACE
   // ===================================================
 
   return (
-    <main className="min-h-screen bg-[#f8f6ef] text-[#19352b]">
+    <main
+      className="
+        min-h-screen
+        bg-black
+        text-white
+      "
+      style={{
+        fontFamily:
+          "'Arial Black', 'Montserrat', Arial, sans-serif",
+      }}
+    >
+      {/* =================================================
+          CABEÇALHO
+      ================================================= */}
 
-      {/* =============================================== */}
-      {/* CABEÇALHO                                       */}
-      {/* =============================================== */}
-
-      <header className="bg-[#101813] px-4 py-5 text-white">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4">
-
+      <header
+        className="
+          sticky
+          top-0
+          z-50
+          border-b
+          border-white/10
+          bg-black/95
+          px-4
+          py-4
+          backdrop-blur-xl
+        "
+      >
+        <div
+          className="
+            mx-auto
+            flex
+            max-w-7xl
+            items-center
+            justify-between
+            gap-4
+          "
+        >
           <div className="flex items-center gap-3">
-
             <img
-              src="/logo-imperio.png"
+              src="/coroa.png"
               alt="Império Chalés"
-              className="h-12 w-12 rounded-full object-contain"
+              draggable={false}
+              className="h-10 w-10 object-contain"
             />
 
-            <div>
-              <h1 className="text-lg font-black">
-                Império Chalés
-              </h1>
+            <div className="hidden sm:block">
+              <p className="text-[11px] font-black uppercase text-white">
+                CENTRAL ADMINISTRATIVA
+              </p>
 
-              <p className="text-xs font-bold tracking-widest text-amber-300">
+              <p className="mt-1 text-[7px] font-black uppercase tracking-[0.18em] text-[#ffd429]">
                 GESTÃO DE PRATOS
               </p>
             </div>
-
           </div>
 
-          <div className="flex flex-wrap gap-2">
-
+          <div className="flex gap-2">
             <Link
               to="/admin/restaurantes"
-              className="rounded-xl border border-amber-400/40 px-4 py-3 text-sm font-bold text-amber-300"
+              className="
+                rounded-xl
+                border
+                border-[#ffd429]/25
+                bg-[#ffd429]/10
+                px-4
+                py-3
+                text-[9px]
+                font-black
+                uppercase
+                text-[#ffd429]
+              "
             >
-              🏪 Restaurantes
+              RESTAURANTES
             </Link>
 
             <Link
               to="/admin/dashboard"
-              className="rounded-xl border border-white/20 px-4 py-3 text-sm font-bold text-white"
+              className="
+                rounded-xl
+                border
+                border-white/10
+                bg-white/[0.04]
+                px-4
+                py-3
+                text-[9px]
+                font-black
+                uppercase
+                text-white
+              "
             >
-              ← Dashboard
+              ← PAINEL
             </Link>
-
           </div>
-
         </div>
       </header>
 
-      <div className="mx-auto max-w-7xl px-4 py-10">
+      {/* =================================================
+          CONTEÚDO
+      ================================================= */}
 
-        {/* ============================================= */}
-        {/* APRESENTAÇÃO                                  */}
-        {/* ============================================= */}
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        {/* =================================================
+            TÍTULO
+        ================================================= */}
 
-        <section className="rounded-[30px] bg-gradient-to-br from-[#10251d] via-[#19352b] to-[#123027] p-6 text-white shadow-xl md:p-10">
-
-          <span className="inline-flex rounded-full border border-amber-400/40 bg-amber-400/10 px-4 py-2 text-xs font-black text-amber-300">
-            🍽️ GESTÃO GASTRONÔMICA
-          </span>
-
-          <h2 className="mt-6 text-3xl font-black uppercase leading-tight md:text-5xl">
-            CENTRAL DE
-
-            <span className="block text-amber-400">
-              PRATOS E PUBLICAÇÕES
-            </span>
-          </h2>
-
-          <p className="mt-5 max-w-2xl text-sm leading-7 text-gray-200">
-            Analise solicitações, prepare imagens,
-            aprove pratos e gerencie os produtos
-            disponíveis no catálogo dos hóspedes.
+        <section className="text-center">
+          <p className="text-[8px] font-black uppercase tracking-[0.22em] text-[#ffd429]">
+            CATÁLOGO
           </p>
 
-          <div className="mt-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
-
-            {[
-              {
-                titulo: "Pendentes",
-                valor: totalPendentes,
-                icone: "⏳",
-                cor: "text-amber-200",
-              },
-              {
-                titulo: "Aprovados",
-                valor: totalAprovados,
-                icone: "✅",
-                cor: "text-green-200",
-              },
-              {
-                titulo: "Correções",
-                valor: totalRejeitados,
-                icone: "❌",
-                cor: "text-red-200",
-              },
-              {
-                titulo: "Publicados",
-                valor: totalPublicados,
-                icone: "🌐",
-                cor: "text-blue-200",
-              },
-            ].map((item) => (
-              <div
-                key={item.titulo}
-                className="rounded-2xl border border-white/15 bg-white/10 p-4 md:p-5"
-              >
-                <p className={`text-xs font-bold ${item.cor}`}>
-                  {item.icone} {item.titulo}
-                </p>
-
-                <p className="mt-3 text-3xl font-black md:text-4xl">
-                  {carregando ? "—" : item.valor}
-                </p>
-              </div>
-            ))}
-
-          </div>
-
+          <h1
+            className="
+              mt-3
+              text-4xl
+              font-black
+              uppercase
+              leading-none
+              sm:text-5xl
+              md:text-6xl
+            "
+          >
+            GESTÃO DE{" "}
+            <span className="text-[#ffd429]">
+              PRATOS
+            </span>
+          </h1>
         </section>
 
-        {/* ============================================= */}
-        {/* AVISO                                         */}
-        {/* ============================================= */}
+        {/* =================================================
+            INDICADORES
+        ================================================= */}
 
-        <div className="mt-6 rounded-2xl border border-blue-200 bg-blue-50 p-5 text-sm leading-7 text-blue-900">
+        <section className="mt-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {[
+            {
+              titulo: "PENDENTES",
+              valor: totalPendentes,
+              cor: "text-[#ffd429]",
+            },
+            {
+              titulo: "APROVADOS",
+              valor: totalAprovados,
+              cor: "text-emerald-400",
+            },
+            {
+              titulo: "CORREÇÕES",
+              valor: totalRejeitados,
+              cor: "text-red-400",
+            },
+            {
+              titulo: "PUBLICADOS",
+              valor: totalPublicados,
+              cor: "text-sky-400",
+            },
+          ].map((item) => (
+            <article
+              key={item.titulo}
+              className="
+                rounded-[20px]
+                border
+                border-white/10
+                bg-white/[0.035]
+                p-5
+                text-center
+              "
+            >
+              <p
+                className={`
+                  text-3xl
+                  font-black
+                  md:text-4xl
+                  ${item.cor}
+                `}
+              >
+                {carregando ? "—" : item.valor}
+              </p>
 
-          <strong>
-            🔒 Controle administrativo.
-          </strong>
+              <p className="mt-2 text-[8px] font-black uppercase tracking-[0.12em] text-white/30">
+                {item.titulo}
+              </p>
+            </article>
+          ))}
+        </section>
 
-          <p className="mt-2">
-            Os pratos são cadastrados pelos parceiros
-            no Firestore. A administração revisa os dados,
-            envia a imagem pelo Supabase e realiza
-            a aprovação e a publicação separadamente.
-          </p>
-
-        </div>
-
-        {/* ============================================= */}
-        {/* MENSAGENS                                     */}
-        {/* ============================================= */}
+        {/* =================================================
+            MENSAGENS
+        ================================================= */}
 
         {erroConsulta && (
           <div
             role="alert"
-            className="mt-6 rounded-2xl border border-red-200 bg-red-50 p-5 text-sm font-bold text-red-800"
+            className="
+              mt-6
+              rounded-xl
+              border
+              border-red-500/25
+              bg-red-500/10
+              p-4
+              text-xs
+              font-bold
+              text-red-400
+            "
           >
-            ⚠️ {erroConsulta}
+            {erroConsulta}
           </div>
         )}
 
         {mensagem && (
           <div
             role="status"
-            className="mt-6 rounded-2xl border border-green-200 bg-green-50 p-5 text-sm font-bold text-green-800"
+            className="
+              mt-6
+              rounded-xl
+              border
+              border-emerald-400/25
+              bg-emerald-400/10
+              p-4
+              text-xs
+              font-bold
+              text-emerald-300
+            "
           >
-            ✅ {mensagem}
+            {mensagem}
           </div>
         )}
 
-        {/* ============================================= */}
-        {/* FILTROS                                       */}
-        {/* ============================================= */}
+        {/* =================================================
+            BUSCA E FILTROS
+        ================================================= */}
 
-        <section className="mt-10 rounded-3xl border border-gray-100 bg-white p-5 shadow-sm md:p-7">
+        <section
+          className="
+            mt-8
+            rounded-[24px]
+            border
+            border-white/10
+            bg-[#080808]
+            p-5
+          "
+        >
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
+            <input
+              type="search"
+              value={busca}
+              onChange={(event) =>
+                setBusca(event.target.value)
+              }
+              placeholder="Buscar prato ou restaurante..."
+              className="
+                min-w-0
+                flex-1
+                rounded-xl
+                border
+                border-white/10
+                bg-[#111111]
+                px-5
+                py-4
+                text-sm
+                text-white
+                outline-none
+                placeholder:text-white/25
+                focus:border-[#ffd429]/60
+              "
+            />
 
-          <h3 className="text-xl font-black">
-            🔎 Localizar pratos
-          </h3>
-
-          <p className="mt-2 text-sm text-gray-500">
-            Pesquise pelo nome do prato, restaurante
-            ou e-mail do estabelecimento.
-          </p>
-
-          <input
-            type="search"
-            value={busca}
-            onChange={(event) =>
-              setBusca(event.target.value)
-            }
-            placeholder="Nome do prato, restaurante ou e-mail..."
-            className={classeInput}
-          />
-
-          <div className="mt-5 flex flex-wrap gap-2">
-
-            {[
-              {
-                valor: "todos",
-                titulo: `Todos (${pratos.length})`,
-              },
-              {
-                valor: "pendente",
-                titulo: `⏳ Pendentes (${totalPendentes})`,
-              },
-              {
-                valor: "aprovado",
-                titulo: `✅ Aprovados (${totalAprovados})`,
-              },
-              {
-                valor: "rejeitado",
-                titulo: `❌ Correções (${totalRejeitados})`,
-              },
-            ].map((opcao) => (
-              <button
-                key={opcao.valor}
-                type="button"
-                onClick={() =>
-                  setFiltro(
-                    opcao.valor as FiltroPratos
-                  )
-                }
-                aria-pressed={
-                  filtro === opcao.valor
-                }
-                className={`rounded-full border px-4 py-2 text-xs font-black transition ${
-                  filtro === opcao.valor
-                    ? "border-[#19352b] bg-[#19352b] text-white"
-                    : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
-                }`}
-              >
-                {opcao.titulo}
-              </button>
-            ))}
-
+            <div className="flex flex-wrap gap-2">
+              {[
+                {
+                  valor: "todos",
+                  titulo: "TODOS",
+                },
+                {
+                  valor: "pendente",
+                  titulo: "PENDENTES",
+                },
+                {
+                  valor: "aprovado",
+                  titulo: "APROVADOS",
+                },
+                {
+                  valor: "rejeitado",
+                  titulo: "CORREÇÕES",
+                },
+              ].map((opcao) => (
+                <button
+                  key={opcao.valor}
+                  type="button"
+                  onClick={() =>
+                    setFiltro(
+                      opcao.valor as FiltroPratos
+                    )
+                  }
+                  aria-pressed={
+                    filtro === opcao.valor
+                  }
+                  className={`
+                    rounded-full
+                    border
+                    px-4
+                    py-2
+                    text-[8px]
+                    font-black
+                    uppercase
+                    transition
+                    ${
+                      filtro === opcao.valor
+                        ? "border-[#ffd429] bg-[#ffd429] text-black"
+                        : "border-white/10 bg-white/[0.03] text-white/45"
+                    }
+                  `}
+                >
+                  {opcao.titulo}
+                </button>
+              ))}
+            </div>
           </div>
-
         </section>
 
-        {/* ============================================= */}
-        {/* PAINEL DO PRATO SELECIONADO                   */}
-        {/* ============================================= */}
+        {/* =================================================
+            PAINEL DO PRATO SELECIONADO
+        ================================================= */}
 
         {pratoSelecionado && (
           <section
-            className={`mt-10 overflow-hidden rounded-[28px] border-2 bg-white shadow-xl ${
-              pratoPublicado
-                ? "border-sky-400 shadow-[0_0_20px_rgba(0,145,255,0.30)]"
-                : pratoAprovado
-                  ? "border-green-200"
-                  : pratoRejeitado
-                    ? "border-red-300"
-                    : "border-amber-300"
-            }`}
+            className="
+              mt-8
+              overflow-hidden
+              rounded-[28px]
+              border
+              border-white/10
+              bg-gradient-to-br
+              from-[#151515]
+              via-[#0b0b0b]
+              to-black
+              shadow-[0_25px_70px_rgba(0,0,0,.55)]
+            "
           >
+            {/* CABEÇALHO */}
 
-            {/* ========================================= */}
-            {/* CABEÇALHO DINÂMICO                        */}
-            {/* ========================================= */}
-
-            <div className="flex flex-wrap items-center justify-between gap-4 bg-[#080a0f] p-6 text-white md:p-8">
-
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 p-5 md:p-7">
               <div>
+                <div className="flex flex-wrap gap-2">
+                  <span
+                    className={`
+                      rounded-full
+                      border
+                      px-3
+                      py-1.5
+                      text-[8px]
+                      font-black
+                      uppercase
+                      ${
+                        pratoPublicado
+                          ? "border-sky-400/30 bg-sky-400/10 text-sky-300"
+                          : classeStatusEscuro(pratoSelecionado.status)
+                      }
+                    `}
+                  >
+                    {pratoPublicado
+                      ? "PUBLICADO"
+                      : identificarStatus(
+                          pratoSelecionado.status
+                        ).nome}
+                  </span>
+                </div>
 
-                <span
-                  className={`inline-flex rounded-full px-3 py-2 text-xs font-black ${
-                    pratoPublicado
-                      ? "bg-sky-100 text-sky-900"
-                      : pratoAprovado
-                        ? "bg-green-100 text-green-800"
-                        : pratoRejeitado
-                          ? "bg-red-100 text-red-800"
-                          : "bg-amber-100 text-amber-900"
-                  }`}
-                >
-                  {pratoPublicado
-                    ? "🌐 APROVADO E PUBLICADO"
-                    : pratoAprovado
-                      ? "✅ APROVADO — NÃO PUBLICADO"
-                      : pratoRejeitado
-                        ? "❌ CORREÇÃO NECESSÁRIA"
-                        : "⏳ ANÁLISE ADMINISTRATIVA"}
-                </span>
-
-                <h3 className="mt-4 text-2xl font-black md:text-3xl">
+                <h2 className="mt-3 text-2xl font-black uppercase md:text-3xl">
                   {pratoSelecionado.nome}
-                </h3>
+                </h2>
 
-                <p className="mt-2 text-sm text-amber-200">
-                  🏪 {pratoSelecionado.restauranteNome}
+                <p className="mt-2 text-[10px] font-black uppercase tracking-[0.08em] text-[#ffd429]">
+                  {pratoSelecionado.restauranteNome}
                 </p>
-
               </div>
 
               <button
                 type="button"
                 onClick={fecharAnalise}
                 disabled={salvando}
-                className="rounded-xl border border-white/20 px-4 py-3 text-sm font-bold text-white hover:bg-white/10 disabled:opacity-60"
+                className="
+                  rounded-xl
+                  border
+                  border-white/10
+                  bg-white/[0.04]
+                  px-4
+                  py-3
+                  text-[9px]
+                  font-black
+                  uppercase
+                  text-white
+                  disabled:opacity-50
+                "
               >
-                ✕ Fechar
+                FECHAR
               </button>
-
             </div>
 
-            <div className="space-y-6 p-5 md:p-8">
+            <div className="grid gap-6 p-5 md:p-7 lg:grid-cols-[0.9fr_1.1fr]">
+              {/* ============================================
+                  COLUNA VISUAL
+              ============================================ */}
 
-              {/* ======================================= */}
-              {/* VISUAL DIFERENCIADO: PUBLICADO          */}
-              {/* ======================================= */}
-
-              {pratoPublicado && (
-                <div className="rounded-2xl border border-sky-400 bg-[#f0f8ff] p-5 shadow-[0_0_30px_rgba(0,145,255,0.28)] md:p-7">
-
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-
-                    <div>
-                      <p className="text-xs font-black uppercase tracking-widest text-green-700">
-                        Produto no catálogo
-                      </p>
-
-                      <h4 className="mt-2 text-2xl font-black text-green-950">
-                        Seu prato está publicado!
-                      </h4>
-                    </div>
-
-                    <span className="rounded-full bg-[#080a0f] px-4 py-2 text-xs font-black text-white shadow-[0_0_16px_rgba(0,145,255,0.65)]">
-                      🌐 PUBLICADO
-                    </span>
-
-                  </div>
-
-                  <p className="mt-4 text-sm leading-7 text-green-900">
-                    A versão aprovada possui um documento
-                    na vitrine pública do Sabores da Chapada.
-                    Você pode consultar seus dados ou retirar
-                    a publicação quando necessário.
-                  </p>
-
-                  <div className="mt-6 overflow-hidden rounded-2xl bg-white p-4 shadow-sm">
-
-                    {pratoSelecionado.imagemUrl && (
-                      <img
-                        src={pratoSelecionado.imagemUrl}
-                        alt={`Imagem ilustrativa de ${pratoSelecionado.nome}`}
-                        className="mx-auto h-56 w-full rounded-xl object-contain md:h-80"
-                      />
-                    )}
-
-                    <h5 className="mt-5 text-2xl font-black">
-                      {pratoSelecionado.nome}
-                    </h5>
-
-                    <p className="mt-2 text-sm text-gray-500">
-                      {pratoSelecionado.descricao}
-                    </p>
-
-                    <div className="mt-5 grid grid-cols-2 gap-3">
-
-                      <div className="rounded-xl bg-lime-50 p-4">
-
-                        <p className="text-xs font-bold text-green-800">
-                          💰 Preço
-                        </p>
-
-                        <p className="mt-2 text-xl font-black text-green-900">
-                          {formatarMoeda(
-                            pratoSelecionado.preco
-                          )}
-                        </p>
-
-                      </div>
-
-                      <div className="rounded-xl bg-amber-50 p-4">
-
-                        <p className="text-xs font-bold text-amber-900">
-                          👥 Rendimento
-                        </p>
-
-                        <p className="mt-2 text-lg font-black text-amber-900">
-                          {pratoSelecionado.pessoas}{" "}
-                          {pratoSelecionado.pessoas === 1
-                            ? "pessoa"
-                            : "pessoas"}
-                        </p>
-
-                      </div>
-
-                    </div>
-
-                  </div>
-
-                  <div className="mt-6 rounded-xl border border-green-200 bg-white p-4">
-
-                    <p className="text-sm font-bold text-green-900">
-                      ✅ Gerenciamento do produto
-                    </p>
-
-                    <p className="mt-2 text-xs leading-6 text-gray-600">
-                      Para alterar os dados de um prato
-                      publicado, retire-o da vitrine antes
-                      de solicitar uma nova correção.
-                    </p>
-
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={retirarPrato}
-                    disabled={salvando}
-                    className="mt-5 w-full rounded-xl border border-red-300 bg-[#080a0f] px-5 py-4 text-sm font-black text-white transition hover:bg-[#1b2230] disabled:opacity-50"
-                  >
-                    {salvando
-                      ? "⏳ Processando..."
-                      : "🗑️ Retirar do cardápio"}
-                  </button>
-
-                </div>
-              )}
-
-              {/* ======================================= */}
-              {/* DADOS DOS NÃO PUBLICADOS                */}
-              {/* ======================================= */}
-
-              {!pratoPublicado && (
-                <>
-
-                  <div className="grid gap-4 sm:grid-cols-2">
-
-                    <div className="rounded-xl bg-lime-50 p-4">
-
-                      <p className="text-xs text-green-800">
-                        💰 Preço
-                      </p>
-
-                      <p className="mt-2 text-2xl font-black text-green-900">
-                        {formatarMoeda(
-                          pratoSelecionado.preco
-                        )}
-                      </p>
-
-                    </div>
-
-                    <div className="rounded-xl bg-amber-50 p-4">
-
-                      <p className="text-xs text-amber-900">
-                        👥 Serve
-                      </p>
-
-                      <p className="mt-2 text-2xl font-black text-amber-900">
-                        {pratoSelecionado.pessoas}{" "}
-                        {pratoSelecionado.pessoas === 1
-                          ? "pessoa"
-                          : "pessoas"}
-                      </p>
-
-                    </div>
-
-                  </div>
-
-                  <div>
-
-                    <h4 className="text-sm font-black">
-                      📋 Descrição
-                    </h4>
-
-                    <p className="mt-2 whitespace-pre-wrap break-words rounded-xl bg-[#f8f6ef] p-5 text-sm leading-7 text-gray-700">
-                      {pratoSelecionado.descricao}
-                    </p>
-
-                  </div>
-
-                  {/* =================================== */}
-                  {/* IMAGEM JÁ VINCULADA                 */}
-                  {/* =================================== */}
-
-                  {pratoSelecionado.imagemUrl && (
-                    <div className="rounded-2xl border border-gray-200 bg-[#f8f6ef] p-5">
-
-                      <h4 className="text-lg font-black">
-                        🖼️ Imagem do prato
-                      </h4>
-
-                      <div className="mt-4 rounded-xl bg-white p-4">
-
-                        <img
-                          key={pratoSelecionado.imagemUrl}
-                          src={pratoSelecionado.imagemUrl}
-                          alt={`Imagem ilustrativa de ${pratoSelecionado.nome}`}
-                          className="mx-auto max-h-80 w-full object-contain"
-                          onLoad={() => {
-                            setImagemCarregou(true);
-                            setImagemFalhou(false);
-                          }}
-                          onError={() => {
-                            setImagemCarregou(false);
-                            setImagemFalhou(true);
-                          }}
-                        />
-
-                      </div>
-
-                      {imagemCarregou && (
-                        <p className="mt-4 rounded-xl bg-green-100 p-3 text-sm font-bold text-green-800">
-                          ✅ Imagem carregada.
-                        </p>
-                      )}
-
-                      {imagemFalhou && (
-                        <p className="mt-4 rounded-xl bg-red-100 p-3 text-sm font-bold text-red-800">
-                          ⚠️ Não foi possível carregar a imagem.
-                        </p>
-                      )}
-
-                      <p className="mt-4 break-all text-xs text-gray-500">
-                        {pratoSelecionado.imagemUrl}
-                      </p>
-
+              <div>
+                <div
+                  className="
+                    overflow-hidden
+                    rounded-[20px]
+                    border
+                    border-white/10
+                    bg-black
+                  "
+                >
+                  {pratoSelecionado.imagemUrl ? (
+                    <img
+                      key={pratoSelecionado.imagemUrl}
+                      src={pratoSelecionado.imagemUrl}
+                      alt={`Imagem ilustrativa de ${pratoSelecionado.nome}`}
+                      className="h-[280px] w-full object-contain p-4"
+                      onLoad={() => {
+                        setImagemCarregou(true);
+                        setImagemFalhou(false);
+                      }}
+                      onError={() => {
+                        setImagemCarregou(false);
+                        setImagemFalhou(true);
+                      }}
+                    />
+                  ) : (
+                    <div className="flex h-[280px] items-center justify-center">
+                      <span className="text-5xl opacity-30">
+                        🍽️
+                      </span>
                     </div>
                   )}
+                </div>
 
-                  {/* =================================== */}
-                  {/* UPLOAD APENAS NA ANÁLISE             */}
-                  {/* =================================== */}
+                {imagemFalhou && (
+                  <p className="mt-3 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-xs font-bold text-red-400">
+                    Não foi possível carregar a imagem.
+                  </p>
+                )}
 
-                  {!pratoAprovado && (
-                    <div className="rounded-2xl border border-gray-200 bg-[#f8f6ef] p-5">
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+                    <p className="text-[7px] font-black uppercase text-white/25">
+                      PREÇO
+                    </p>
 
-                      <div className="flex flex-wrap items-center justify-between gap-3">
+                    <p className="mt-2 text-xl font-black text-emerald-400">
+                      {formatarMoeda(
+                        pratoSelecionado.preco
+                      )}
+                    </p>
+                  </div>
 
+                  <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+                    <p className="text-[7px] font-black uppercase text-white/25">
+                      SERVE
+                    </p>
+
+                    <p className="mt-2 text-sm font-black text-white">
+                      {pratoSelecionado.pessoas}{" "}
+                      {pratoSelecionado.pessoas === 1
+                        ? "PESSOA"
+                        : "PESSOAS"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.025] p-4">
+                  <p className="text-[7px] font-black uppercase text-white/25">
+                    DESCRIÇÃO
+                  </p>
+
+                  <p className="mt-2 whitespace-pre-wrap text-xs leading-6 text-white/45">
+                    {pratoSelecionado.descricao ||
+                      "Sem descrição."}
+                  </p>
+                </div>
+              </div>
+
+              {/* ============================================
+                  COLUNA DE AÇÕES
+              ============================================ */}
+
+              <div className="space-y-4">
+                {/* PUBLICADO */}
+
+                {pratoPublicado && (
+                  <div className="rounded-[20px] border border-sky-400/20 bg-sky-400/[0.06] p-5">
+                    <p className="text-[8px] font-black uppercase tracking-[0.14em] text-sky-300">
+                      PRODUTO PUBLICADO
+                    </p>
+
+                    <h3 className="mt-2 text-lg font-black uppercase">
+                      DISPONÍVEL NO CARDÁPIO
+                    </h3>
+
+                    <button
+                      type="button"
+                      onClick={retirarPrato}
+                      disabled={salvando}
+                      className="
+                        mt-5
+                        w-full
+                        rounded-xl
+                        border
+                        border-red-500/30
+                        bg-red-500/10
+                        px-5
+                        py-4
+                        text-[10px]
+                        font-black
+                        uppercase
+                        text-red-400
+                        disabled:opacity-40
+                      "
+                    >
+                      {salvando
+                        ? "PROCESSANDO..."
+                        : "RETIRAR DO CARDÁPIO"}
+                    </button>
+                  </div>
+                )}
+
+                {/* UPLOAD DE IMAGEM */}
+
+                {!pratoPublicado &&
+                  !pratoAprovado && (
+                    <div className="rounded-[20px] border border-white/10 bg-white/[0.025] p-5">
+                      <div className="flex items-center justify-between gap-3">
                         <div>
-
-                          <h4 className="text-lg font-black">
-                            📷 Preparar imagem ilustrativa
-                          </h4>
-
-                          <p className="mt-2 text-sm text-gray-600">
-                            Arraste ou selecione uma imagem
-                            para vincular ao prato.
+                          <p className="text-[8px] font-black uppercase tracking-[0.14em] text-[#ffd429]">
+                            IMAGEM
                           </p>
 
+                          <h3 className="mt-2 text-lg font-black uppercase">
+                            FOTO DO PRATO
+                          </h3>
                         </div>
 
                         <button
@@ -1980,30 +1999,47 @@ export function AdminPratos() {
                               !mostrarTrocaImagem
                             )
                           }
-                          className="rounded-xl bg-[#19352b] px-4 py-3 text-sm font-bold text-white"
+                          className="
+                            rounded-xl
+                            border
+                            border-white/10
+                            bg-white/[0.04]
+                            px-4
+                            py-3
+                            text-[8px]
+                            font-black
+                            uppercase
+                            text-white
+                          "
                         >
                           {mostrarTrocaImagem
-                            ? "Fechar"
-                            : "📷 Gerenciar imagem"}
+                            ? "FECHAR"
+                            : "GERENCIAR"}
                         </button>
-
                       </div>
 
                       {(mostrarTrocaImagem ||
                         !pratoSelecionado.imagemUrl) && (
                         <>
-
                           <div
                             onDragOver={arrastarSobreArea}
                             onDragLeave={sairAreaArrasto}
                             onDrop={soltarImagem}
-                            className={`mt-5 rounded-2xl border-2 border-dashed p-6 text-center transition ${
-                              arrastando
-                                ? "border-lime-500 bg-lime-100"
-                                : "border-lime-300 bg-white"
-                            }`}
+                            className={`
+                              mt-4
+                              rounded-[18px]
+                              border
+                              border-dashed
+                              p-5
+                              text-center
+                              transition
+                              ${
+                                arrastando
+                                  ? "border-[#ffd429] bg-[#ffd429]/10"
+                                  : "border-white/15 bg-black/40"
+                              }
+                            `}
                           >
-
                             <input
                               ref={inputArquivoRef}
                               type="file"
@@ -2015,47 +2051,47 @@ export function AdminPratos() {
 
                             {previewImagem ? (
                               <>
-
                                 <img
                                   src={previewImagem}
                                   alt="Prévia da imagem"
-                                  className="mx-auto max-h-64 w-full object-contain"
+                                  className="mx-auto max-h-56 w-full object-contain"
                                 />
 
-                                <p className="mt-3 break-all text-sm font-bold">
+                                <p className="mt-3 break-all text-[9px] text-white/35">
                                   {arquivoImagem?.name}
                                 </p>
-
                               </>
                             ) : (
                               <>
-
-                                <div className="text-4xl">
-                                  🖼️
-                                </div>
-
-                                <p className="mt-3 font-black">
-                                  Arraste sua imagem aqui
+                                <p className="text-sm font-black uppercase text-white/60">
+                                  ARRASTE A IMAGEM AQUI
                                 </p>
 
-                                <p className="mt-2 text-xs text-gray-500">
-                                  JPG, PNG ou WEBP — até 5 MB.
+                                <p className="mt-2 text-[9px] text-white/25">
+                                  JPG, PNG OU WEBP • ATÉ 5 MB
                                 </p>
-
                               </>
                             )}
 
-                            <div className="mt-5 flex flex-wrap justify-center gap-3">
-
+                            <div className="mt-4 flex flex-wrap justify-center gap-2">
                               <button
                                 type="button"
                                 onClick={() =>
                                   inputArquivoRef.current?.click()
                                 }
                                 disabled={salvando}
-                                className="rounded-xl bg-[#9af000] px-5 py-3 text-sm font-black"
+                                className="
+                                  rounded-xl
+                                  bg-[#ffd429]
+                                  px-5
+                                  py-3
+                                  text-[9px]
+                                  font-black
+                                  uppercase
+                                  text-black
+                                "
                               >
-                                📷 Selecionar imagem
+                                SELECIONAR
                               </button>
 
                               {arquivoImagem && (
@@ -2063,14 +2099,22 @@ export function AdminPratos() {
                                   type="button"
                                   onClick={limparImagemTemporaria}
                                   disabled={salvando}
-                                  className="rounded-xl border border-red-200 bg-red-50 px-5 py-3 text-sm font-bold text-red-700"
+                                  className="
+                                    rounded-xl
+                                    border
+                                    border-white/10
+                                    px-5
+                                    py-3
+                                    text-[9px]
+                                    font-black
+                                    uppercase
+                                    text-white/50
+                                  "
                                 >
-                                  Remover prévia
+                                  REMOVER
                                 </button>
                               )}
-
                             </div>
-
                           </div>
 
                           <button
@@ -2080,68 +2124,43 @@ export function AdminPratos() {
                               !arquivoImagem ||
                               salvando
                             }
-                            className="mt-5 w-full rounded-xl bg-[#9af000] px-5 py-4 text-sm font-black uppercase text-[#10251d] disabled:opacity-50"
+                            className="
+                              mt-4
+                              w-full
+                              rounded-xl
+                              bg-[#ffd429]
+                              px-5
+                              py-4
+                              text-[10px]
+                              font-black
+                              uppercase
+                              text-black
+                              disabled:opacity-40
+                            "
                           >
                             {etapaUpload === "enviando"
-                              ? "⏳ Enviando..."
+                              ? "ENVIANDO..."
                               : etapaUpload === "salvando"
-                                ? "⏳ Salvando no Firebase..."
-                                : "☁️ Enviar imagem ao Supabase"}
+                              ? "SALVANDO..."
+                              : "ENVIAR IMAGEM"}
                           </button>
-
                         </>
                       )}
-
                     </div>
                   )}
 
-                  {/* =================================== */}
-                  {/* APROVADO, AINDA NÃO PUBLICADO        */}
-                  {/* =================================== */}
+                {/* PENDENTE */}
 
-                  {pratoAprovado && (
-                    <div className="rounded-2xl border border-green-200 bg-green-50 p-5">
-
-                      <h4 className="text-lg font-black text-green-900">
-                        ✅ Prato aprovado
-                      </h4>
-
-                      <p className="mt-2 text-sm leading-6 text-green-800">
-                        O cadastro já foi analisado.
-                        Agora falta disponibilizar
-                        o prato no catálogo dos hóspedes.
+                {pratoPendente &&
+                  !pratoPublicado && (
+                    <div className="rounded-[20px] border border-[#ffd429]/20 bg-[#ffd429]/[0.05] p-5">
+                      <p className="text-[8px] font-black uppercase tracking-[0.14em] text-[#ffd429]">
+                        ANÁLISE
                       </p>
 
-                      <button
-                        type="button"
-                        onClick={publicarPrato}
-                        disabled={salvando}
-                        className="mt-5 w-full rounded-xl bg-[#9af000] px-5 py-4 text-sm font-black text-[#19352b] disabled:opacity-50"
-                      >
-                        {salvando
-                          ? "⏳ Publicando..."
-                          : "🌐 Publicar no cardápio"}
-                      </button>
-
-                    </div>
-                  )}
-
-                  {/* =================================== */}
-                  {/* PENDENTE                            */}
-                  {/* =================================== */}
-
-                  {pratoPendente && (
-                    <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
-
-                      <h4 className="text-lg font-black text-amber-900">
-                        ⏳ Aguardando sua análise
-                      </h4>
-
-                      <p className="mt-2 text-sm text-amber-800">
-                        Confira o preço, o rendimento,
-                        a descrição e a imagem antes
-                        de aprovar.
-                      </p>
+                      <h3 className="mt-2 text-lg font-black uppercase">
+                        AGUARDANDO APROVAÇÃO
+                      </h3>
 
                       <button
                         type="button"
@@ -2153,52 +2172,87 @@ export function AdminPratos() {
                             pratoSelecionado.imagemUrl
                           )
                         }
-                        className="mt-5 w-full rounded-xl bg-green-700 px-5 py-4 text-sm font-black text-white disabled:opacity-50"
+                        className="
+                          mt-5
+                          w-full
+                          rounded-xl
+                          bg-emerald-400
+                          px-5
+                          py-4
+                          text-[10px]
+                          font-black
+                          uppercase
+                          text-black
+                          disabled:opacity-40
+                        "
                       >
                         {salvando
-                          ? "⏳ Processando..."
-                          : "✅ Aprovar prato"}
+                          ? "PROCESSANDO..."
+                          : "APROVAR PRATO"}
                       </button>
-
                     </div>
                   )}
 
-                  {/* =================================== */}
-                  {/* REJEITADO                           */}
-                  {/* =================================== */}
+                {/* APROVADO */}
 
-                  {pratoRejeitado && (
-                    <div className="rounded-2xl border border-red-200 bg-red-50 p-5">
-
-                      <h4 className="text-lg font-black text-red-900">
-                        ❌ Aguardando correção do parceiro
-                      </h4>
-
-                      <p className="mt-2 text-sm text-red-800">
-                        Motivo registrado:
+                {pratoAprovado &&
+                  !pratoPublicado && (
+                    <div className="rounded-[20px] border border-emerald-400/20 bg-emerald-400/[0.05] p-5">
+                      <p className="text-[8px] font-black uppercase tracking-[0.14em] text-emerald-300">
+                        APROVADO
                       </p>
 
-                      <p className="mt-3 whitespace-pre-wrap rounded-xl bg-white p-4 text-sm text-red-900">
+                      <h3 className="mt-2 text-lg font-black uppercase">
+                        PRONTO PARA PUBLICAR
+                      </h3>
+
+                      <button
+                        type="button"
+                        onClick={publicarPrato}
+                        disabled={salvando}
+                        className="
+                          mt-5
+                          w-full
+                          rounded-xl
+                          bg-[#ffd429]
+                          px-5
+                          py-4
+                          text-[10px]
+                          font-black
+                          uppercase
+                          text-black
+                          disabled:opacity-40
+                        "
+                      >
+                        {salvando
+                          ? "PUBLICANDO..."
+                          : "PUBLICAR NO CARDÁPIO"}
+                      </button>
+                    </div>
+                  )}
+
+                {/* REJEITADO */}
+
+                {pratoRejeitado &&
+                  !pratoPublicado && (
+                    <div className="rounded-[20px] border border-red-500/20 bg-red-500/[0.05] p-5">
+                      <p className="text-[8px] font-black uppercase tracking-[0.14em] text-red-400">
+                        CORREÇÃO SOLICITADA
+                      </p>
+
+                      <p className="mt-3 whitespace-pre-wrap text-xs leading-6 text-white/45">
                         {pratoSelecionado.motivoRecusa ||
                           "Motivo não informado."}
                       </p>
-
-                      <p className="mt-3 text-xs text-red-700">
-                        Após corrigir o cadastro,
-                        o parceiro deverá reenviar
-                        o prato para análise.
-                      </p>
-
                     </div>
                   )}
 
-                  {/* =================================== */}
-                  {/* SOLICITAR CORREÇÃO                   */}
-                  {/* =================================== */}
+                {/* SOLICITAR CORREÇÃO */}
 
-                  {(pratoPendente || pratoAprovado) && (
-                    <div className="rounded-2xl border border-red-200 bg-red-50 p-5">
-
+                {!pratoPublicado &&
+                  (pratoPendente ||
+                    pratoAprovado) && (
+                    <div className="rounded-[20px] border border-red-500/15 bg-red-500/[0.035] p-5">
                       <button
                         type="button"
                         onClick={() =>
@@ -2206,34 +2260,28 @@ export function AdminPratos() {
                             !mostrarCorrecao
                           )
                         }
-                        className="flex w-full items-center justify-between gap-3 text-left"
+                        className="
+                          flex
+                          w-full
+                          items-center
+                          justify-between
+                          gap-3
+                          text-left
+                        "
                       >
-
-                        <span className="font-black text-red-900">
-                          ❌ Solicitar correção
+                        <span className="text-[10px] font-black uppercase text-red-400">
+                          SOLICITAR CORREÇÃO
                         </span>
 
-                        <span className="text-sm font-bold text-red-800">
-                          {mostrarCorrecao ? "▲" : "▼"}
+                        <span className="text-xs text-red-400">
+                          {mostrarCorrecao
+                            ? "▲"
+                            : "▼"}
                         </span>
-
                       </button>
 
                       {mostrarCorrecao && (
                         <>
-
-                          <p className="mt-4 text-sm leading-6 text-red-800">
-                            Informe claramente o que o restaurante
-                            precisa corrigir.
-                          </p>
-
-                          <label
-                            htmlFor="motivoRecusa"
-                            className="mt-4 block text-sm font-bold text-red-900"
-                          >
-                            Motivo da correção
-                          </label>
-
                           <textarea
                             id="motivoRecusa"
                             value={motivoRecusa}
@@ -2246,271 +2294,226 @@ export function AdminPratos() {
                             rows={4}
                             disabled={salvando}
                             className={classeInput}
-                            placeholder="Descreva o que precisa ser corrigido..."
+                            placeholder="Informe o que precisa ser corrigido..."
                           />
 
-                          <p className="mt-2 text-xs text-red-700">
-                            {motivoRecusa.length}/1000 caracteres
+                          <p className="mt-2 text-right text-[8px] text-white/20">
+                            {motivoRecusa.length}/1000
                           </p>
 
                           <button
                             type="button"
                             onClick={rejeitarPrato}
                             disabled={salvando}
-                            className="mt-5 w-full rounded-xl bg-red-600 px-5 py-4 text-sm font-black text-white disabled:opacity-50"
+                            className="
+                              mt-3
+                              w-full
+                              rounded-xl
+                              bg-red-500
+                              px-5
+                              py-4
+                              text-[10px]
+                              font-black
+                              uppercase
+                              text-white
+                              disabled:opacity-40
+                            "
                           >
                             {salvando
-                              ? "⏳ Processando..."
-                              : "❌ Recusar e solicitar correção"}
+                              ? "PROCESSANDO..."
+                              : "ENVIAR CORREÇÃO"}
                           </button>
-
                         </>
                       )}
-
                     </div>
                   )}
 
-                </>
-              )}
+                {/* ERRO DE AÇÃO */}
 
-              {/* ======================================= */}
-              {/* MENSAGENS DA AÇÃO                       */}
-              {/* ======================================= */}
-
-              {erroAcao && (
-                <div
-                  role="alert"
-                  className="rounded-xl border border-red-300 bg-red-50 p-4 text-sm font-bold text-red-800"
-                >
-                  ⚠️ {erroAcao}
-                </div>
-              )}
-
+                {erroAcao && (
+                  <div
+                    role="alert"
+                    className="
+                      rounded-xl
+                      border
+                      border-red-500/25
+                      bg-red-500/10
+                      p-4
+                      text-xs
+                      font-bold
+                      text-red-400
+                    "
+                  >
+                    {erroAcao}
+                  </div>
+                )}
+              </div>
             </div>
-
           </section>
         )}
 
-        {/* ============================================= */}
-        {/* LISTA DOS PRATOS                              */}
-        {/* ============================================= */}
+        {/* =================================================
+            LISTA DOS PRATOS
+        ================================================= */}
 
-        <section className="mt-12">
-
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-
+        <section className="mt-10">
+          <div className="mb-5 flex items-end justify-between gap-4">
             <div>
-
-              <h3 className="text-2xl font-black">
-                🍽️ Pratos cadastrados
-              </h3>
-
-              <p className="mt-2 text-sm text-gray-500">
-                Informações consultadas diretamente
-                no Firestore.
+              <p className="text-[8px] font-black uppercase tracking-[0.18em] text-[#ffd429]">
+                PRODUTOS
               </p>
 
+              <h2 className="mt-2 text-2xl font-black uppercase">
+                PRATOS CADASTRADOS
+              </h2>
             </div>
 
-            <span className="rounded-full bg-white px-4 py-2 text-xs font-black shadow-sm">
-              {pratosFiltrados.length} resultado(s)
+            <span className="text-xs font-black text-white/30">
+              {pratosFiltrados.length}
             </span>
-
           </div>
 
           {carregando && (
-            <div className="rounded-3xl bg-white p-10 text-center shadow-sm">
-              ⏳ Consultando pratos...
+            <div className="rounded-[24px] border border-white/10 bg-[#0a0a0a] p-10 text-center text-xs text-white/35">
+              CARREGANDO PRATOS...
             </div>
           )}
 
           {!carregando &&
             !erroConsulta &&
-            pratosFiltrados.length === 0 && (
-              <div className="rounded-3xl border-2 border-dashed border-gray-200 bg-white p-10 text-center">
-
-                <div className="text-5xl">
-                  🍽️
-                </div>
-
-                <h4 className="mt-5 text-xl font-black">
-                  Nenhum prato encontrado
-                </h4>
-
-                <p className="mt-3 text-sm text-gray-500">
-                  Nenhum registro corresponde
-                  aos filtros selecionados.
+            pratosFiltrados.length ===
+              0 && (
+              <div className="rounded-[24px] border border-dashed border-white/10 p-10 text-center">
+                <p className="text-sm font-black uppercase text-white/50">
+                  NENHUM PRATO ENCONTRADO
                 </p>
-
               </div>
             )}
 
           {!carregando &&
-            pratosFiltrados.length > 0 && (
-              <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
-
+            pratosFiltrados.length >
+              0 && (
+              <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
                 {pratosFiltrados.map((prato) => {
-                  const status =
-                    identificarStatus(prato.status);
-
                   const publicado =
                     estaPublicado(prato);
 
                   return (
                     <article
                       key={`${prato.restauranteId}-${prato.id}`}
-                      className={`overflow-hidden rounded-[26px] border-2 bg-white shadow-sm ${
-                        publicado
-                          ? "border-sky-400 shadow-[0_0_24px_rgba(0,145,255,0.55)] hover:shadow-[0_0_36px_rgba(0,145,255,0.8)] transition-shadow duration-300"
-                          : status.borda
-                      }`}
+                      className="
+                        group
+                        overflow-hidden
+                        rounded-[24px]
+                        border
+                        border-white/10
+                        bg-gradient-to-br
+                        from-[#151515]
+                        via-[#0b0b0b]
+                        to-black
+                        transition
+                        hover:-translate-y-1
+                        hover:border-[#ffd429]/35
+                      "
                     >
+                      {/* IMAGEM */}
 
-                      {/* ============================= */}
-                      {/* CABEÇALHO                     */}
-                      {/* ============================= */}
-
-                      <div className="bg-[#080a0f] p-5 text-white">
-
-                        <div className="flex flex-wrap gap-2">
-
-                          <span
-                            className={`inline-flex rounded-full px-3 py-1 text-xs font-black ${status.classe}`}
-                          >
-                            {status.icone} {status.nome}
-                          </span>
-
-                          {publicado && (
-                            <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-black text-blue-900">
-                              🌐 Publicado
-                            </span>
-                          )}
-
-                        </div>
-
-                        <h4 className="mt-4 break-words text-xl font-black">
-                          {prato.nome}
-                        </h4>
-
-                        <p className="mt-2 text-sm text-amber-200">
-                          🏪 {prato.restauranteNome}
-                        </p>
-
-                      </div>
-
-                      {/* ============================= */}
-                      {/* IMAGEM EM DESTAQUE             */}
-                      {/* ============================= */}
-
-                      {prato.imagemUrl ? (
-                        <div className="bg-[#f8f6ef] p-4">
-
+                      <div className="relative h-48 overflow-hidden bg-black">
+                        {prato.imagemUrl ? (
                           <img
                             src={prato.imagemUrl}
                             alt={`Imagem ilustrativa de ${prato.nome}`}
-                            className="mx-auto h-48 w-full rounded-xl object-contain"
+                            className="
+                              h-full
+                              w-full
+                              object-contain
+                              p-3
+                              transition-transform
+                              duration-300
+                              group-hover:scale-[1.03]
+                            "
                           />
+                        ) : (
+                          <div className="flex h-full items-center justify-center text-5xl opacity-25">
+                            🍽️
+                          </div>
+                        )}
 
+                        <div className="absolute left-3 top-3 flex flex-wrap gap-2">
+                          <span
+                            className={`
+                              rounded-full
+                              border
+                              px-3
+                              py-1.5
+                              text-[7px]
+                              font-black
+                              uppercase
+                              ${
+                                publicado
+                                  ? "border-sky-400/30 bg-black/80 text-sky-300"
+                                  : classeStatusEscuro(
+                                      prato.status
+                                    )
+                              }
+                            `}
+                          >
+                            {publicado
+                              ? "PUBLICADO"
+                              : identificarStatus(
+                                  prato.status
+                                ).nome}
+                          </span>
                         </div>
-                      ) : (
-                        <div className="flex h-48 items-center justify-center bg-gray-100 text-5xl">
-                          🍽️
-                        </div>
-                      )}
+                      </div>
 
-                      {/* ============================= */}
-                      {/* INFORMAÇÕES                   */}
-                      {/* ============================= */}
+                      {/* DADOS */}
 
                       <div className="p-5">
+                        <p className="text-[8px] font-black uppercase tracking-[0.12em] text-[#ffd429]">
+                          {prato.restauranteNome}
+                        </p>
 
-                        <div className="grid grid-cols-2 gap-3">
+                        <h3 className="mt-2 break-words text-lg font-black uppercase">
+                          {prato.nome}
+                        </h3>
 
-                          <div className="rounded-xl bg-lime-50 p-4">
-
-                            <p className="text-xs text-green-800">
-                              💰 Preço
+                        <div className="mt-4 flex items-end justify-between gap-3">
+                          <div>
+                            <p className="text-[7px] font-black uppercase text-white/25">
+                              PREÇO
                             </p>
 
-                            <p className="mt-2 text-xl font-black text-green-900">
-                              {formatarMoeda(prato.preco)}
+                            <p className="mt-1 text-lg font-black text-emerald-400">
+                              {formatarMoeda(
+                                prato.preco
+                              )}
                             </p>
-
                           </div>
 
-                          <div className="rounded-xl bg-amber-50 p-4">
-
-                            <p className="text-xs text-amber-900">
-                              👥 Serve
+                          <div className="text-right">
+                            <p className="text-[7px] font-black uppercase text-white/25">
+                              SERVE
                             </p>
 
-                            <p className="mt-2 text-lg font-black text-amber-900">
+                            <p className="mt-1 text-xs font-black text-white">
                               {prato.pessoas}{" "}
                               {prato.pessoas === 1
-                                ? "pessoa"
-                                : "pessoas"}
+                                ? "PESSOA"
+                                : "PESSOAS"}
                             </p>
-
                           </div>
-
                         </div>
 
-                        <p className="mt-5 whitespace-pre-wrap break-words text-sm leading-7 text-gray-600">
+                        <p className="mt-4 line-clamp-2 text-xs leading-5 text-white/35">
                           {prato.descricao}
                         </p>
 
-                        {/* STATUS DIFERENCIADO */}
-
-                        {publicado && (
-                          <div className="mt-5 rounded-xl border border-sky-300 bg-sky-50 p-4">
-
-                            <p className="text-sm font-black text-green-900">
-                              🌐 Produto publicado
-                            </p>
-
-                            <p className="mt-2 text-xs leading-6 text-green-800">
-                              O prato possui uma versão
-                              no catálogo público.
-                            </p>
-
-                          </div>
-                        )}
-
-                        {!publicado &&
-                          prato.status === "aprovado" && (
-                            <div className="mt-5 rounded-xl bg-amber-50 p-4 text-sm font-bold text-amber-900">
-                              ⏳ Aprovado, aguardando publicação.
-                            </div>
+                        <p className="mt-4 text-[8px] text-white/20">
+                          {formatarData(
+                            prato.criadoEm
                           )}
-
-                        {prato.status === "rejeitado" && (
-                          <div className="mt-5 rounded-xl bg-red-50 p-4 text-sm font-bold text-red-800">
-                            ❌ Correção solicitada.
-                          </div>
-                        )}
-
-                        {prato.status === "pendente" && (
-                          <div className="mt-5 rounded-xl bg-amber-50 p-4 text-sm font-bold text-amber-900">
-                            ⏳ Aguardando revisão.
-                          </div>
-                        )}
-
-                        <div className="mt-5 rounded-xl bg-[#f8f6ef] p-4 text-xs text-gray-600">
-
-                          <p>
-                            {prato.imagemUrl
-                              ? "📷 Imagem vinculada."
-                              : "📷 Imagem não cadastrada."}
-                          </p>
-
-                          <p className="mt-2">
-                            Criado em:{" "}
-                            {formatarData(prato.criadoEm)}
-                          </p>
-
-                        </div>
-
-                        {/* BOTÃO DINÂMICO */}
+                        </p>
 
                         <button
                           type="button"
@@ -2518,36 +2521,62 @@ export function AdminPratos() {
                             abrirAnalise(prato)
                           }
                           disabled={salvando}
-                          className={`mt-5 w-full rounded-xl px-5 py-4 text-sm font-black transition disabled:opacity-60 ${
-                            publicado
-                              ? "bg-[#080a0f] text-white ring-1 ring-sky-400 shadow-[0_0_16px_rgba(0,145,255,0.55)] hover:shadow-[0_0_24px_rgba(0,145,255,0.85)]"
-                              : prato.status === "pendente"
-                                ? "bg-amber-400 text-black hover:bg-amber-300"
-                                : "bg-[#19352b] text-white hover:bg-[#28533e]"
-                          }`}
+                          className={`
+                            mt-5
+                            w-full
+                            rounded-xl
+                            px-5
+                            py-4
+                            text-[9px]
+                            font-black
+                            uppercase
+                            transition
+                            disabled:opacity-40
+                            ${
+                              publicado
+                                ? "border border-sky-400/25 bg-sky-400/10 text-sky-300"
+                                : prato.status ===
+                                  "pendente"
+                                ? "bg-[#ffd429] text-black"
+                                : "border border-white/10 bg-white/[0.04] text-white"
+                            }
+                          `}
                         >
                           {publicado
-                            ? "🌐 Gerenciar produto →"
-                            : prato.status === "pendente"
-                              ? "🔎 Analisar prato →"
-                              : prato.status === "aprovado"
-                                ? "🌐 Preparar publicação →"
-                                : "📋 Consultar correção →"}
+                            ? "GERENCIAR"
+                            : prato.status ===
+                              "pendente"
+                            ? "ANALISAR"
+                            : prato.status ===
+                              "aprovado"
+                            ? "PUBLICAR"
+                            : "VER CORREÇÃO"}
                         </button>
-
                       </div>
-
                     </article>
                   );
                 })}
-
               </div>
             )}
-
         </section>
 
-      </div>
+        {/* =================================================
+            RODAPÉ
+        ================================================= */}
 
+        <footer className="mt-14 border-t border-white/10 py-10 text-center">
+          <img
+            src="/coroa.png"
+            alt=""
+            draggable={false}
+            className="mx-auto h-9 w-9 object-contain opacity-40"
+          />
+
+          <p className="mt-3 text-[7px] font-black uppercase tracking-[0.18em] text-white/15">
+            IMPÉRIO CHALÉS • CENTRAL ADMINISTRATIVA
+          </p>
+        </footer>
+      </div>
     </main>
   );
 }

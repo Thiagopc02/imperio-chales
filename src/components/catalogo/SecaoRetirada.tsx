@@ -22,9 +22,9 @@ export function SecaoRetirada({
     <section
       id="retirada"
       className="
+        relative
         mb-16
-
-        scroll-mt-8
+        scroll-mt-24
       "
     >
       {/* =====================================================
@@ -33,49 +33,62 @@ export function SecaoRetirada({
 
       <div
         className="
+          mb-7
           flex
-
-          items-center
+          flex-col
 
           gap-4
+
+          sm:flex-row
+          sm:items-center
         "
       >
+        {/* ÍCONE */}
+
         <div
           className="
             flex
-
-            h-12
-            w-12
+            h-[72px]
+            w-[72px]
 
             shrink-0
 
             items-center
             justify-center
 
-            rounded-2xl
+            rounded-[22px]
 
             border
             border-[#d4af37]/25
 
-            bg-[#d4af37]/10
+            bg-gradient-to-br
+            from-[#2a2514]
+            via-[#17140c]
+            to-black
 
-            text-2xl
+            text-3xl
+
+            shadow-[0_12px_35px_rgba(212,175,55,0.10)]
           "
         >
           🛍️
         </div>
 
+        {/* TEXTO */}
+
         <div>
           <p
             className="
-              text-[10px]
+              text-[9px]
               font-black
 
               uppercase
 
-              tracking-[0.25em]
+              tracking-[0.30em]
 
-              text-[#d4af37]
+              text-[#ffd447]
+
+              sm:text-[10px]
             "
           >
             Retirada sob consulta
@@ -83,81 +96,172 @@ export function SecaoRetirada({
 
           <h2
             className="
-              mt-1
+              mt-2
 
-              text-2xl
+              text-[30px]
               font-black
+
+              uppercase
+
+              leading-[0.95]
+
+              tracking-[-0.04em]
 
               text-white
 
-              sm:text-3xl
+              sm:text-[38px]
+
+              lg:text-[44px]
             "
+            style={{
+              fontFamily:
+                "'Arial Black', 'Montserrat', sans-serif",
+
+              textShadow:
+                "0 3px 0 rgba(0,0,0,1), 0 8px 20px rgba(0,0,0,0.45)",
+            }}
           >
             Consulte o anfitrião
           </h2>
+
+          <p
+            className="
+              mt-3
+
+              max-w-2xl
+
+              text-sm
+              leading-6
+
+              text-white/50
+
+              sm:text-[15px]
+            "
+          >
+            Algumas opções precisam de confirmação
+            antes da retirada.
+          </p>
         </div>
       </div>
 
       {/* =====================================================
-          AVISO
+          CARD PRINCIPAL
       ====================================================== */}
 
       <div
         className="
-          mt-6
+          relative
 
           overflow-hidden
 
-          rounded-[24px]
+          rounded-[28px]
 
           border
-          border-[#d4af37]/30
+          border-[#d4af37]/25
 
           bg-gradient-to-br
-          from-[#29261b]
-          via-[#181713]
-          to-[#0d0d0c]
+          from-[#1d1b13]
+          via-[#10100d]
+          to-[#050505]
+
+          shadow-[0_20px_60px_rgba(0,0,0,0.42)]
         "
       >
+        {/* BRILHO */}
+
         <div
+          aria-hidden="true"
           className="
-            border-b
-            border-[#d4af37]/15
+            pointer-events-none
+
+            absolute
+            -right-16
+            -top-20
+
+            h-60
+            w-60
+
+            rounded-full
 
             bg-[#d4af37]/10
 
+            blur-[90px]
+          "
+        />
+
+        {/* AVISO */}
+
+        <div
+          className="
+            relative
+            z-10
+
+            border-b
+            border-[#d4af37]/15
+
+            bg-[#d4af37]/[0.08]
+
             px-5
             py-4
+
+            sm:px-6
           "
         >
           <p
             className="
-              text-sm
+              flex
+              items-center
+
+              gap-2
+
+              text-xs
               font-black
 
-              text-[#f2cd47]
+              uppercase
+
+              tracking-[0.06em]
+
+              text-[#ffd447]
+
+              sm:text-sm
             "
           >
-            ⚠️ Retirada mediante confirmação!
+            <span>⚠️</span>
+
+            Retirada mediante confirmação
           </p>
         </div>
 
+        {/* CONTEÚDO */}
+
         <div
           className="
+            relative
+            z-10
+
             p-5
 
-            text-sm
-            leading-7
-
-            text-white/55
+            sm:p-6
           "
         >
-          Antes de realizar qualquer pedido ou
-          pagamento, entre em contato com o
-          anfitrião para verificar a
-          disponibilidade da retirada.
+          <p
+            className="
+              max-w-3xl
 
-          {/* HORÁRIOS */}
+              text-sm
+              leading-7
+
+              text-white/55
+            "
+          >
+            Entre em contato com o anfitrião antes
+            de realizar o pedido para confirmar se
+            existe disponibilidade para retirada.
+          </p>
+
+          {/* =================================================
+              HORÁRIOS
+          ================================================== */}
 
           <div
             className="
@@ -166,126 +270,227 @@ export function SecaoRetirada({
               grid
               grid-cols-1
 
-              gap-3
+              gap-4
 
               sm:grid-cols-2
             "
           >
+            {/* ALMOÇO */}
+
             <div
               className="
-                rounded-2xl
+                group
+                relative
+
+                overflow-hidden
+
+                rounded-[22px]
 
                 border
                 border-[#d4af37]/15
 
-                bg-black/35
+                bg-gradient-to-br
+                from-[#18150d]
+                via-[#100f0b]
+                to-[#070707]
 
                 p-5
+
+                transition-all
+                duration-300
+
+                hover:-translate-y-1
+
+                hover:border-[#d4af37]/40
               "
             >
-              <div className="text-xl">
-                ☀️
+              <div
+                aria-hidden="true"
+                className="
+                  pointer-events-none
+
+                  absolute
+                  -right-10
+                  -top-10
+
+                  h-32
+                  w-32
+
+                  rounded-full
+
+                  bg-[#ffcc33]/[0.06]
+
+                  blur-[45px]
+                "
+              />
+
+              <div
+                className="
+                  relative
+                  z-10
+                "
+              >
+                <div className="text-2xl">
+                  ☀️
+                </div>
+
+                <p
+                  className="
+                    mt-4
+
+                    text-[9px]
+                    font-black
+
+                    uppercase
+
+                    tracking-[0.20em]
+
+                    text-white/35
+                  "
+                >
+                  Almoço
+                </p>
+
+                <p
+                  className="
+                    mt-2
+
+                    text-[24px]
+                    font-black
+
+                    uppercase
+
+                    tracking-[-0.03em]
+
+                    text-white
+                  "
+                >
+                  11h às 13h
+                </p>
               </div>
-
-              <p
-                className="
-                  mt-3
-
-                  text-[10px]
-                  font-black
-
-                  uppercase
-
-                  tracking-[0.16em]
-
-                  text-white/40
-                "
-              >
-                Almoço
-              </p>
-
-              <p
-                className="
-                  mt-1
-
-                  text-lg
-                  font-black
-
-                  text-white
-                "
-              >
-                11h às 13h
-              </p>
             </div>
+
+            {/* NOITE */}
 
             <div
               className="
-                rounded-2xl
+                group
+                relative
+
+                overflow-hidden
+
+                rounded-[22px]
 
                 border
                 border-white/10
 
                 bg-gradient-to-br
-                from-[#252525]
-                to-[#0c0c0c]
+                from-[#242424]
+                via-[#151515]
+                to-[#070707]
 
                 p-5
+
+                transition-all
+                duration-300
+
+                hover:-translate-y-1
+
+                hover:border-white/20
               "
             >
-              <div className="text-xl">
-                🌙
+              <div
+                aria-hidden="true"
+                className="
+                  pointer-events-none
+
+                  absolute
+                  -right-10
+                  -top-10
+
+                  h-32
+                  w-32
+
+                  rounded-full
+
+                  bg-white/[0.04]
+
+                  blur-[45px]
+                "
+              />
+
+              <div
+                className="
+                  relative
+                  z-10
+                "
+              >
+                <div className="text-2xl">
+                  🌙
+                </div>
+
+                <p
+                  className="
+                    mt-4
+
+                    text-[9px]
+                    font-black
+
+                    uppercase
+
+                    tracking-[0.20em]
+
+                    text-white/35
+                  "
+                >
+                  Noite
+                </p>
+
+                <p
+                  className="
+                    mt-2
+
+                    text-[24px]
+                    font-black
+
+                    uppercase
+
+                    tracking-[-0.03em]
+
+                    text-white
+                  "
+                >
+                  20h às 22h
+                </p>
               </div>
-
-              <p
-                className="
-                  mt-3
-
-                  text-[10px]
-                  font-black
-
-                  uppercase
-
-                  tracking-[0.16em]
-
-                  text-white/40
-                "
-              >
-                Noite
-              </p>
-
-              <p
-                className="
-                  mt-1
-
-                  text-lg
-                  font-black
-
-                  text-white
-                "
-              >
-                20h às 22h
-              </p>
             </div>
           </div>
+
+          {/* OBSERVAÇÃO */}
 
           <div
             className="
               mt-4
 
-              rounded-xl
+              rounded-2xl
 
-              bg-white/[0.035]
+              border
+              border-white/[0.06]
+
+              bg-white/[0.025]
 
               px-4
               py-3
 
-              text-xs
+              text-[11px]
               leading-5
 
-              text-white/40
+              text-white/35
+
+              sm:text-xs
             "
           >
-            Esses horários são períodos para
+            Os horários acima são períodos para
             consulta. A retirada depende de
             disponibilidade e confirmação prévia.
           </div>
@@ -314,8 +519,12 @@ export function SecaoRetirada({
           {restaurantes.map(
             (restaurante) => (
               <RestauranteCard
-                key={restaurante.id}
-                restaurante={restaurante}
+                key={
+                  restaurante.id
+                }
+                restaurante={
+                  restaurante
+                }
                 onAbrir={
                   onAbrirRestaurante
                 }
@@ -326,60 +535,124 @@ export function SecaoRetirada({
       ) : (
         <div
           className="
+            relative
+
             mt-7
+
+            overflow-hidden
 
             rounded-[26px]
 
             border
             border-dashed
-            border-[#d4af37]/25
+            border-[#d4af37]/20
 
             bg-gradient-to-br
-            from-[#252525]
-            via-[#151515]
-            to-[#080808]
+            from-[#202020]
+            via-[#101010]
+            to-[#050505]
 
             px-6
-            py-12
+            py-10
 
             text-center
+
+            shadow-[0_18px_45px_rgba(0,0,0,0.30)]
+
+            sm:py-12
           "
         >
-          <div className="text-3xl">
-            🛍️
+          <div
+            aria-hidden="true"
+            className="
+              pointer-events-none
+
+              absolute
+              left-1/2
+              top-1/2
+
+              h-36
+              w-64
+
+              -translate-x-1/2
+              -translate-y-1/2
+
+              rounded-full
+
+              bg-[#d4af37]/[0.04]
+
+              blur-[70px]
+            "
+          />
+
+          <div
+            className="
+              relative
+              z-10
+            "
+          >
+            <div
+              className="
+                mx-auto
+
+                flex
+                h-14
+                w-14
+
+                items-center
+                justify-center
+
+                rounded-2xl
+
+                border
+                border-[#d4af37]/20
+
+                bg-[#d4af37]/[0.06]
+
+                text-2xl
+              "
+            >
+              🛍️
+            </div>
+
+            <h3
+              className="
+                mt-5
+
+                text-xl
+                font-black
+
+                uppercase
+
+                tracking-[-0.02em]
+
+                text-white
+              "
+            >
+              Nenhuma opção disponível
+            </h3>
+
+            <p
+              className="
+                mx-auto
+                mt-3
+
+                max-w-lg
+
+                text-sm
+                leading-6
+
+                text-white/40
+              "
+            >
+              Ainda não temos restaurantes com
+              retirada disponíveis nesta seleção.
+            </p>
           </div>
-
-          <h3
-            className="
-              mt-4
-
-              text-xl
-              font-black
-
-              text-white
-            "
-          >
-            Nenhuma opção encontrada
-          </h3>
-
-          <p
-            className="
-              mx-auto
-              mt-3
-
-              max-w-lg
-
-              text-sm
-              leading-6
-
-              text-white/45
-            "
-          >
-            Não encontramos restaurantes com
-            retirada nos filtros selecionados.
-          </p>
         </div>
       )}
     </section>
   );
 }
+
+export default SecaoRetirada;

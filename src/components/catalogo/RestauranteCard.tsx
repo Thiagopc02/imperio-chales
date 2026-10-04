@@ -2,6 +2,9 @@ import type {
   RestaurantePublico,
 } from "./catalogoTypes";
 
+import entregaIcon from "./entrega.png";
+import restauranteIcon from "./restaurante-emoji.png";
+
 type RestauranteCardProps = {
   restaurante: RestaurantePublico;
 
@@ -14,40 +17,46 @@ export function RestauranteCard({
   restaurante,
   onAbrir,
 }: RestauranteCardProps) {
+  const temEntrega =
+    restaurante.modalidadeEntrega ===
+    "entrega_propria";
+
   return (
     <article
+      id={`restaurante-${restaurante.id}`}
       className="
         group
         relative
 
         overflow-hidden
 
-        rounded-[26px]
+        rounded-[28px]
 
         border
         border-white/10
 
         bg-gradient-to-br
-        from-[#303030]
-        via-[#171717]
-        to-[#070707]
+        from-[#2b2b2b]
+        via-[#151515]
+        to-[#050505]
 
         text-white
 
-        shadow-[0_18px_50px_rgba(0,0,0,0.40)]
+        shadow-[0_22px_55px_rgba(0,0,0,0.55)]
 
         transition-all
-        duration-300
+        duration-500
 
-        hover:-translate-y-1.5
+        hover:-translate-y-2
+        hover:scale-[1.01]
 
-        hover:border-[#d4af37]/55
+        hover:border-white/20
 
-        hover:shadow-[0_22px_60px_rgba(212,175,55,0.10)]
+        hover:shadow-[0_28px_75px_rgba(0,0,0,0.68)]
       "
     >
       {/* =====================================================
-          BRILHO
+          LUZ SUPERIOR
       ====================================================== */}
 
       <div
@@ -56,27 +65,27 @@ export function RestauranteCard({
           pointer-events-none
 
           absolute
-          -right-20
-          -top-20
+          -right-16
+          -top-16
 
-          h-48
-          w-48
+          h-52
+          w-52
 
           rounded-full
 
           bg-white/[0.07]
 
-          blur-[65px]
+          blur-[70px]
 
           transition-all
-          duration-300
+          duration-500
 
-          group-hover:bg-[#d4af37]/10
+          group-hover:bg-white/[0.12]
         "
       />
 
       {/* =====================================================
-          CAPA
+          CAPA / ÍCONE 3D
       ====================================================== */}
 
       {restaurante.imagemCapa ? (
@@ -84,11 +93,13 @@ export function RestauranteCard({
           className="
             relative
 
-            h-[180px]
+            h-[185px]
 
             overflow-hidden
 
             bg-black
+
+            sm:h-[200px]
           "
         >
           <img
@@ -102,9 +113,9 @@ export function RestauranteCard({
               object-cover
 
               transition-transform
-              duration-500
+              duration-700
 
-              group-hover:scale-[1.04]
+              group-hover:scale-[1.06]
             "
           />
 
@@ -115,29 +126,80 @@ export function RestauranteCard({
               inset-0
 
               bg-gradient-to-t
-              from-black/85
+              from-black/90
               via-black/15
-              to-transparent
+              to-black/10
             "
           />
         </div>
       ) : (
         <div
           className="
+            relative
+
             flex
-            h-[110px]
+            h-[155px]
 
             items-center
             justify-center
 
+            overflow-hidden
+
+            border-b
+            border-white/[0.05]
+
             bg-gradient-to-br
-            from-[#232323]
-            to-[#090909]
+            from-[#262626]
+            via-[#141414]
+            to-[#070707]
           "
         >
-          <span className="text-4xl">
-            🍽️
-          </span>
+          {/* GLOW */}
+
+          <div
+            aria-hidden="true"
+            className="
+              pointer-events-none
+
+              absolute
+
+              h-28
+              w-28
+
+              rounded-full
+
+              bg-[#ffd447]/10
+
+              blur-[40px]
+            "
+          />
+
+          <img
+            src={restauranteIcon}
+            alt=""
+            aria-hidden="true"
+            draggable={false}
+            className="
+              relative
+              z-10
+
+              h-[105px]
+              w-[105px]
+
+              object-contain
+
+              drop-shadow-[0_18px_24px_rgba(0,0,0,0.60)]
+
+              transition-all
+              duration-500
+
+              group-hover:-translate-y-2
+              group-hover:scale-110
+
+              sm:h-[118px]
+              sm:w-[118px]
+            "
+          />
         </div>
       )}
 
@@ -151,9 +213,13 @@ export function RestauranteCard({
           z-10
 
           p-5
+
+          sm:p-6
         "
       >
-        {/* CABEÇALHO */}
+        {/* =================================================
+            CABEÇALHO
+        ================================================= */}
 
         <div
           className="
@@ -180,14 +246,14 @@ export function RestauranteCard({
 
               overflow-hidden
 
-              rounded-2xl
+              rounded-[18px]
 
               border
               border-white/15
 
-              bg-black/50
+              bg-black/55
 
-              shadow-[0_8px_25px_rgba(0,0,0,0.35)]
+              shadow-[0_10px_30px_rgba(0,0,0,0.45)]
             "
           >
             {restaurante.logoUrl ? (
@@ -203,13 +269,24 @@ export function RestauranteCard({
                 "
               />
             ) : (
-              <span className="text-2xl">
-                🍴
-              </span>
+              <img
+                src={restauranteIcon}
+                alt=""
+                aria-hidden="true"
+                draggable={false}
+                className="
+                  h-12
+                  w-12
+
+                  object-contain
+
+                  drop-shadow-[0_8px_14px_rgba(0,0,0,0.45)]
+                "
+              />
             )}
           </div>
 
-          {/* NOME */}
+          {/* TEXTO */}
 
           <div
             className="
@@ -226,21 +303,23 @@ export function RestauranteCard({
                 rounded-full
 
                 border
-                border-[#d4af37]/35
+                border-[#ffd447]/35
 
-                bg-[#d4af37]/10
+                bg-[#ffd447]/10
 
                 px-3
-                py-1
+                py-1.5
 
-                text-[9px]
+                text-[8px]
                 font-black
 
                 uppercase
 
-                tracking-[0.1em]
+                tracking-[0.12em]
 
-                text-[#f1cb43]
+                text-[#ffd447]
+
+                sm:text-[9px]
               "
             >
               {restaurante.categoria ||
@@ -251,20 +330,35 @@ export function RestauranteCard({
               className="
                 mt-3
 
-                text-xl
+                text-[20px]
                 font-black
 
-                leading-tight
+                uppercase
+
+                leading-[1.02]
+
+                tracking-[-0.025em]
 
                 text-white
+
+                sm:text-[22px]
               "
+              style={{
+                fontFamily:
+                  "'Arial Black', 'Montserrat', sans-serif",
+
+                textShadow:
+                  "0 2px 0 rgba(0,0,0,1), 0 6px 16px rgba(0,0,0,0.45)",
+              }}
             >
               {restaurante.nome}
             </h3>
           </div>
         </div>
 
-        {/* DESCRIÇÃO */}
+        {/* =================================================
+            DESCRIÇÃO
+        ================================================= */}
 
         <p
           className="
@@ -272,19 +366,23 @@ export function RestauranteCard({
 
             line-clamp-3
 
-            min-h-[60px]
+            min-h-[54px]
 
-            text-sm
+            text-[12px]
             leading-6
 
-            text-white/50
+            text-white/48
+
+            sm:text-[13px]
           "
         >
           {restaurante.descricao ||
             "Conheça os pratos e opções disponíveis deste parceiro."}
         </p>
 
-        {/* INFORMAÇÕES */}
+        {/* =================================================
+            INFORMAÇÕES
+        ================================================= */}
 
         <div
           className="
@@ -293,60 +391,125 @@ export function RestauranteCard({
             flex
             flex-wrap
 
-            gap-2
+            gap-3
           "
         >
-          {restaurante.modalidadeEntrega ===
-            "entrega_propria" && (
-            <span
+          {/* ENTREGA */}
+
+          {temEntrega && (
+            <div
               className="
-                rounded-full
+                flex
+
+                items-center
+
+                gap-2.5
+
+                rounded-2xl
 
                 border
-                border-emerald-400/25
+                border-emerald-400/20
 
-                bg-emerald-400/10
+                bg-gradient-to-r
+                from-emerald-400/10
+                to-emerald-400/[0.04]
 
                 px-3
-                py-1.5
+                py-2
 
-                text-[10px]
-                font-bold
-
-                text-emerald-300
+                shadow-[0_8px_22px_rgba(0,0,0,0.25)]
               "
             >
-              🚚 Entrega própria
-            </span>
+              <img
+                src={entregaIcon}
+                alt=""
+                aria-hidden="true"
+                draggable={false}
+                className="
+                  h-9
+                  w-9
+
+                  object-contain
+
+                  drop-shadow-[0_6px_10px_rgba(0,0,0,0.45)]
+                "
+              />
+
+              <div>
+                <p
+                  className="
+                    text-[7px]
+                    font-black
+
+                    uppercase
+
+                    tracking-[0.14em]
+
+                    text-emerald-400/65
+                  "
+                >
+                  Entrega
+                </p>
+
+                <p
+                  className="
+                    mt-0.5
+
+                    text-[10px]
+                    font-black
+
+                    uppercase
+
+                    text-emerald-300
+                  "
+                >
+                  Entrega própria
+                </p>
+              </div>
+            </div>
           )}
+
+          {/* RETIRADA */}
 
           {restaurante.aceitaRetirada && (
             <span
               className="
-                rounded-full
+                inline-flex
+
+                items-center
+
+                rounded-2xl
 
                 border
-                border-[#d4af37]/25
+                border-[#ffd447]/20
 
-                bg-[#d4af37]/10
+                bg-[#ffd447]/10
 
                 px-3
-                py-1.5
+                py-2
 
                 text-[10px]
-                font-bold
+                font-black
 
-                text-[#f0cb49]
+                uppercase
+
+                text-[#ffd447]
               "
             >
-              🛍️ Retirada
+              Retirada disponível
             </span>
           )}
+
+          {/* HORÁRIO */}
 
           {restaurante.horarioFuncionamento && (
             <span
               className="
-                rounded-full
+                inline-flex
+
+                items-center
+
+                rounded-2xl
 
                 border
                 border-white/10
@@ -354,7 +517,7 @@ export function RestauranteCard({
                 bg-white/[0.04]
 
                 px-3
-                py-1.5
+                py-2
 
                 text-[10px]
                 font-bold
@@ -362,12 +525,14 @@ export function RestauranteCard({
                 text-white/55
               "
             >
-              🕐 {restaurante.horarioFuncionamento}
+              {restaurante.horarioFuncionamento}
             </span>
           )}
         </div>
 
-        {/* BOTÃO */}
+        {/* =================================================
+            BOTÃO AZUL
+        ================================================= */}
 
         <button
           type="button"
@@ -375,6 +540,10 @@ export function RestauranteCard({
             onAbrir(restaurante)
           }
           className="
+            group/botao
+
+            relative
+
             mt-6
 
             flex
@@ -383,50 +552,166 @@ export function RestauranteCard({
             items-center
             justify-between
 
-            rounded-2xl
+            overflow-hidden
+
+            rounded-[18px]
 
             border
-            border-[#d4af37]/30
+            border-[#54baff]/80
 
             bg-gradient-to-r
-            from-[#1d1d1d]
-            via-[#292929]
-            to-[#1d1d1d]
+            from-[#0377d9]
+            via-[#0797ff]
+            to-[#036fcb]
 
             px-5
             py-4
 
-            text-sm
-            font-black
-
-            text-white
+            shadow-[0_10px_30px_rgba(0,140,255,0.26),inset_0_1px_0_rgba(255,255,255,0.35)]
 
             transition-all
             duration-300
 
-            hover:border-[#d4af37]
+            hover:-translate-y-1
 
-            hover:bg-[#d4af37]
+            hover:border-[#8fd2ff]
 
-            hover:text-[#f4cf4a]
+            hover:shadow-[0_14px_38px_rgba(0,150,255,0.38)]
           "
         >
-          <span>
-            🍽️ Ver pratos e cardápio
+          {/* BRILHO ANIMADO */}
+
+          <span
+            aria-hidden="true"
+            className="
+              pointer-events-none
+
+              absolute
+              -left-20
+              top-0
+
+              h-full
+              w-16
+
+              skew-x-[-20deg]
+
+              bg-white/15
+
+              blur-[4px]
+
+              transition-all
+              duration-700
+
+              group-hover/botao:left-[110%]
+            "
+          />
+
+          <span
+            className="
+              relative
+              z-10
+
+              flex
+
+              items-center
+
+              gap-3
+            "
+          >
+            <img
+              src={restauranteIcon}
+              alt=""
+              aria-hidden="true"
+              draggable={false}
+              className="
+                h-10
+                w-10
+
+                object-contain
+
+                drop-shadow-[0_5px_8px_rgba(0,0,0,0.45)]
+
+                transition-transform
+                duration-300
+
+                group-hover/botao:scale-110
+              "
+            />
+
+            <span
+              className="
+                text-[12px]
+                font-black
+
+                uppercase
+
+                tracking-[0.035em]
+
+                text-white
+
+                sm:text-[13px]
+              "
+              style={{
+                WebkitTextStroke:
+                  "0.7px rgba(0,0,0,0.95)",
+
+                textShadow:
+                  "0 2px 0 rgba(0,0,0,1), 0 4px 7px rgba(0,0,0,0.65)",
+              }}
+            >
+              Ver pratos e cardápio
+            </span>
           </span>
 
           <span
             className="
+              relative
+              z-10
+
+              ml-3
+
+              text-xl
+              font-black
+
+              text-white
+
+              drop-shadow-[0_2px_2px_rgba(0,0,0,0.9)]
+
               transition-transform
               duration-300
 
-              group-hover:translate-x-1
+              group-hover/botao:translate-x-1.5
             "
           >
             →
           </span>
         </button>
       </div>
+
+      {/* =====================================================
+          LINHA 3D INFERIOR
+      ====================================================== */}
+
+      <div
+        aria-hidden="true"
+        className="
+          pointer-events-none
+
+          absolute
+          bottom-0
+          left-[8%]
+          right-[8%]
+
+          h-px
+
+          bg-gradient-to-r
+          from-transparent
+          via-white/20
+          to-transparent
+        "
+      />
     </article>
   );
 }
+
+export default RestauranteCard;

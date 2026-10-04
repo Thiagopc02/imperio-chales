@@ -1,22 +1,72 @@
-import {
-  categorias,
-} from "./catalogoConstants";
+/* =========================================================
+   FILTROS DO CATÁLOGO
+========================================================= */
+
+import todosIcon from "./todos.png";
+import hamburguerIcon from "./hambúrguer.png";
+import pizzaIcon from "./pizza.png";
+import jantinhaIcon from "./jantinha.png";
+import almocoIcon from "./almoco.png";
+import gastroIcon from "./gastro.png";
+import sobremesaIcon from "./sobremesa.png";
+
+/* =========================================================
+   TIPOS
+========================================================= */
 
 interface FiltrosCatalogoProps {
   busca: string;
-
   categoria: string;
-
   quantidadeResultados: number;
 
-  onBuscaChange: (
-    valor: string
-  ) => void;
-
-  onCategoriaChange: (
-    categoria: string
-  ) => void;
+  onBuscaChange: (valor: string) => void;
+  onCategoriaChange: (categoria: string) => void;
 }
+
+/* =========================================================
+   CATEGORIAS
+========================================================= */
+
+const categorias = [
+  {
+    nome: "Todos",
+    imagem: todosIcon,
+  },
+
+  {
+    nome: "Hambúrgueres",
+    imagem: hamburguerIcon,
+  },
+
+  {
+    nome: "Pizzarias",
+    imagem: pizzaIcon,
+  },
+
+  {
+    nome: "Jantinhas e Espetinhos",
+    imagem: jantinhaIcon,
+  },
+
+  {
+    nome: "Almoço e Comida Caseira",
+    imagem: almocoIcon,
+  },
+
+  {
+    nome: "Gastronomia Especial",
+    imagem: gastroIcon,
+  },
+
+  {
+    nome: "Cafeterias e Sobremesas",
+    imagem: sobremesaIcon,
+  },
+];
+
+/* =========================================================
+   COMPONENTE
+========================================================= */
 
 export function FiltrosCatalogo({
   busca,
@@ -29,142 +79,296 @@ export function FiltrosCatalogo({
     <section
       id="categorias"
       className="
+        relative
         mb-14
-        scroll-mt-8
+        pt-10
+
+        sm:mb-16
+        sm:pt-14
+
+        lg:pt-16
       "
     >
-      {/* CABEÇALHO */}
+      {/* =====================================================
+          LUZ DE FUNDO
+      ====================================================== */}
 
-      <div>
-        <span
+      <div
+        aria-hidden="true"
+        className="
+          pointer-events-none
+          absolute
+          left-1/2
+          top-[35%]
+
+          h-[350px]
+          w-[80%]
+
+          -translate-x-1/2
+          -translate-y-1/2
+
+          rounded-full
+
+          bg-white/[0.018]
+
+          blur-[120px]
+        "
+      />
+
+      {/* =====================================================
+          CABEÇALHO
+      ====================================================== */}
+
+      <div
+        className="
+          relative
+          z-10
+
+          mx-auto
+
+          mb-8
+          max-w-4xl
+
+          text-center
+
+          sm:mb-10
+        "
+      >
+        {/* PEQUENO TEXTO */}
+
+        <p
           className="
-            text-[10px]
+            text-[9px]
             font-black
 
             uppercase
 
-            tracking-[0.3em]
+            tracking-[0.28em]
 
-            text-[#d4af37]
+            text-[#ffd447]
+
+            sm:text-[10px]
           "
+          style={{
+            textShadow:
+              "0 0 10px rgba(255,212,71,0.28)",
+          }}
         >
-          Escolha sua experiência
-        </span>
+          ESCOLHA SUA EXPERIÊNCIA
+        </p>
+
+        {/* TÍTULO */}
 
         <h2
           className="
             mt-3
 
-            text-3xl
+            text-[30px]
             font-black
+
+            uppercase
+
+            leading-[0.95]
+
+            tracking-[-0.045em]
 
             text-white
 
-            md:text-4xl
+            sm:text-[40px]
+
+            md:text-[48px]
+
+            lg:text-[54px]
           "
+          style={{
+            fontFamily:
+              "'Arial Black', 'Montserrat', 'Segoe UI', sans-serif",
+
+            textShadow:
+              "0 3px 0 rgba(0,0,0,1), 0 9px 24px rgba(0,0,0,0.55)",
+          }}
         >
-          O que vamos comer hoje?
+          ESCOLHA ONDE
+          <span
+            className="
+              ml-2
+              text-[#ffd447]
+            "
+            style={{
+              textShadow:
+                "0 0 8px rgba(255,212,71,0.5), 0 0 18px rgba(255,212,71,0.22)",
+            }}
+          >
+            VAI COMER
+          </span>
         </h2>
+
+        {/* SUBTÍTULO */}
 
         <p
           className="
-            mt-3
+            mx-auto
 
-            text-sm
+            mt-4
 
-            text-white/45
+            max-w-xl
 
-            sm:text-base
+            text-[12px]
+            leading-6
+
+            text-white/50
+
+            sm:text-sm
           "
         >
-          Escolha uma categoria ou encontre
-          seu restaurante preferido.
+          Escolha uma categoria ou encontre seu restaurante
+          preferido.
         </p>
       </div>
 
-      {/* BUSCA */}
+      {/* =====================================================
+          BUSCA
+      ====================================================== */}
 
       <div
         className="
           relative
+          z-10
 
-          mt-8
+          mx-auto
+          mb-7
+
+          w-full
         "
       >
         <div
           className="
-            pointer-events-none
+            group
+            relative
 
-            absolute
-            left-5
-            top-1/2
+            overflow-hidden
 
-            -translate-y-1/2
-
-            text-lg
-          "
-        >
-          🔎
-        </div>
-
-        <input
-          type="search"
-          value={busca}
-          onChange={(event) =>
-            onBuscaChange(
-              event.target.value
-            )
-          }
-          placeholder="Buscar restaurantes ou especialidades..."
-          className="
-            w-full
-
-            rounded-2xl
+            rounded-[20px]
 
             border
             border-white/15
 
             bg-gradient-to-r
-            from-[#242424]
-            via-[#171717]
-            to-[#0c0c0c]
-
-            py-5
-            pl-14
-            pr-6
-
-            text-sm
-
-            text-white
-
-            outline-none
-
-            placeholder:text-white/30
-
-            shadow-[0_12px_30px_rgba(0,0,0,0.30)]
+            from-[#252525]
+            via-[#141414]
+            to-[#080808]
 
             transition-all
             duration-300
 
-            focus:border-[#d4af37]/70
+            focus-within:border-[#ffd447]/60
 
-            focus:shadow-[0_0_30px_rgba(212,175,55,0.08)]
+            focus-within:shadow-[0_0_25px_rgba(255,212,71,0.10)]
           "
-        />
+        >
+          {/* BRILHO */}
+
+          <div
+            aria-hidden="true"
+            className="
+              pointer-events-none
+
+              absolute
+              left-0
+              top-1/2
+
+              h-20
+              w-20
+
+              -translate-y-1/2
+
+              rounded-full
+
+              bg-[#ffd447]/[0.05]
+
+              blur-[30px]
+            "
+          />
+
+          {/* ÍCONE PESQUISA */}
+
+          <div
+            className="
+              pointer-events-none
+
+              absolute
+              left-5
+              top-1/2
+
+              z-10
+
+              -translate-y-1/2
+
+              text-lg
+
+              sm:left-6
+              sm:text-xl
+            "
+          >
+            🔎
+          </div>
+
+          {/* INPUT */}
+
+          <input
+            type="search"
+            value={busca}
+            onChange={(evento) =>
+              onBuscaChange(evento.target.value)
+            }
+            placeholder="Buscar restaurantes ou especialidades..."
+            aria-label="Buscar restaurantes"
+            className="
+              relative
+              z-10
+
+              h-[58px]
+              w-full
+
+              bg-transparent
+
+              pl-14
+              pr-5
+
+              text-[12px]
+              font-medium
+
+              text-white
+
+              outline-none
+
+              placeholder:text-white/30
+
+              sm:h-[64px]
+              sm:pl-16
+              sm:text-sm
+            "
+          />
+        </div>
       </div>
 
-      {/* CATEGORIAS */}
+      {/* =====================================================
+          CARDS DAS CATEGORIAS
+      ====================================================== */}
 
       <div
         className="
-          mt-8
+          relative
+          z-10
 
           grid
+
           grid-cols-2
 
           gap-3
 
           sm:grid-cols-3
+          sm:gap-4
 
           lg:grid-cols-4
         "
@@ -178,18 +382,14 @@ export function FiltrosCatalogo({
               key={item.nome}
               type="button"
               onClick={() =>
-                onCategoriaChange(
-                  item.nome
-                )
+                onCategoriaChange(item.nome)
               }
-              aria-pressed={ativo}
               className={`
                 group
-
                 relative
 
                 flex
-                min-h-[125px]
+                min-h-[150px]
 
                 flex-col
 
@@ -198,124 +398,211 @@ export function FiltrosCatalogo({
 
                 overflow-hidden
 
-                rounded-[22px]
+                rounded-[24px]
 
                 border
 
-                p-4
+                px-3
+                py-5
 
                 text-center
-
-                shadow-[0_12px_30px_rgba(0,0,0,0.25)]
 
                 transition-all
                 duration-300
 
-                hover:-translate-y-1
+                sm:min-h-[170px]
 
                 ${
                   ativo
                     ? `
-                      border-[#d4af37]/70
+                      border-[#ffd447]/80
 
                       bg-gradient-to-br
-                      from-[#3a331c]
-                      via-[#1e1b12]
-                      to-[#090909]
-                    `
-                    : `
-                      border-white/10
-
-                      bg-gradient-to-br
-                      from-[#303030]
-                      via-[#171717]
+                      from-[#332b10]
+                      via-[#17140b]
                       to-[#080808]
 
+                      shadow-[0_0_28px_rgba(255,212,71,0.12)]
+                    `
+                    : `
+                      border-white/12
+
+                      bg-gradient-to-br
+                      from-[#292929]
+                      via-[#171717]
+                      to-[#090909]
+
+                      hover:-translate-y-1
+
                       hover:border-white/25
+
+                      hover:from-[#333333]
+                      hover:to-[#0b0b0b]
                     `
                 }
               `}
             >
-              <span
+              {/* BRILHO ATRÁS DO ÍCONE */}
+
+              <div
+                aria-hidden="true"
+                className={`
+                  pointer-events-none
+
+                  absolute
+                  left-1/2
+                  top-[42%]
+
+                  h-24
+                  w-24
+
+                  -translate-x-1/2
+                  -translate-y-1/2
+
+                  rounded-full
+
+                  blur-[35px]
+
+                  transition-all
+                  duration-300
+
+                  ${
+                    ativo
+                      ? "bg-[#ffd447]/15"
+                      : "bg-white/[0.025] group-hover:bg-white/[0.06]"
+                  }
+                `}
+              />
+
+              {/* ÍCONE 3D */}
+
+              <img
+                src={item.imagem}
+                alt=""
+                aria-hidden="true"
+                draggable={false}
                 className="
                   relative
                   z-10
 
-                  mb-3
+                  h-[78px]
+                  w-[78px]
 
-                  text-3xl
+                  object-contain
 
-                  transition-transform
+                  drop-shadow-[0_12px_16px_rgba(0,0,0,0.55)]
+
+                  transition-all
                   duration-300
 
+                  group-hover:-translate-y-1
                   group-hover:scale-110
+
+                  sm:h-[92px]
+                  sm:w-[92px]
+
+                  lg:h-[100px]
+                  lg:w-[100px]
                 "
-              >
-                {item.icone}
-              </span>
+              />
+
+              {/* NOME */}
 
               <span
                 className={`
                   relative
                   z-10
 
-                  text-sm
+                  mt-2
+
+                  text-[11px]
                   font-black
+
+                  uppercase
+
+                  leading-tight
+
+                  tracking-[-0.01em]
+
+                  sm:text-[12px]
 
                   ${
                     ativo
-                      ? "text-[#f0c93d]"
+                      ? "text-[#ffd447]"
                       : "text-white"
                   }
                 `}
+                style={{
+                  fontFamily:
+                    "'Arial Black', 'Montserrat', sans-serif",
+
+                  textShadow:
+                    "0 2px 4px rgba(0,0,0,0.85)",
+                }}
               >
                 {item.nome}
               </span>
 
-              {ativo && (
-                <div
-                  aria-hidden="true"
-                  className="
-                    pointer-events-none
+              {/* LINHA INFERIOR */}
 
-                    absolute
-                    inset-0
+              <div
+                aria-hidden="true"
+                className={`
+                  absolute
 
-                    bg-[#d4af37]/[0.035]
-                  "
-                />
-              )}
+                  bottom-0
+                  left-[15%]
+                  right-[15%]
+
+                  h-px
+
+                  bg-gradient-to-r
+
+                  from-transparent
+
+                  ${
+                    ativo
+                      ? "via-[#ffd447]/80"
+                      : "via-white/15"
+                  }
+
+                  to-transparent
+                `}
+              />
             </button>
           );
         })}
       </div>
 
-      {/* RESULTADOS */}
+      {/* =====================================================
+          RESULTADO
+      ====================================================== */}
 
       <div
         className="
+          relative
+          z-10
+
           mt-6
 
           flex
-          flex-wrap
+          flex-col
 
-          items-center
-          justify-between
+          gap-2
 
-          gap-3
-
-          text-sm
+          text-[11px]
 
           text-white/40
+
+          sm:flex-row
+          sm:items-center
+          sm:justify-between
+          sm:text-xs
         "
       >
         <p>
           Categoria:{" "}
-          <strong
-            className="
-              text-[#d4af37]
-            "
-          >
+          <strong className="text-[#ffd447]">
             {categoria}
           </strong>
         </p>
@@ -325,10 +612,12 @@ export function FiltrosCatalogo({
             {quantidadeResultados}
           </strong>{" "}
           {quantidadeResultados === 1
-            ? "restaurante disponível"
-            : "restaurantes disponíveis"}
+            ? "estabelecimento disponível"
+            : "estabelecimentos disponíveis"}
         </p>
       </div>
     </section>
   );
 }
+
+export default FiltrosCatalogo;

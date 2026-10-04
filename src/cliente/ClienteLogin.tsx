@@ -1,5 +1,9 @@
+import {
+  useEffect,
+  useState,
+  type FormEvent,
+} from "react";
 
-import { useEffect, useState, type FormEvent } from "react";
 import {
   Link,
   useLocation,
@@ -18,11 +22,17 @@ import {
   getDoc,
 } from "firebase/firestore";
 
-import { auth, db } from "../firebase/config";
+import {
+  auth,
+  db,
+} from "../firebase/config";
 
-// ======================================================
-// TIPOS
-// ======================================================
+import coroaIcon from "../../public/coroa.png";
+import perfilIcon from "../components/catalogo/perfil.png";
+
+/* =========================================================
+   TIPOS
+========================================================= */
 
 type PerfilCliente = {
   uid: string;
@@ -31,11 +41,13 @@ type PerfilCliente = {
   tipo: "cliente";
 };
 
-// ======================================================
-// TRATAMENTO DE ERROS
-// ======================================================
+/* =========================================================
+   TRATAMENTO DE ERROS
+========================================================= */
 
-function codigoErro(erro: unknown): string {
+function codigoErro(
+  erro: unknown
+): string {
   if (
     erro !== null &&
     typeof erro === "object" &&
@@ -48,7 +60,9 @@ function codigoErro(erro: unknown): string {
   return "";
 }
 
-function mensagemErroLogin(erro: unknown): string {
+function mensagemErroLogin(
+  erro: unknown
+): string {
   switch (codigoErro(erro)) {
     case "auth/invalid-email":
       return "Informe um e-mail válido.";
@@ -59,7 +73,7 @@ function mensagemErroLogin(erro: unknown): string {
       return "E-mail ou senha incorretos.";
 
     case "auth/user-disabled":
-      return "Esta conta está desativada. Entre em contato com o atendimento.";
+      return "Esta conta está desativada.";
 
     case "auth/too-many-requests":
       return "Muitas tentativas de acesso. Aguarde alguns minutos.";
@@ -69,16 +83,16 @@ function mensagemErroLogin(erro: unknown): string {
 
     case "permission-denied":
     case "firestore/permission-denied":
-      return "Não foi possível verificar seu perfil. Confira as permissões do Firebase.";
+      return "Não foi possível verificar seu perfil.";
 
     default:
       return "Não foi possível entrar na sua conta. Tente novamente.";
   }
 }
 
-// ======================================================
-// CONSULTAR PERFIL PRIVADO DO CLIENTE
-// ======================================================
+/* =========================================================
+   CONSULTAR PERFIL DO CLIENTE
+========================================================= */
 
 async function buscarPerfilCliente(
   usuario: User
@@ -89,191 +103,229 @@ async function buscarPerfilCliente(
     usuario.uid
   );
 
-  const resultado = await getDoc(referencia);
+  const resultado =
+    await getDoc(referencia);
 
   if (!resultado.exists()) {
     return null;
   }
 
-  const dados = resultado.data();
-
-  // Confirma o vínculo entre o documento e
-  // o usuário autenticado.
+  const dados =
+    resultado.data();
 
   if (
     dados.uid !== usuario.uid ||
     dados.tipo !== "cliente" ||
-    typeof dados.nomeCompleto !== "string" ||
-    typeof dados.email !== "string"
+    typeof dados.nomeCompleto !==
+      "string" ||
+    typeof dados.email !==
+      "string"
   ) {
     return null;
   }
 
   return {
     uid: usuario.uid,
-    nomeCompleto: dados.nomeCompleto,
+
+    nomeCompleto:
+      dados.nomeCompleto,
+
     email: dados.email,
+
     tipo: "cliente",
   };
 }
 
-// ======================================================
-// DESTINO SEGURO APÓS LOGIN
-// ======================================================
-
-// Aceita somente caminhos internos conhecidos.
-//
-// Evita redirecionamentos externos ou para áreas
-// administrativas após o login do cliente.
+/* =========================================================
+   DESTINO APÓS LOGIN
+========================================================= */
 
 function destinoPermitido(
   valor: unknown
 ): string {
-  if (typeof valor !== "string") {
+  if (
+    typeof valor !== "string"
+  ) {
     return "/cliente/perfil";
   }
 
   const permitido =
     valor === "/cardapio" ||
-    valor === "/cliente/perfil" ||
-    valor.startsWith("/cardapio?");
+    valor ===
+      "/cliente/perfil" ||
+    valor.startsWith(
+      "/cardapio?"
+    );
 
   return permitido
     ? valor
     : "/cliente/perfil";
 }
 
-// ======================================================
-// COMPONENTE PRINCIPAL
-// ======================================================
+/* =========================================================
+   COMPONENTE
+========================================================= */
 
 export function ClienteLogin() {
-  const navigate = useNavigate();
+  const navigate =
+    useNavigate();
 
-  const location = useLocation();
+  const location =
+    useLocation();
 
-  // ====================================================
-  // CAMPOS
-  // ====================================================
+  /* =======================================================
+     CAMPOS
+  ======================================================= */
 
-  const [email, setEmail] = useState("");
+  const [
+    email,
+    setEmail,
+  ] = useState("");
 
-  const [senha, setSenha] = useState("");
+  const [
+    senha,
+    setSenha,
+  ] = useState("");
 
-  // ====================================================
-  // INTERFACE
-  // ====================================================
+  /* =======================================================
+     INTERFACE
+  ======================================================= */
 
-  const [mostrarSenha, setMostrarSenha] =
-    useState(false);
+  const [
+    mostrarSenha,
+    setMostrarSenha,
+  ] = useState(false);
 
-  const [carregando, setCarregando] =
-    useState(false);
+  const [
+    carregando,
+    setCarregando,
+  ] = useState(false);
 
-  const [verificandoSessao, setVerificandoSessao] =
-    useState(true);
+  const [
+    verificandoSessao,
+    setVerificandoSessao,
+  ] = useState(true);
 
-  const [erro, setErro] = useState("");
+  const [
+    erro,
+    setErro,
+  ] = useState("");
 
-  const [aviso, setAviso] = useState("");
+  const [
+    aviso,
+    setAviso,
+  ] = useState("");
 
   const [
     recuperacaoAberta,
     setRecuperacaoAberta,
   ] = useState(false);
 
-  // ====================================================
-  // DESTINO APÓS O LOGIN
-  // ====================================================
+  /* =======================================================
+     DESTINO
+  ======================================================= */
 
-  const estadoNavegacao = location.state as
-    | {
-        from?: string;
-      }
-    | null;
+  const estadoNavegacao =
+    location.state as
+      | {
+          from?: string;
+        }
+      | null;
 
-  const destino = destinoPermitido(
-    estadoNavegacao?.from
-  );
+  const destino =
+    destinoPermitido(
+      estadoNavegacao?.from
+    );
 
-  // ====================================================
-  // VERIFICAR SESSÃO ATUAL
-  // ====================================================
+  /* =======================================================
+     VERIFICAR SESSÃO
+  ======================================================= */
 
   useEffect(() => {
     let ativo = true;
 
-    const cancelar = onAuthStateChanged(
-      auth,
+    const cancelar =
+      onAuthStateChanged(
+        auth,
 
-      async (usuario) => {
-        if (!ativo) {
-          return;
-        }
-
-        if (!usuario) {
-          setVerificandoSessao(false);
-          return;
-        }
-
-        try {
-          const perfil =
-            await buscarPerfilCliente(usuario);
-
+        async (
+          usuario
+        ) => {
           if (!ativo) {
             return;
           }
 
-          if (perfil) {
-            navigate(destino, {
-              replace: true,
-            });
+          if (!usuario) {
+            setVerificandoSessao(
+              false
+            );
 
             return;
           }
 
-          // Existe uma sessão Firebase, mas não
-          // encontramos um perfil de cliente.
-          //
-          // Não desconectamos automaticamente,
-          // pois pode ser uma sessão legítima
-          // da administração ou do parceiro.
+          try {
+            const perfil =
+              await buscarPerfilCliente(
+                usuario
+              );
 
-          setAviso(
-            "Há uma sessão de outra área do sistema neste navegador. Para entrar como cliente, utilize uma janela separada ou saia da conta atual."
-          );
+            if (!ativo) {
+              return;
+            }
 
-        } catch (erroSessao) {
-          if (!ativo) {
-            return;
-          }
+            if (perfil) {
+              navigate(
+                destino,
+                {
+                  replace:
+                    true,
+                }
+              );
 
-          console.error(
-            "Erro ao verificar sessão:",
+              return;
+            }
+
+            setAviso(
+              "Já existe outra sessão ativa neste navegador."
+            );
+          } catch (
             erroSessao
-          );
+          ) {
+            if (!ativo) {
+              return;
+            }
 
-          setErro(
-            "Não foi possível verificar sua sessão. Tente novamente."
-          );
+            console.error(
+              "Erro ao verificar sessão:",
+              erroSessao
+            );
 
-        } finally {
-          if (ativo) {
-            setVerificandoSessao(false);
+            setErro(
+              "Não foi possível verificar sua sessão."
+            );
+          } finally {
+            if (ativo) {
+              setVerificandoSessao(
+                false
+              );
+            }
           }
         }
-      }
-    );
+      );
 
     return () => {
       ativo = false;
+
       cancelar();
     };
-  }, [navigate, destino]);
+  }, [
+    navigate,
+    destino,
+  ]);
 
-  // ====================================================
-  // REALIZAR LOGIN
-  // ====================================================
+  /* =======================================================
+     LOGIN
+  ======================================================= */
 
   async function entrar(
     evento: FormEvent<HTMLFormElement>
@@ -288,9 +340,14 @@ export function ClienteLogin() {
     setAviso("");
 
     const emailLimpo =
-      email.trim().toLowerCase();
+      email
+        .trim()
+        .toLowerCase();
 
-    if (!emailLimpo || !senha) {
+    if (
+      !emailLimpo ||
+      !senha
+    ) {
       setErro(
         "Informe seu e-mail e sua senha."
       );
@@ -301,10 +358,6 @@ export function ClienteLogin() {
     setCarregando(true);
 
     try {
-      // ------------------------------------------------
-      // 1. AUTENTICAR NO FIREBASE
-      // ------------------------------------------------
-
       const credencial =
         await signInWithEmailAndPassword(
           auth,
@@ -312,57 +365,46 @@ export function ClienteLogin() {
           senha
         );
 
-      // ------------------------------------------------
-      // 2. VERIFICAR PERFIL DO CLIENTE
-      // ------------------------------------------------
-
       const perfil =
         await buscarPerfilCliente(
           credencial.user
         );
 
       if (!perfil) {
-        // Pode ser:
-        //
-        // - conta administrativa;
-        // - conta de restaurante;
-        // - cadastro de cliente incompleto.
-        //
-        // Não apagamos nem modificamos a conta.
-
         setErro(
-          "Esta conta não possui um perfil de cliente concluído. Se você acabou de se cadastrar, seu perfil pode estar pendente. Entre em contato com o atendimento."
+          "Esta conta não possui perfil de cliente."
         );
 
         return;
       }
 
-      // ------------------------------------------------
-      // 3. LOGIN CONCLUÍDO
-      // ------------------------------------------------
-
-      navigate(destino, {
-        replace: true,
-      });
-
-    } catch (erroLogin) {
+      navigate(
+        destino,
+        {
+          replace: true,
+        }
+      );
+    } catch (
+      erroLogin
+    ) {
       console.error(
         "Erro no login do cliente:",
         erroLogin
       );
 
       setErro(
-        mensagemErroLogin(erroLogin)
+        mensagemErroLogin(
+          erroLogin
+        )
       );
-
     } finally {
       setCarregando(false);
     }
   }
 
-  // ====================================================
-  // RECUPERAÇÃO DE SENHA
-  // ====================================================
+  /* =======================================================
+     RECUPERAR SENHA
+  ======================================================= */
 
   async function recuperarSenha(
     evento: FormEvent<HTMLFormElement>
@@ -377,11 +419,13 @@ export function ClienteLogin() {
     setAviso("");
 
     const emailLimpo =
-      email.trim().toLowerCase();
+      email
+        .trim()
+        .toLowerCase();
 
     if (!emailLimpo) {
       setErro(
-        "Informe seu e-mail para recuperar a senha."
+        "Informe seu e-mail."
       );
 
       return;
@@ -395,337 +439,869 @@ export function ClienteLogin() {
         emailLimpo
       );
 
-      // Mensagem genérica para não informar
-      // se o e-mail possui conta no sistema.
-
       setAviso(
-        "Se este e-mail estiver cadastrado, você receberá instruções para redefinir sua senha. Confira também a caixa de spam."
+        "Se o e-mail estiver cadastrado, enviaremos as instruções de recuperação."
       );
 
-      setRecuperacaoAberta(false);
-
-    } catch (erroRecuperacao) {
+      setRecuperacaoAberta(
+        false
+      );
+    } catch (
+      erroRecuperacao
+    ) {
       console.error(
         "Erro ao solicitar recuperação:",
         erroRecuperacao
       );
 
-      // Mantém mensagem genérica na recuperação,
-      // sem revelar existência de contas.
-
       setAviso(
-        "Se este e-mail estiver cadastrado, você receberá instruções para redefinir sua senha. Confira também a caixa de spam."
+        "Se o e-mail estiver cadastrado, enviaremos as instruções de recuperação."
       );
 
-      setRecuperacaoAberta(false);
-
+      setRecuperacaoAberta(
+        false
+      );
     } finally {
       setCarregando(false);
     }
   }
 
-  // ====================================================
-  // CARREGANDO SESSÃO
-  // ====================================================
+  /* =======================================================
+     CARREGAMENTO
+  ======================================================= */
 
-  if (verificandoSessao) {
+  if (
+    verificandoSessao
+  ) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#f8f6ef] px-4">
+      <main
+        className="
+          flex
+          min-h-screen
+          items-center
+          justify-center
+          bg-black
+          px-4
+          text-white
+        "
+      >
+        <div
+          className="
+            flex
+            flex-col
+            items-center
+            rounded-[28px]
+            border
+            border-white/10
+            bg-gradient-to-br
+            from-[#202020]
+            via-[#101010]
+            to-black
+            px-8
+            py-10
+            text-center
+            shadow-[0_25px_70px_rgba(0,0,0,0.60)]
+          "
+        >
+          <div
+            className="
+              h-10
+              w-10
+              animate-spin
+              rounded-full
+              border-4
+              border-white/10
+              border-t-[#18ff72]
+            "
+          />
 
-        <div className="rounded-2xl bg-white p-8 text-center text-[#19352b] shadow-md">
-
-          <p className="text-lg font-black">
-            ⏳ Verificando sua conta...
+          <p
+            className="
+              mt-5
+              text-sm
+              font-black
+              uppercase
+              tracking-[0.12em]
+              text-white
+            "
+          >
+            Verificando conta
           </p>
-
-          <p className="mt-3 text-sm text-gray-500">
-            Aguarde um instante.
-          </p>
-
         </div>
-
       </main>
     );
   }
 
-  // ====================================================
-  // INTERFACE PRINCIPAL
-  // ====================================================
+  /* =======================================================
+     INTERFACE PRINCIPAL
+  ======================================================= */
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#f8f6ef] px-4 py-10 text-[#19352b]">
+    <main
+      className="
+        relative
+        flex
+        min-h-screen
+        items-center
+        justify-center
+        overflow-hidden
+        bg-black
+        px-4
+        py-10
+        text-white
 
-      <div className="w-full max-w-md">
+        sm:px-6
+        sm:py-14
+      "
+    >
+      {/* LUZES */}
 
-        {/* =========================================== */}
-        {/* LOGOMARCA                                  */}
-        {/* =========================================== */}
+      <div
+        aria-hidden="true"
+        className="
+          pointer-events-none
+          absolute
+          left-1/2
+          top-1/2
+          h-[500px]
+          w-[500px]
+          -translate-x-1/2
+          -translate-y-1/2
+          rounded-full
+          bg-[#18ff72]/[0.06]
+          blur-[160px]
+        "
+      />
 
-        <div className="mb-7 text-center">
+      <div
+        aria-hidden="true"
+        className="
+          pointer-events-none
+          absolute
+          -bottom-40
+          -right-40
+          h-[420px]
+          w-[420px]
+          rounded-full
+          bg-white/[0.035]
+          blur-[140px]
+        "
+      />
 
-          <Link to="/cardapio">
-            <img
-              src="/logo-imperio.png"
-              alt="Império Chalés"
-              className="mx-auto h-20 w-20 object-contain"
-            />
-          </Link>
+      <div
+        className="
+          relative
+          z-10
+          w-full
+          max-w-[500px]
+        "
+      >
+        {/* CARD */}
 
-          <p className="mt-4 text-xs font-black uppercase tracking-[0.25em] text-amber-700">
-            SABORES DA CHAPADA
-          </p>
+        <section
+          className="
+            relative
+            overflow-hidden
+            rounded-[32px]
+            border
+            border-white/10
+            bg-gradient-to-br
+            from-[#242424]
+            via-[#111111]
+            to-[#020202]
+            px-5
+            py-7
+            shadow-[0_30px_90px_rgba(0,0,0,0.75)]
 
-          <h1 className="mt-3 text-3xl font-black">
-            {recuperacaoAberta
-              ? "Recuperar minha senha"
-              : "Entrar na minha conta"}
-          </h1>
+            sm:px-8
+            sm:py-9
+          "
+        >
+          <div
+            aria-hidden="true"
+            className="
+              pointer-events-none
+              absolute
+              left-1/2
+              top-0
+              h-60
+              w-60
+              -translate-x-1/2
+              -translate-y-1/2
+              rounded-full
+              bg-[#18ff72]/10
+              blur-[90px]
+            "
+          />
 
-          <p className="mt-3 text-sm leading-6 text-gray-600">
-            {recuperacaoAberta
-              ? "Informe seu e-mail para receber as instruções de recuperação."
-              : "Acesse sua conta para continuar suas consultas e utilizar o cardápio."}
-          </p>
+          <div
+            className="
+              relative
+              z-10
+            "
+          >
+            {/* COROA */}
 
-        </div>
-
-        {/* =========================================== */}
-        {/* FORMULÁRIO                                 */}
-        {/* =========================================== */}
-
-        <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-xl sm:p-8">
-
-          {/* ERROS */}
-
-          {erro && (
-
-            <div
-              role="alert"
-              className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-semibold leading-6 text-red-800"
+            <Link
+              to="/cardapio"
+              className="
+                mx-auto
+                flex
+                w-fit
+                items-center
+                justify-center
+              "
             >
-              ⚠️ {erro}
-            </div>
+              <img
+                src={coroaIcon}
+                alt="Império Chalés"
+                draggable={false}
+                className="
+                  h-[72px]
+                  w-[120px]
+                  object-contain
+                  drop-shadow-[0_0_18px_rgba(255,255,255,0.16)]
 
-          )}
-
-          {/* AVISOS */}
-
-          {aviso && (
-
-            <div
-              role="status"
-              className="mb-6 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm leading-6 text-blue-900"
-            >
-              ℹ️ {aviso}
-            </div>
-
-          )}
-
-          {/* ========================================= */}
-          {/* RECUPERAÇÃO DE SENHA                      */}
-          {/* ========================================= */}
-
-          {recuperacaoAberta ? (
-
-            <form onSubmit={recuperarSenha}>
-
-              <label
-                htmlFor="recuperarEmail"
-                className="block text-sm font-bold"
-              >
-                E-mail cadastrado *
-              </label>
-
-              <input
-                id="recuperarEmail"
-                type="email"
-                autoComplete="email"
-                required
-                maxLength={150}
-                value={email}
-                onChange={(evento) =>
-                  setEmail(evento.target.value)
-                }
-                placeholder="seuemail@exemplo.com"
-                disabled={carregando}
-                className="mt-2 w-full rounded-xl border border-gray-200 p-4 text-sm outline-none focus:border-amber-400 disabled:bg-gray-100"
+                  sm:h-[82px]
+                  sm:w-[140px]
+                "
               />
+            </Link>
 
-              <button
-                type="submit"
-                disabled={carregando}
-                className="mt-6 w-full rounded-xl bg-[#19352b] px-6 py-4 text-sm font-black text-white transition hover:bg-[#28533e] disabled:opacity-50"
+            {/* PERFIL */}
+
+            <div
+              className="
+                mx-auto
+                mt-3
+                flex
+                h-[96px]
+                w-[96px]
+                items-center
+                justify-center
+                rounded-[26px]
+                border
+                border-white/10
+                bg-gradient-to-br
+                from-[#333333]
+                via-[#171717]
+                to-black
+                shadow-[0_18px_40px_rgba(0,0,0,0.50)]
+
+                sm:h-[110px]
+                sm:w-[110px]
+              "
+            >
+              <img
+                src={perfilIcon}
+                alt="Login cliente"
+                draggable={false}
+                className="
+                  h-[78px]
+                  w-[78px]
+                  object-contain
+                  drop-shadow-[0_10px_24px_rgba(123,54,255,0.40)]
+
+                  sm:h-[90px]
+                  sm:w-[90px]
+                "
+              />
+            </div>
+
+            {/* TÍTULO */}
+
+            <h1
+              className="
+                mt-5
+                text-center
+                text-[34px]
+                font-black
+                uppercase
+                leading-none
+                tracking-[-0.04em]
+                text-[#18ff72]
+
+                sm:text-[42px]
+                md:text-[48px]
+              "
+              style={{
+                fontFamily:
+                  "'Arial Black', 'Montserrat', sans-serif",
+
+                textShadow:
+                  "0 0 12px rgba(24,255,114,0.35), 0 3px 0 rgba(0,0,0,1)",
+              }}
+            >
+              {recuperacaoAberta
+                ? "RECUPERAR SENHA"
+                : "LOGIN CLIENTE"}
+            </h1>
+
+            {/* ERRO */}
+
+            {erro && (
+              <div
+                role="alert"
+                className="
+                  mt-6
+                  rounded-2xl
+                  border
+                  border-red-400/30
+                  bg-red-500/[0.08]
+                  px-4
+                  py-3
+                  text-center
+                  text-xs
+                  font-bold
+                  leading-5
+                  text-red-300
+                "
               >
-                {carregando
-                  ? "Enviando..."
-                  : "Enviar recuperação →"}
-              </button>
+                ⚠️{" "}
+                {erro}
+              </div>
+            )}
 
-              <button
-                type="button"
-                onClick={() => {
-                  setRecuperacaoAberta(false);
-                  setErro("");
-                  setAviso("");
-                }}
-                disabled={carregando}
-                className="mt-4 w-full rounded-xl border border-gray-200 px-5 py-3 text-sm font-bold"
+            {/* AVISO */}
+
+            {aviso && (
+              <div
+                role="status"
+                className="
+                  mt-6
+                  rounded-2xl
+                  border
+                  border-[#18ff72]/20
+                  bg-[#18ff72]/[0.06]
+                  px-4
+                  py-3
+                  text-center
+                  text-xs
+                  font-bold
+                  leading-5
+                  text-[#8dffb9]
+                "
               >
-                ← Voltar ao login
-              </button>
+                {aviso}
+              </div>
+            )}
 
-            </form>
+            {/* RECUPERAÇÃO */}
 
-          ) : (
-
-            /* ======================================= */
-            /* LOGIN                                  */
-            /* ======================================= */
-
-            <form onSubmit={entrar}>
-
-              {/* E-MAIL */}
-
-              <div>
-
+            {recuperacaoAberta ? (
+              <form
+                onSubmit={
+                  recuperarSenha
+                }
+                className="
+                  mt-8
+                "
+              >
                 <label
-                  htmlFor="clienteEmailLogin"
-                  className="block text-sm font-bold"
+                  htmlFor="recuperarEmail"
+                  className="
+                    block
+                    text-[14px]
+                    font-black
+                    uppercase
+                    tracking-[0.10em]
+                    text-white
+
+                    sm:text-[15px]
+                  "
                 >
-                  E-mail *
+                  EMAIL
                 </label>
 
                 <input
-                  id="clienteEmailLogin"
+                  id="recuperarEmail"
                   type="email"
                   autoComplete="email"
                   required
                   maxLength={150}
                   value={email}
-                  onChange={(evento) =>
-                    setEmail(evento.target.value)
+                  onChange={(
+                    evento
+                  ) =>
+                    setEmail(
+                      evento.target
+                        .value
+                    )
                   }
-                  placeholder="seuemail@exemplo.com"
-                  disabled={carregando}
-                  className="mt-2 w-full rounded-xl border border-gray-200 p-4 text-sm outline-none focus:border-amber-400 disabled:bg-gray-100"
+                  placeholder="SEUEMAIL@EXEMPLO.COM"
+                  disabled={
+                    carregando
+                  }
+                  className="
+                    mt-3
+                    w-full
+                    rounded-2xl
+                    border
+                    border-white/10
+                    bg-[#0b0b0b]
+                    px-5
+                    py-4
+                    text-sm
+                    font-bold
+                    text-white
+                    outline-none
+                    transition-all
+                    placeholder:text-white/20
+                    focus:border-[#18ff72]
+                    focus:shadow-[0_0_20px_rgba(24,255,114,0.12)]
+                    disabled:opacity-50
+                  "
                 />
 
-              </div>
-
-              {/* SENHA */}
-
-              <div className="mt-5">
-
-                <label
-                  htmlFor="clienteSenhaLogin"
-                  className="block text-sm font-bold"
+                <button
+                  type="submit"
+                  disabled={
+                    carregando
+                  }
+                  className="
+                    mt-6
+                    w-full
+                    rounded-2xl
+                    border
+                    border-[#18ff72]
+                    bg-[#18e96d]
+                    px-6
+                    py-4
+                    text-sm
+                    font-black
+                    uppercase
+                    tracking-[0.06em]
+                    text-black
+                    shadow-[0_0_28px_rgba(24,255,114,0.20)]
+                    transition-all
+                    duration-300
+                    hover:-translate-y-1
+                    hover:bg-[#25ff7d]
+                    hover:shadow-[0_0_38px_rgba(24,255,114,0.32)]
+                    disabled:opacity-50
+                  "
                 >
-                  Senha *
-                </label>
-
-                <div className="relative mt-2">
-
-                  <input
-                    id="clienteSenhaLogin"
-                    type={
-                      mostrarSenha
-                        ? "text"
-                        : "password"
-                    }
-                    autoComplete="current-password"
-                    required
-                    value={senha}
-                    onChange={(evento) =>
-                      setSenha(evento.target.value)
-                    }
-                    placeholder="Digite sua senha"
-                    disabled={carregando}
-                    className="w-full rounded-xl border border-gray-200 p-4 pr-20 text-sm outline-none focus:border-amber-400 disabled:bg-gray-100"
-                  />
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setMostrarSenha(
-                        (anterior) => !anterior
-                      )
-                    }
-                    disabled={carregando}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg px-2 py-1 text-xs font-black"
-                  >
-                    {mostrarSenha
-                      ? "Ocultar"
-                      : "Mostrar"}
-                  </button>
-
-                </div>
-
-              </div>
-
-              {/* RECUPERAR SENHA */}
-
-              <div className="mt-3 text-right">
+                  {carregando
+                    ? "ENVIANDO..."
+                    : "ENVIAR RECUPERAÇÃO →"}
+                </button>
 
                 <button
                   type="button"
                   onClick={() => {
-                    setRecuperacaoAberta(true);
+                    setRecuperacaoAberta(
+                      false
+                    );
+
                     setErro("");
                     setAviso("");
                   }}
-                  className="text-xs font-black text-amber-800 underline underline-offset-4"
+                  disabled={
+                    carregando
+                  }
+                  className="
+                    mt-4
+                    w-full
+                    rounded-2xl
+                    border
+                    border-white/10
+                    bg-white/[0.04]
+                    px-5
+                    py-4
+                    text-[13px]
+                    font-black
+                    uppercase
+                    tracking-[0.07em]
+                    text-white
+                    transition-all
+                    hover:border-white/30
+                    hover:bg-white/[0.08]
+                  "
                 >
-                  Esqueci minha senha
+                  ← VOLTAR AO LOGIN
+                </button>
+              </form>
+            ) : (
+              <form
+                onSubmit={
+                  entrar
+                }
+                className="
+                  mt-8
+                "
+              >
+                {/* EMAIL */}
+
+                <div>
+                  <label
+                    htmlFor="clienteEmailLogin"
+                    className="
+                      block
+                      text-[15px]
+                      font-black
+                      uppercase
+                      tracking-[0.12em]
+                      text-white
+
+                      sm:text-[16px]
+                    "
+                  >
+                    EMAIL
+                  </label>
+
+                  <input
+                    id="clienteEmailLogin"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    maxLength={150}
+                    value={email}
+                    onChange={(
+                      evento
+                    ) =>
+                      setEmail(
+                        evento
+                          .target
+                          .value
+                      )
+                    }
+                    placeholder="SEUEMAIL@EXEMPLO.COM"
+                    disabled={
+                      carregando
+                    }
+                    className="
+                      mt-3
+                      w-full
+                      rounded-2xl
+                      border
+                      border-white/10
+                      bg-[#0b0b0b]
+                      px-5
+                      py-4
+                      text-sm
+                      font-bold
+                      text-white
+                      outline-none
+                      transition-all
+                      placeholder:text-white/20
+                      focus:border-[#18ff72]
+                      focus:shadow-[0_0_20px_rgba(24,255,114,0.12)]
+                      disabled:opacity-50
+                    "
+                  />
+                </div>
+
+                {/* SENHA */}
+
+                <div
+                  className="
+                    mt-6
+                  "
+                >
+                  <label
+                    htmlFor="clienteSenhaLogin"
+                    className="
+                      block
+                      text-[15px]
+                      font-black
+                      uppercase
+                      tracking-[0.12em]
+                      text-white
+
+                      sm:text-[16px]
+                    "
+                  >
+                    SENHA
+                  </label>
+
+                  <div
+                    className="
+                      relative
+                      mt-3
+                    "
+                  >
+                    <input
+                      id="clienteSenhaLogin"
+                      type={
+                        mostrarSenha
+                          ? "text"
+                          : "password"
+                      }
+                      autoComplete="current-password"
+                      required
+                      value={senha}
+                      onChange={(
+                        evento
+                      ) =>
+                        setSenha(
+                          evento
+                            .target
+                            .value
+                        )
+                      }
+                      placeholder="DIGITE SUA SENHA"
+                      disabled={
+                        carregando
+                      }
+                      className="
+                        w-full
+                        rounded-2xl
+                        border
+                        border-white/10
+                        bg-[#0b0b0b]
+                        px-5
+                        py-4
+                        pr-24
+                        text-sm
+                        font-bold
+                        text-white
+                        outline-none
+                        transition-all
+                        placeholder:text-white/20
+                        focus:border-[#18ff72]
+                        focus:shadow-[0_0_20px_rgba(24,255,114,0.12)]
+                        disabled:opacity-50
+                      "
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setMostrarSenha(
+                          (
+                            anterior
+                          ) =>
+                            !anterior
+                        )
+                      }
+                      disabled={
+                        carregando
+                      }
+                      className="
+                        absolute
+                        right-3
+                        top-1/2
+                        -translate-y-1/2
+                        rounded-xl
+                        border
+                        border-white/10
+                        bg-white/[0.05]
+                        px-3
+                        py-2
+                        text-[9px]
+                        font-black
+                        uppercase
+                        text-white/65
+                        transition-colors
+                        hover:text-white
+                      "
+                    >
+                      {mostrarSenha
+                        ? "OCULTAR"
+                        : "MOSTRAR"}
+                    </button>
+                  </div>
+                </div>
+
+                {/* ESQUECI SENHA */}
+
+                <div
+                  className="
+                    mt-5
+                    text-right
+                  "
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRecuperacaoAberta(
+                        true
+                      );
+
+                      setErro("");
+                      setAviso("");
+                    }}
+                    className="
+                      inline-flex
+                      items-center
+                      justify-end
+                      gap-2
+                      text-[12px]
+                      font-black
+                      uppercase
+                      tracking-[0.06em]
+                      text-red-500
+                      transition-all
+                      duration-300
+                      hover:text-red-400
+                      hover:drop-shadow-[0_0_8px_rgba(239,68,68,0.50)]
+
+                      sm:text-[13px]
+                    "
+                  >
+                    <span
+                      className="
+                        text-[16px]
+                      "
+                    >
+                      ⚠️
+                    </span>
+
+                    <span>
+                      ESQUECI MINHA SENHA
+                    </span>
+                  </button>
+                </div>
+
+                {/* BOTÃO LOGIN */}
+
+                <button
+                  type="submit"
+                  disabled={
+                    carregando
+                  }
+                  className="
+                    group
+                    mt-7
+                    flex
+                    w-full
+                    items-center
+                    justify-center
+                    gap-3
+                    rounded-2xl
+                    border
+                    border-[#18ff72]
+                    bg-[#18e96d]
+                    px-6
+                    py-4
+                    text-[14px]
+                    font-black
+                    uppercase
+                    tracking-[0.07em]
+                    text-black
+                    shadow-[0_0_28px_rgba(24,255,114,0.20)]
+                    transition-all
+                    duration-300
+                    hover:-translate-y-1
+                    hover:bg-[#25ff7d]
+                    hover:shadow-[0_0_40px_rgba(24,255,114,0.34)]
+                    disabled:opacity-50
+                  "
+                >
+                  <img
+                    src={
+                      perfilIcon
+                    }
+                    alt=""
+                    aria-hidden="true"
+                    draggable={
+                      false
+                    }
+                    className="
+                      h-9
+                      w-9
+                      object-contain
+                      drop-shadow-[0_6px_12px_rgba(0,0,0,0.30)]
+                      transition-transform
+                      group-hover:scale-110
+                    "
+                  />
+
+                  <span>
+                    {carregando
+                      ? "ENTRANDO..."
+                      : "ENTRAR"}
+                  </span>
+
+                  {!carregando && (
+                    <span
+                      className="
+                        transition-transform
+                        group-hover:translate-x-1
+                      "
+                    >
+                      →
+                    </span>
+                  )}
                 </button>
 
-              </div>
+                {/* CRIAR CONTA */}
 
-              {/* ENTRAR */}
-
-              <button
-                type="submit"
-                disabled={carregando}
-                className="mt-7 w-full rounded-xl bg-[#19352b] px-6 py-4 text-sm font-black text-white transition hover:bg-[#28533e] disabled:opacity-50"
-              >
-                {carregando
-                  ? "Entrando..."
-                  : "Entrar na minha conta →"}
-              </button>
-
-              {/* CADASTRO */}
-
-              <div className="mt-7 border-t border-gray-100 pt-6 text-center">
-
-                <p className="text-sm text-gray-600">
-                  É sua primeira vez aqui?
-                </p>
-
-                <Link
-                  to="/cliente/cadastro"
-                  className="mt-3 inline-block text-sm font-black underline underline-offset-4"
+                <div
+                  className="
+                    mt-7
+                    border-t
+                    border-white/[0.09]
+                    pt-6
+                    text-center
+                  "
                 >
-                  Criar minha conta
-                </Link>
+                  <Link
+                    to="/cliente/cadastro"
+                    className="
+                      inline-flex
+                      items-center
+                      justify-center
+                      gap-2
+                      text-[13px]
+                      font-black
+                      uppercase
+                      tracking-[0.07em]
+                      text-white
+                      transition-all
+                      duration-300
+                      hover:text-[#18ff72]
+                      hover:drop-shadow-[0_0_8px_rgba(24,255,114,0.28)]
 
-              </div>
+                      sm:text-[14px]
+                    "
+                  >
+                    <span>
+                      CRIAR MINHA CONTA
+                    </span>
 
-            </form>
-
-          )}
-
+                    <span>
+                      →
+                    </span>
+                  </Link>
+                </div>
+              </form>
+            )}
+          </div>
         </section>
 
-        {/* VOLTAR AO CARDÁPIO */}
+        {/* VOLTAR */}
 
         <Link
           to="/cardapio"
-          className="mt-7 block text-center text-sm font-bold text-gray-600 transition hover:text-[#19352b]"
+          className="
+            mt-6
+            flex
+            items-center
+            justify-center
+            gap-2
+            text-[13px]
+            font-black
+            uppercase
+            tracking-[0.07em]
+            text-white
+            transition-all
+            duration-300
+            hover:text-[#18ff72]
+            hover:drop-shadow-[0_0_8px_rgba(24,255,114,0.28)]
+
+            sm:text-[14px]
+          "
         >
-          ← Voltar ao cardápio
+          <span>
+            ←
+          </span>
+
+          <span>
+            VOLTAR AO CARDÁPIO
+          </span>
         </Link>
-
       </div>
-
     </main>
   );
 }
