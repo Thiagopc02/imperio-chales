@@ -24,7 +24,6 @@ import { auth, db } from "../firebase/config";
 import { isAdmin } from "../firebase/admin";
 
 import estabelecimentoIcon from "../components/catalogo/estabelecimento.png";
-import restauranteEmoji from "../components/catalogo/restaurante-emoji.png";
 
 /* =========================================================
    TIPOS
